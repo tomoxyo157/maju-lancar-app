@@ -5,15 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Maju Lancar - Sistem Pengecoran</title>
   
-  <!-- PRECONNECT UNTUK MEMPERCEPAT KONEKSI CDN -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
   
-  <!-- FAVICON & MOBILE HOME SCREEN APP ICON -->
   <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/tomoxyo157/maju-lancar-app/d7ce4fd0fc6d47330c695961e50e36da149ae9dc/home.jpg" />
   <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/tomoxyo157/maju-lancar-app/d7ce4fd0fc6d47330c695961e50e36da149ae9dc/home.jpg" />
   
-  <!-- PWA MANIFEST INLINE/DATA -->
   <link rel="manifest" href="data:application/manifest+json;charset=utf-8,{
     %22name%22: %22Maju Lancar App%22,
     %22short_name%22: %22MajuLancar%22,
@@ -29,132 +26,30 @@
   }">
   <meta name="theme-color" content="#1e3a8a">
 
-  <!-- Supabase JS & html2canvas CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
     :root {
-      --bg-color: #f1f5f9;
-      --card-bg: #ffffff;
-      --text-main: #0f172a;
-      --text-muted: #475569;
-      --primary: #1e3a8a;
-      --primary-hover: #1e40af;
-      --success: #15803d;
-      --danger: #b91c1c;
-      --warning: #b45309;
-      --border: #cbd5e1;
+      --bg-color: #f1f5f9; --card-bg: #ffffff; --text-main: #0f172a; --text-muted: #475569;
+      --primary: #1e3a8a; --primary-hover: #1e40af; --success: #15803d; --danger: #b91c1c;
+      --warning: #b45309; --border: #cbd5e1;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      font-size: 18px;
-      line-height: 1.5;
-      padding-bottom: 50px;
-    }
-
-    header {
-      background-color: var(--primary);
-      color: white;
-      padding: 16px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-    }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-main); font-size: 18px; line-height: 1.5; padding-bottom: 50px; }
+    header { background-color: var(--primary); color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
     header h1 { font-size: 1.8rem; letter-spacing: 0.5px; }
-
-    nav {
-      display: flex;
-      background-color: #0f172a;
-      padding: 4px 16px;
-      gap: 8px;
-      overflow-x: auto;
-    }
-    .nav-btn {
-      background: none;
-      border: none;
-      color: #94a3b8;
-      padding: 14px 24px;
-      font-size: 1.1rem;
-      font-weight: bold;
-      cursor: pointer;
-      border-bottom: 4px solid transparent;
-      white-space: nowrap;
-      transition: all 0.2s;
-    }
+    nav { display: flex; background-color: #0f172a; padding: 4px 16px; gap: 8px; overflow-x: auto; }
+    .nav-btn { background: none; border: none; color: #94a3b8; padding: 14px 24px; font-size: 1.1rem; font-weight: bold; cursor: pointer; border-bottom: 4px solid transparent; white-space: nowrap; transition: all 0.2s; }
     .nav-btn:hover { color: white; }
-    .nav-btn.active {
-      color: #38bdf8;
-      border-bottom-color: #38bdf8;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 24px auto;
-      padding: 0 16px;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-      border: 1px solid var(--border);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .card-title {
-      font-size: 1.4rem;
-      font-weight: bold;
-      margin-bottom: 16px;
-      color: var(--primary);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 2px solid #f1f5f9;
-      padding-bottom: 8px;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 6px;
-      font-size: 1rem;
-    }
-    input, select {
-      width: 100%;
-      padding: 12px 16px;
-      font-size: 1rem;
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      margin-bottom: 16px;
-      background-color: #f8fafc;
-    }
-    input:focus, select:focus {
-      border-color: var(--primary);
-      outline: none;
-      background-color: #fff;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 18px;
-      font-size: 1rem;
-      font-weight: bold;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      gap: 6px;
-      transition: background 0.2s, transform 0.1s;
-    }
+    .nav-btn.active { color: #38bdf8; border-bottom-color: #38bdf8; }
+    .container { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
+    .card { background: var(--card-bg); border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .card-title { font-size: 1.4rem; font-weight: bold; margin-bottom: 16px; color: var(--primary); display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; flex-wrap: wrap; gap: 10px; }
+    label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 1rem; }
+    input, select { width: 100%; padding: 12px 16px; font-size: 1rem; border: 2px solid var(--border); border-radius: 8px; margin-bottom: 16px; background-color: #f8fafc; }
+    input:focus, select:focus { border-color: var(--primary); outline: none; background-color: #fff; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 18px; font-size: 1rem; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; gap: 6px; transition: background 0.2s, transform 0.1s; }
     .btn:active { transform: scale(0.98); }
     .btn-primary { background-color: var(--primary); color: white; }
     .btn-primary:hover { background-color: var(--primary-hover); }
@@ -162,135 +57,29 @@
     .btn-danger { background-color: var(--danger); color: white; }
     .btn-warning { background-color: var(--warning); color: white; }
     .btn-secondary { background-color: #64748b; color: white; }
-
     .table-responsive { overflow-x: auto; margin-top: 12px; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      min-width: 600px;
-    }
-    th, td {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      font-size: 1rem;
-    }
-    th {
-      background-color: #f1f5f9;
-      color: var(--text-main);
-      font-weight: bold;
-    }
-
-    .indicator-box {
-      background: #f8fafc;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      margin: 16px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .badge {
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-weight: bold;
-      font-size: 1rem;
-      color: white;
-    }
+    table { width: 100%; border-collapse: collapse; text-align: left; min-width: 600px; }
+    th, td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 1rem; }
+    th { background-color: #f1f5f9; color: var(--text-main); font-weight: bold; }
+    .indicator-box { background: #f8fafc; border: 2px solid var(--border); border-radius: 10px; padding: 16px; margin: 16px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .badge { padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 1rem; color: white; }
     .badge-safe { background-color: var(--success); }
     .badge-over { background-color: var(--danger); }
-
-    /* Modal */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.7);
-      backdrop-filter: blur(4px);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      opacity: 0;
-      transition: opacity 0.25s ease-out;
-      padding: 16px;
-    }
-    .modal-overlay.active {
-      display: flex;
-      opacity: 1;
-    }
-    .modal-content {
-      background: white;
-      border-radius: 16px;
-      width: 100%;
-      max-width: 650px;
-      max-height: 90vh;
-      overflow-y: auto;
-      padding: 28px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-      transform: scale(0.85);
-      transition: transform 0.25s ease-out;
-    }
-    .modal-overlay.active .modal-content {
-      transform: scale(1);
-    }
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 2px solid #f1f5f9;
-      padding-bottom: 12px;
-      margin-bottom: 20px;
-    }
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-top: 24px;
-      border-top: 2px solid #f1f5f9;
-      padding-top: 16px;
-      flex-wrap: wrap;
-    }
-
-    .sub-nav {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    .sub-btn {
-      padding: 10px 20px;
-      border-radius: 8px;
-      border: 2px solid var(--border);
-      background: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .sub-btn.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-
-    .allocation-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 16px;
-      margin-top: 16px;
-    }
-    .allocation-card {
-      background: #f8fafc;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-    }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.25s ease-out; padding: 16px; }
+    .modal-overlay.active { display: flex; opacity: 1; }
+    .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; padding: 28px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); transform: scale(0.85); transition: transform 0.25s ease-out; }
+    .modal-overlay.active .modal-content { transform: scale(1); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 20px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; border-top: 2px solid #f1f5f9; padding-top: 16px; flex-wrap: wrap; }
+    .sub-nav { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .sub-btn { padding: 10px 20px; border-radius: 8px; border: 2px solid var(--border); background: white; font-weight: bold; cursor: pointer; }
+    .sub-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .allocation-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-top: 16px; }
+    .allocation-card { background: #f8fafc; border: 2px solid var(--border); border-radius: 10px; padding: 16px; }
   </style>
 </head>
 <body>
 
-  <!-- LOGIN PIN MODAL -->
   <div class="modal-overlay" id="modalLogin" style="z-index: 2000;">
     <div class="modal-content" style="max-width: 400px; text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 12px;">MAJU LANCAR</h2>
@@ -300,13 +89,11 @@
     </div>
   </div>
 
-  <!-- HEADER -->
   <header>
     <h1>MAJU LANCAR</h1>
     <button class="btn btn-warning" onclick="logoutSystem()">🔒 Keluar</button>
   </header>
 
-  <!-- NAVIGATION TABS -->
   <nav>
     <button class="nav-btn active" onclick="switchTab('tabPengecoran')">🔥 Pengecoran</button>
     <button class="nav-btn" onclick="switchTab('tabDatabase')">🗄️ Database</button>
@@ -314,8 +101,6 @@
   </nav>
 
   <div class="container">
-
-    <!-- TAB 1: PENGECORAN -->
     <div id="tabPengecoran" class="tab-content">
       <div class="card">
         <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
@@ -337,7 +122,6 @@
         <button class="sub-btn" onclick="switchSubTab('pasca')">2. PASCA PRODUKSI</button>
       </div>
 
-      <!-- SECTION PRA PRODUKSI -->
       <div id="subPra">
         <div class="card">
           <div class="card-title">
@@ -381,7 +165,6 @@
           </div>
         </div>
 
-        <!-- SPK -->
         <div class="card" id="spkContainer">
           <div class="card-title">
             <span>Surat Perintah Kerja (SPK) Summary</span>
@@ -406,7 +189,6 @@
         </div>
       </div>
 
-      <!-- SECTION PASCA PRODUKSI -->
       <div id="subPasca" style="display: none;">
         <div class="card">
           <div class="card-title">
@@ -454,20 +236,16 @@
           </div>
         </div>
 
-        <!-- CARD ALOKASI KUSTOMER -->
         <div class="card">
           <div class="card-title">
             <span>Alokasi Hasil Produksi per Kustomer</span>
           </div>
           <p style="color: var(--text-muted); margin-bottom: 12px;">Pembagian barang jadi lengkap dengan rincian berat per barang dan total berat keseluruhan:</p>
-          <div class="allocation-grid" id="containerAlokasiKustomer">
-            <!-- Render via JS -->
-          </div>
+          <div class="allocation-grid" id="containerAlokasiKustomer"></div>
         </div>
       </div>
     </div>
 
-    <!-- TAB 2: DATABASE -->
     <div id="tabDatabase" class="tab-content" style="display: none;">
       <div class="sub-nav">
         <button class="sub-btn active" onclick="switchDbSubTab('barang')">Barang</button>
@@ -552,7 +330,6 @@
       </div>
     </div>
 
-    <!-- TAB 3: RIWAYAT -->
     <div id="tabRiwayat" class="tab-content" style="display: none;">
       <div class="card">
         <div class="card-title">Daftar Sesi Pencetakan (Maksimal 5 Terakhir)</div>
@@ -572,10 +349,8 @@
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- MODALS MASTER BARANG -->
   <div class="modal-overlay" id="modalBarang">
     <div class="modal-content">
       <div class="modal-header">
@@ -606,7 +381,6 @@
     </div>
   </div>
 
-  <!-- MODAL KUSTOMER -->
   <div class="modal-overlay" id="modalKustomer">
     <div class="modal-content">
       <div class="modal-header">
@@ -627,7 +401,6 @@
     </div>
   </div>
 
-  <!-- MODAL MISC -->
   <div class="modal-overlay" id="modalMisc">
     <div class="modal-content">
       <div class="modal-header">
@@ -649,7 +422,6 @@
     </div>
   </div>
 
-  <!-- MODAL ENTRY ORDER (PRA PRODUKSI) -->
   <div class="modal-overlay" id="modalEntryOrder">
     <div class="modal-content">
       <div class="modal-header">
@@ -677,7 +449,6 @@
     </div>
   </div>
 
-  <!-- MODAL ENTRY PASCA -->
   <div class="modal-overlay" id="modalEntryPasca">
     <div class="modal-content">
       <div class="modal-header">
@@ -699,40 +470,30 @@
   </div>
 
   <script>
-    // KREDENSIAL SUPABASE ASLI
     const SUPABASE_URL = "https://movcjscdntwckaslnumn.supabase.co"; 
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1a3JydGttaXFuaHRhg3dscXhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5OTkwMTEsImV4cCI6MjEwMTU3NTAxMX0.Jzi14b1heGTt1ObUau64KO2wPq2ri1qLcdR-IsJvi1E";
     
-    let supabaseClient = null;
-    let currentSession = null;
-    let cachedOrders = [];
+    let supabaseClient = null, currentSession = null, cachedOrders = [];
     let globalProducts = [], globalCustomers = [], globalMiscs = [];
 
     window.addEventListener('DOMContentLoaded', () => {
-      const isAuth = localStorage.getItem('ml_auth_session');
-      if(isAuth === 'true') {
+      if(localStorage.getItem('ml_auth_session') === 'true') {
         document.getElementById('modalLogin').classList.remove('active');
         initSupabase();
       } else {
         document.getElementById('modalLogin').classList.add('active');
       }
-
       window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
-        }
+        if (e.key === 'Escape') document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
       });
     });
 
     function checkPin() {
-      const pin = document.getElementById('inputPin').value;
-      if(pin === "1234" || pin === "5678") {
+      if(document.getElementById('inputPin').value === "1234" || document.getElementById('inputPin').value === "5678") {
         localStorage.setItem('ml_auth_session', 'true');
         document.getElementById('modalLogin').classList.remove('active');
         initSupabase();
-      } else {
-        alert("PIN Salah!");
-      }
+      } else { alert("PIN Salah!"); }
     }
 
     function logoutSystem() {
@@ -780,44 +541,26 @@
           supabaseClient.from('customers').select('*'),
           supabaseClient.from('miscs').select('*')
         ]);
-
         globalProducts = resP.data || [];
         globalCustomers = resC.data || [];
         globalMiscs = resM.data || [];
-
-        renderTableBarang();
-        renderTableKustomer();
-        renderTableMiscs();
-        populateDropdowns();
-        loadCastingSession();
-      } catch(err) {
-        console.error("Gagal memuat database:", err);
-      }
+        renderTableBarang(); renderTableKustomer(); renderTableMiscs(); populateDropdowns(); loadCastingSession();
+      } catch(err) { console.error(err); }
     }
 
     function populateDropdowns() {
-      const pSel = document.getElementById('mOrderProduct');
-      const pPasca = document.getElementById('mPascaProduct');
       const prodOptions = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang}</option>`).join('');
-      pSel.innerHTML = pPasca.innerHTML = prodOptions;
-
-      const cSel = document.getElementById('mOrderCustomer');
-      cSel.innerHTML = globalCustomers.map(c => `<option value="${c.id}">${c.nama} (${c.perusahaan || '-'})</option>`).join('');
-
-      const kSel = document.getElementById('mPascaKaryawan');
-      kSel.innerHTML = globalMiscs.filter(m => m.kategori === 'karyawan').map(k => `<option value="${k.id}">${k.nama_item}</option>`).join('');
+      document.getElementById('mOrderProduct').innerHTML = document.getElementById('mPascaProduct').innerHTML = prodOptions;
+      document.getElementById('mOrderCustomer').innerHTML = globalCustomers.map(c => `<option value="${c.id}">${c.nama} (${c.perusahaan || '-'})</option>`).join('');
+      document.getElementById('mPascaKaryawan').innerHTML = globalMiscs.filter(m => m.kategori === 'karyawan').map(k => `<option value="${k.id}">${k.nama_item}</option>`).join('');
     }
 
     function resetFormBarang() {
       document.getElementById('titleModalBarang').innerText = "Tambah Barang Baru";
-      document.getElementById('mBarangId').value = "";
-      document.getElementById('mBarangNama').value = "";
-      document.getElementById('mBarangBerat').value = "1";
-      document.getElementById('mBarangLingkar').value = "0";
-      document.getElementById('mBarangTebal').value = "0";
-      document.getElementById('mBarangLubang').value = "0";
-      document.getElementById('mBarangKotak').value = "10";
-      document.getElementById('mBarangKgKotak').value = "0";
+      document.getElementById('mBarangId').value = ""; document.getElementById('mBarangNama').value = "";
+      document.getElementById('mBarangBerat').value = "1"; document.getElementById('mBarangLingkar').value = "0";
+      document.getElementById('mBarangTebal').value = "0"; document.getElementById('mBarangLubang').value = "0";
+      document.getElementById('mBarangKotak').value = "10"; document.getElementById('mBarangKgKotak').value = "0";
       document.getElementById('mBarangZak').value = "50";
     }
 
@@ -825,14 +568,10 @@
       const p = globalProducts.find(x => x.id === id);
       if(!p) return;
       document.getElementById('titleModalBarang').innerText = "Edit Barang";
-      document.getElementById('mBarangId').value = p.id;
-      document.getElementById('mBarangNama').value = p.nama_barang;
-      document.getElementById('mBarangBerat').value = p.berat_biji_kg || 0;
-      document.getElementById('mBarangLingkar').value = p.lingkar_cm || 0;
-      document.getElementById('mBarangTebal').value = p.tebal_cm || 0;
-      document.getElementById('mBarangLubang').value = p.lubang_cm || 0;
-      document.getElementById('mBarangKotak').value = p.isi_per_kotak || 1;
-      document.getElementById('mBarangKgKotak').value = p.kg_per_kotak || 0;
+      document.getElementById('mBarangId').value = p.id; document.getElementById('mBarangNama').value = p.nama_barang;
+      document.getElementById('mBarangBerat').value = p.berat_biji_kg || 0; document.getElementById('mBarangLingkar').value = p.lingkar_cm || 0;
+      document.getElementById('mBarangTebal').value = p.tebal_cm || 0; document.getElementById('mBarangLubang').value = p.lubang_cm || 0;
+      document.getElementById('mBarangKotak').value = p.isi_per_kotak || 1; document.getElementById('mBarangKgKotak').value = p.kg_per_kotak || 0;
       document.getElementById('mBarangZak').value = p.isi_per_zak || 1;
       openModal('modalBarang');
     }
@@ -850,66 +589,47 @@
           kg_per_kotak: parseFloat(document.getElementById('mBarangKgKotak').value) || 0,
           isi_per_zak: parseInt(document.getElementById('mBarangZak').value) || 1
         };
-
-        if(id) {
-          await supabaseClient.from('products').update(payload).eq('id', id);
-        } else {
-          await supabaseClient.from('products').insert([payload]);
-        }
-        closeModal('modalBarang');
-        loadMasterData();
-      } catch(e) { alert("Gagal menyimpan barang: " + e.message); }
+        if(id) await supabaseClient.from('products').update(payload).eq('id', id);
+        else await supabaseClient.from('products').insert([payload]);
+        closeModal('modalBarang'); loadMasterData();
+      } catch(e) { alert("Gagal: " + e.message); }
     }
 
     function resetFormKustomer() {
       document.getElementById('titleModalKustomer').innerText = "Tambah Kustomer";
-      document.getElementById('mKustId').value = "";
-      document.getElementById('mKustNama').value = "";
-      document.getElementById('mKustPerusahaan').value = "";
-      document.getElementById('mKustLokasi').value = "";
+      document.getElementById('mKustId').value = ""; document.getElementById('mKustNama').value = "";
+      document.getElementById('mKustPerusahaan').value = ""; document.getElementById('mKustLokasi').value = "";
     }
 
     function editKustomer(id) {
       const c = globalCustomers.find(x => x.id === id);
       if(!c) return;
       document.getElementById('titleModalKustomer').innerText = "Edit Kustomer";
-      document.getElementById('mKustId').value = c.id;
-      document.getElementById('mKustNama').value = c.nama;
-      document.getElementById('mKustPerusahaan').value = c.perusahaan || '';
-      document.getElementById('mKustLokasi').value = c.lokasi || '';
+      document.getElementById('mKustId').value = c.id; document.getElementById('mKustNama').value = c.nama;
+      document.getElementById('mKustPerusahaan').value = c.perusahaan || ''; document.getElementById('mKustLokasi').value = c.lokasi || '';
       openModal('modalKustomer');
     }
 
     async function saveKustomer() {
       try {
         const id = document.getElementById('mKustId').value;
-        const payload = {
-          nama: document.getElementById('mKustNama').value,
-          perusahaan: document.getElementById('mKustPerusahaan').value,
-          lokasi: document.getElementById('mKustLokasi').value
-        };
-        if(id) {
-          await supabaseClient.from('customers').update(payload).eq('id', id);
-        } else {
-          await supabaseClient.from('customers').insert([payload]);
-        }
-        closeModal('modalKustomer');
-        loadMasterData();
-      } catch(e) { alert("Gagal menyimpan kustomer: " + e.message); }
+        const payload = { nama: document.getElementById('mKustNama').value, perusahaan: document.getElementById('mKustPerusahaan').value, lokasi: document.getElementById('mKustLokasi').value };
+        if(id) await supabaseClient.from('customers').update(payload).eq('id', id);
+        else await supabaseClient.from('customers').insert([payload]);
+        closeModal('modalKustomer'); loadMasterData();
+      } catch(e) { alert("Gagal: " + e.message); }
     }
 
     function resetFormMisc() {
       document.getElementById('titleModalMisc').innerText = "Tambah Misc";
-      document.getElementById('mMiscId').value = "";
-      document.getElementById('mMiscNama').value = "";
+      document.getElementById('mMiscId').value = ""; document.getElementById('mMiscNama').value = "";
     }
 
     function editMisc(id) {
       const m = globalMiscs.find(x => x.id === id);
       if(!m) return;
       document.getElementById('titleModalMisc').innerText = "Edit Misc";
-      document.getElementById('mMiscId').value = m.id;
-      document.getElementById('mMiscKategori').value = m.kategori;
+      document.getElementById('mMiscId').value = m.id; document.getElementById('mMiscKategori').value = m.kategori;
       document.getElementById('mMiscNama').value = m.nama_item;
       openModal('modalMisc');
     }
@@ -917,70 +637,32 @@
     async function saveMisc() {
       try {
         const id = document.getElementById('mMiscId').value;
-        const payload = {
-          kategori: document.getElementById('mMiscKategori').value,
-          nama_item: document.getElementById('mMiscNama').value
-        };
-        if(id) {
-          await supabaseClient.from('miscs').update(payload).eq('id', id);
-        } else {
-          await supabaseClient.from('miscs').insert([payload]);
-        }
-        closeModal('modalMisc');
-        loadMasterData();
-      } catch(e) { alert("Gagal menyimpan misc: " + e.message); }
+        const payload = { kategori: document.getElementById('mMiscKategori').value, nama_item: document.getElementById('mMiscNama').value };
+        if(id) await supabaseClient.from('miscs').update(payload).eq('id', id);
+        else await supabaseClient.from('miscs').insert([payload]);
+        closeModal('modalMisc'); loadMasterData();
+      } catch(e) { alert("Gagal: " + e.message); }
     }
 
     async function deleteItem(table, id) {
-      if(confirm('Hapus data ini?')) {
-        await supabaseClient.from(table).delete().eq('id', id);
-        loadMasterData();
-      }
+      if(confirm('Hapus data ini?')) { await supabaseClient.from(table).delete().eq('id', id); loadMasterData(); }
     }
 
     function renderTableBarang() {
       document.getElementById('tbodyBarang').innerHTML = globalProducts.map(p => `
-        <tr>
-          <td><strong>${p.nama_barang}</strong></td>
-          <td>${p.berat_biji_kg} kg</td>
-          <td>${p.lingkar_cm || 0} cm</td>
-          <td>${p.tebal_cm || 0} cm</td>
-          <td>${p.lubang_cm || 0} cm</td>
-          <td>${p.isi_per_kotak}</td>
-          <td>${p.kg_per_kotak || 0} kg</td>
-          <td>${p.isi_per_zak}</td>
-          <td style="display:flex; gap:6px;">
-            <button class="btn btn-warning" onclick="editBarang(${p.id})">Edit</button>
-            <button class="btn btn-danger" onclick="deleteItem('products', ${p.id})">Hapus</button>
-          </td>
-        </tr>
+        <tr><td><strong>${p.nama_barang}</strong></td><td>${p.berat_biji_kg} kg</td><td>${p.lingkar_cm || 0} cm</td><td>${p.tebal_cm || 0} cm</td><td>${p.lubang_cm || 0} cm</td><td>${p.isi_per_kotak}</td><td>${p.kg_per_kotak || 0} kg</td><td>${p.isi_per_zak}</td><td style="display:flex; gap:6px;"><button class="btn btn-warning" onclick="editBarang(${p.id})">Edit</button><button class="btn btn-danger" onclick="deleteItem('products', ${p.id})">Hapus</button></td></tr>
       `).join('') || '<tr><td colspan="9" style="text-align:center;">Data Kosong</td></tr>';
     }
 
     function renderTableKustomer() {
       document.getElementById('tbodyKustomer').innerHTML = globalCustomers.map(c => `
-        <tr>
-          <td><strong>${c.nama}</strong></td>
-          <td>${c.perusahaan || '-'}</td>
-          <td>${c.lokasi || '-'}</td>
-          <td style="display:flex; gap:6px;">
-            <button class="btn btn-warning" onclick="editKustomer(${c.id})">Edit</button>
-            <button class="btn btn-danger" onclick="deleteItem('customers', ${c.id})">Hapus</button>
-          </td>
-        </tr>
+        <tr><td><strong>${c.nama}</strong></td><td>${c.perusahaan || '-'}</td><td>${c.lokasi || '-'}</td><td style="display:flex; gap:6px;"><button class="btn btn-warning" onclick="editKustomer(${c.id})">Edit</button><button class="btn btn-danger" onclick="deleteItem('customers', ${c.id})">Hapus</button></td></tr>
       `).join('') || '<tr><td colspan="4" style="text-align:center;">Data Kosong</td></tr>';
     }
 
     function renderTableMiscs() {
       document.getElementById('tbodyMiscs').innerHTML = globalMiscs.map(m => `
-        <tr>
-          <td><strong>${m.kategori.toUpperCase()}</strong></td>
-          <td>${m.nama_item}</td>
-          <td style="display:flex; gap:6px;">
-            <button class="btn btn-warning" onclick="editMisc(${m.id})">Edit</button>
-            <button class="btn btn-danger" onclick="deleteItem('miscs', ${m.id})">Hapus</button>
-          </td>
-        </tr>
+        <tr><td><strong>${m.kategori.toUpperCase()}</strong></td><td>${m.nama_item}</td><td style="display:flex; gap:6px;"><button class="btn btn-warning" onclick="editMisc(${m.id})">Edit</button><button class="btn btn-danger" onclick="deleteItem('miscs', ${m.id})">Hapus</button></td></tr>
       `).join('') || '<tr><td colspan="3" style="text-align:center;">Data Kosong</td></tr>';
     }
 
@@ -988,183 +670,89 @@
       if(!supabaseClient) return;
       const tgl = document.getElementById('dateCor').value;
       document.getElementById('spkDateText').innerText = `Tanggal Pencetakan: ${tgl}`;
-
       let { data } = await supabaseClient.from('casting_sessions').select('*').eq('tanggal_cor', tgl).single();
-      
       if(!data) {
         const ins = await supabaseClient.from('casting_sessions').insert([{ tanggal_cor: tgl, status: 'aktif' }]).select().single();
-        currentSession = ins.data;
-        cleanupOldSessions();
-      } else {
-        currentSession = data;
-      }
+        currentSession = ins.data; cleanupOldSessions();
+      } else { currentSession = data; }
 
-      const badge = document.getElementById('sessionStatusBadge');
-      const btnClose = document.getElementById('btnCloseSession');
+      const badge = document.getElementById('sessionStatusBadge'), btnClose = document.getElementById('btnCloseSession');
       if(currentSession.status === 'closed') {
-        badge.innerText = 'Sesi: CLOSED';
-        badge.className = 'badge badge-over';
-        btnClose.style.display = 'none';
+        badge.innerText = 'Sesi: CLOSED'; badge.className = 'badge badge-over'; btnClose.style.display = 'none';
       } else {
-        badge.innerText = 'Sesi: AKTIF';
-        badge.className = 'badge badge-safe';
-        btnClose.style.display = 'inline-block';
+        badge.innerText = 'Sesi: AKTIF'; badge.className = 'badge badge-safe'; btnClose.style.display = 'inline-block';
       }
-
-      loadPraOrders();
-      loadPascaLogs();
+      loadPraOrders(); loadPascaLogs();
     }
 
     async function cleanupOldSessions() {
       const { data } = await supabaseClient.from('casting_sessions').select('*').order('tanggal_cor', { ascending: false });
-      if(data && data.length > 5) {
-        const toDelete = data.slice(5);
-        for(let s of toDelete) {
-          await supabaseClient.from('casting_sessions').delete().eq('id', s.id);
-        }
-      }
+      if(data && data.length > 5) { for(let s of data.slice(5)) await supabaseClient.from('casting_sessions').delete().eq('id', s.id); }
     }
 
     function resetFormOrder() {
       document.getElementById('titleModalEntryOrder').innerText = "Tambah Order Pengecoran";
-      document.getElementById('mOrderId').value = "";
-      document.getElementById('mOrderAwal').value = "0";
-      document.getElementById('mOrderAdj').value = "0";
+      document.getElementById('mOrderId').value = ""; document.getElementById('mOrderAwal').value = "0"; document.getElementById('mOrderAdj').value = "0";
     }
 
     function editOrder(id) {
       const o = cachedOrders.find(x => x.id === id);
       if(!o) return;
       document.getElementById('titleModalEntryOrder').innerText = "Edit Order Pengecoran";
-      document.getElementById('mOrderId').value = o.id;
-      document.getElementById('mOrderCustomer').value = o.customer_id;
-      document.getElementById('mOrderProduct').value = o.product_id;
-      document.getElementById('mOrderAwal').value = o.jumlah_awal;
-      document.getElementById('mOrderAdj').value = o.pengurangan;
-      document.getElementById('mOrderSatuan').value = o.satuan;
+      document.getElementById('mOrderId').value = o.id; document.getElementById('mOrderCustomer').value = o.customer_id;
+      document.getElementById('mOrderProduct').value = o.product_id; document.getElementById('mOrderAwal').value = o.jumlah_awal;
+      document.getElementById('mOrderAdj').value = o.pengurangan; document.getElementById('mOrderSatuan').value = o.satuan;
       openModal('modalEntryOrder');
     }
 
     async function saveEntryOrder() {
-      if(currentSession.status === 'closed') return alert('Sesi pencetakan sudah ditutup!');
-      
-      const orderId = document.getElementById('mOrderId').value;
-      const productId = parseInt(document.getElementById('mOrderProduct').value);
-      const product = globalProducts.find(p => p.id === productId);
-      const awal = parseInt(document.getElementById('mOrderAwal').value) || 0;
-      const adj = parseInt(document.getElementById('mOrderAdj').value) || 0;
-      const akhir = awal - adj;
-      const satuan = document.getElementById('mOrderSatuan').value;
-
+      if(currentSession.status === 'closed') return alert('Sesi ditutup!');
+      const orderId = document.getElementById('mOrderId').value, productId = parseInt(document.getElementById('mOrderProduct').value);
+      const product = globalProducts.find(p => p.id === productId), awal = parseInt(document.getElementById('mOrderAwal').value) || 0;
+      const adj = parseInt(document.getElementById('mOrderAdj').value) || 0, akhir = awal - adj, satuan = document.getElementById('mOrderSatuan').value;
       let rawKotak = (satuan === 'kg') ? (akhir / (product.isi_per_kotak * product.berat_biji_kg)) : (akhir / product.isi_per_kotak);
       let kebutuhanKotak = Math.ceil(Math.ceil(rawKotak || 0) / 10) * 10;
-
       const payload = {
-        session_id: currentSession.id,
-        customer_id: parseInt(document.getElementById('mOrderCustomer').value),
-        product_id: productId,
-        jumlah_awal: awal,
-        pengurangan: adj,
-        jumlah_akhir: akhir,
-        satuan: satuan,
-        kebutuhan_kotak: kebutuhanKotak
+        session_id: currentSession.id, customer_id: parseInt(document.getElementById('mOrderCustomer').value),
+        product_id: productId, jumlah_awal: awal, pengurangan: adj, jumlah_akhir: akhir, satuan: satuan, kebutuhan_kotak: kebutuhanKotak
       };
-
-      if(orderId) {
-        await supabaseClient.from('casting_orders').update(payload).eq('id', orderId);
-      } else {
-        await supabaseClient.from('casting_orders').insert([payload]);
-      }
-      closeModal('modalEntryOrder');
-      loadPraOrders();
+      if(orderId) await supabaseClient.from('casting_orders').update(payload).eq('id', orderId);
+      else await supabaseClient.from('casting_orders').insert([payload]);
+      closeModal('modalEntryOrder'); loadPraOrders();
     }
 
     async function loadPraOrders() {
       if(!currentSession) return;
       const { data } = await supabaseClient.from('casting_orders').select('*, customers(nama), products(nama_barang, berat_biji_kg, isi_per_kotak)').eq('session_id', currentSession.id);
       cachedOrders = data || [];
-      
-      let totalKotak = 0;
-      let spkSummary = {};
-      let groupedByCustomer = {};
-
+      let totalKotak = 0, spkSummary = {}, groupedByCustomer = {};
       cachedOrders.forEach(o => {
-        const custName = o.customers ? o.customers.nama : '-';
+        let custName = o.customers ? o.customers.nama : '-';
         if(!groupedByCustomer[custName]) groupedByCustomer[custName] = [];
         groupedByCustomer[custName].push(o);
       });
-
       let tbodyHTML = '';
       Object.keys(groupedByCustomer).forEach(custName => {
         let items = groupedByCustomer[custName];
         items.forEach((o, index) => {
           totalKotak += o.kebutuhan_kotak;
-          const pName = o.products ? o.products.nama_barang : '-';
-          const pBerat = o.products ? o.products.berat_biji_kg : 0;
-          const pIsiKotak = o.products ? o.products.isi_per_kotak : 0;
-
+          let pName = o.products ? o.products.nama_barang : '-';
           spkSummary[pName] = (spkSummary[pName] || 0) + o.kebutuhan_kotak;
-
-          tbodyHTML += `
-            <tr>
-              ${index === 0 ? `<td rowspan="${items.length}" style="vertical-align: middle; background: #fafafa; font-weight: bold;">${custName}</td>` : ''}
-              <td><strong>${pName}</strong></td>
-              <td>${pBerat} kg</td>
-              <td>${pIsiKotak}</td>
-              <td>${o.jumlah_awal}</td>
-              <td>${o.pengurangan}</td>
-              <td><strong>${o.jumlah_akhir} ${o.satuan}</strong></td>
-              <td><strong>${o.kebutuhan_kotak} Kotak</strong></td>
-              <td style="display:flex; gap:4px;">
-                <button class="btn btn-warning" onclick="editOrder(${o.id})">Edit</button>
-                <button class="btn btn-danger" onclick="deleteOrder(${o.id})">Hapus</button>
-              </td>
-            </tr>
-          `;
+          tbodyHTML += `<tr>${index === 0 ? `<td rowspan="${items.length}" style="vertical-align: middle; background: #fafafa; font-weight: bold;">${custName}</td>` : ''}<td><strong>${pName}</strong></td><td>${o.products?.berat_biji_kg || 0} kg</td><td>${o.products?.isi_per_kotak || 0}</td><td>${o.jumlah_awal}</td><td>${o.pengurangan}</td><td><strong>${o.jumlah_akhir} ${o.satuan}</strong></td><td><strong>${o.kebutuhan_kotak} Kotak</strong></td><td style="display:flex; gap:4px;"><button class="btn btn-warning" onclick="editOrder(${o.id})">Edit</button><button class="btn btn-danger" onclick="deleteOrder(${o.id})">Hapus</button></td></tr>`;
         });
       });
-
       document.getElementById('tbodyPraOrder').innerHTML = tbodyHTML || '<tr><td colspan="9" style="text-align:center;">Belum ada order.</td></tr>';
       document.getElementById('txtTotalKotak').innerText = `${totalKotak} Kotak`;
       updateKotakIndicator();
 
-      let sortedKeys = Object.keys(spkSummary).sort((a, b) => {
-        let numA = parseInt(a) || 0;
-        let numB = parseInt(b) || 0;
-        if(numA !== numB) return numA - numB;
-        return a.localeCompare(b);
-      });
-
-      let spkIndex = 1;
-      let colorPalette = ['#1e3a8a', '#b91c1c', '#15803d', '#b45309', '#7c3aed', '#0891b2', '#db2777'];
-      let colorMap = {};
-      let colorIdx = 0;
-
+      let sortedKeys = Object.keys(spkSummary).sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0) || a.localeCompare(b));
+      let spkIndex = 1, colorPalette = ['#1e3a8a', '#b91c1c', '#15803d', '#b45309', '#7c3aed', '#0891b2', '#db2777'], colorMap = {}, colorIdx = 0;
       let spkHTML = sortedKeys.map(k => {
-        let matchNum = k.match(/^\d+/);
-        let prefixKey = matchNum ? matchNum[0] : k;
-        if(!colorMap[prefixKey]) {
-          colorMap[prefixKey] = colorPalette[colorIdx % colorPalette.length];
-          colorIdx++;
-        }
-        let fontColor = colorMap[prefixKey];
-
-        return `
-          <tr>
-            <td>${spkIndex++}</td>
-            <td><strong style="color: ${fontColor};">${k}</strong></td>
-            <td><strong>${spkSummary[k]} Kotak</strong></td>
-          </tr>
-        `;
+        let prefixKey = (k.match(/^\d+/) || [k])[0];
+        if(!colorMap[prefixKey]) colorMap[prefixKey] = colorPalette[colorIdx++ % colorPalette.length];
+        return `<tr><td>${spkIndex++}</td><td><strong style="color: ${colorMap[prefixKey]};">${k}</strong></td><td><strong>${spkSummary[k]} Kotak</strong></td></tr>`;
       }).join('');
-
-      spkHTML += `
-        <tr style="background-color: #f8fafc; border-top: 2px solid var(--border);">
-          <td colspan="2" style="text-align: right;"><strong>TOTAL KESELURUHAN KOTAK:</strong></td>
-          <td><strong style="color: var(--primary); font-size: 1.2rem;">${totalKotak} Kotak</strong></td>
-        </tr>
-      `;
-
+      spkHTML += `<tr style="background-color: #f8fafc; border-top: 2px solid var(--border);"><td colspan="2" style="text-align: right;"><strong>TOTAL KESELURUHAN KOTAK:</strong></td><td><strong style="color: var(--primary); font-size: 1.2rem;">${totalKotak} Kotak</strong></td></tr>`;
       document.getElementById('tbodySPK').innerHTML = spkHTML || '<tr><td colspan="3" style="text-align:center;">Belum ada data.</td></tr>';
       renderAlokasiKustomer();
     }
@@ -1173,74 +761,41 @@
       const totalKotak = cachedOrders.reduce((sum, o) => sum + o.kebutuhan_kotak, 0);
       const limit = parseInt(document.getElementById('maxLimitKotak').value) || 3200;
       const badgeCap = document.getElementById('badgeKapasitas');
-      
-      if(totalKotak > limit) {
-        badgeCap.innerText = 'OVERLOAD';
-        badgeCap.className = 'badge badge-over';
-      } else {
-        badgeCap.innerText = 'AMAN';
-        badgeCap.className = 'badge badge-safe';
-      }
+      if(totalKotak > limit) { badgeCap.innerText = 'OVERLOAD'; badgeCap.className = 'badge badge-over'; }
+      else { badgeCap.innerText = 'AMAN'; badgeCap.className = 'badge badge-safe'; }
     }
 
     async function deleteOrder(id) {
-      if(confirm('Hapus order?')) {
-        await supabaseClient.from('casting_orders').delete().eq('id', id);
-        loadPraOrders();
-      }
+      if(confirm('Hapus order?')) { await supabaseClient.from('casting_orders').delete().eq('id', id); loadPraOrders(); }
     }
 
     let cachedPascaLogs = [];
-
     function resetFormPasca() {
       document.getElementById('titleModalEntryPasca').innerText = "Tambah Hasil Pengerjaan";
-      document.getElementById('mPascaId').value = "";
-      document.getElementById('mPascaJumlah').value = "0";
+      document.getElementById('mPascaId').value = ""; document.getElementById('mPascaJumlah').value = "0";
     }
 
     function editPasca(id) {
       const l = cachedPascaLogs.find(x => x.id === id);
       if(!l) return;
       document.getElementById('titleModalEntryPasca').innerText = "Edit Hasil Pengerjaan";
-      document.getElementById('mPascaId').value = l.id;
-      document.getElementById('mPascaKaryawan').value = l.karyawan_id;
-      document.getElementById('mPascaProduct').value = l.product_id;
-      document.getElementById('mPascaJumlah').value = l.jumlah_biji;
+      document.getElementById('mPascaId').value = l.id; document.getElementById('mPascaKaryawan').value = l.karyawan_id;
+      document.getElementById('mPascaProduct').value = l.product_id; document.getElementById('mPascaJumlah').value = l.jumlah_biji;
       openModal('modalEntryPasca');
     }
 
     async function saveEntryPasca() {
-      if(currentSession.status === 'closed') return alert('Sesi pencetakan sudah ditutup!');
-
-      const pascaId = document.getElementById('mPascaId').value;
-      const productId = parseInt(document.getElementById('mPascaProduct').value);
-      const product = globalProducts.find(p => p.id === productId);
-      const jumlahBiji = parseInt(document.getElementById('mPascaJumlah').value) || 0;
-
-      const zakTotal = Math.floor(jumlahBiji / product.isi_per_zak);
-      const sisaBiji = jumlahBiji % product.isi_per_zak;
-
-      let defaultTaliId = null;
-      const taliList = globalMiscs.filter(m => m.kategori === 'tali');
-      if(taliList.length > 0) defaultTaliId = taliList[0].id;
-
+      if(currentSession.status === 'closed') return alert('Sesi ditutup!');
+      const pascaId = document.getElementById('mPascaId').value, productId = parseInt(document.getElementById('mPascaProduct').value);
+      const product = globalProducts.find(p => p.id === productId), jumlahBiji = parseInt(document.getElementById('mPascaJumlah').value) || 0;
       const payload = {
-        session_id: currentSession.id,
-        karyawan_id: parseInt(document.getElementById('mPascaKaryawan').value),
-        product_id: productId,
-        warna_tali_id: defaultTaliId,
-        jumlah_biji: jumlahBiji,
-        zak_total: zakTotal,
-        sisa_biji: sisaBiji
+        session_id: currentSession.id, karyawan_id: parseInt(document.getElementById('mPascaKaryawan').value),
+        product_id: productId, warna_tali_id: globalMiscs.filter(m => m.kategori === 'tali')[0]?.id || null,
+        jumlah_biji: jumlahBiji, zak_total: Math.floor(jumlahBiji / product.isi_per_zak), sisa_biji: jumlahBiji % product.isi_per_zak
       };
-
-      if(pascaId) {
-        await supabaseClient.from('casting_production_logs').update(payload).eq('id', pascaId);
-      } else {
-        await supabaseClient.from('casting_production_logs').insert([payload]);
-      }
-      closeModal('modalEntryPasca');
-      loadPascaLogs();
+      if(pascaId) await supabaseClient.from('casting_production_logs').update(payload).eq('id', pascaId);
+      else await supabaseClient.from('casting_production_logs').insert([payload]);
+      closeModal('modalEntryPasca'); loadPascaLogs();
     }
 
     async function updateLogTali(logId, newTaliId) {
@@ -1252,176 +807,89 @@
       const { data } = await supabaseClient.from('casting_production_logs')
         .select('*, products(nama_barang, berat_biji_kg, isi_per_zak), karyawan:miscs!karyawan_id(nama_item), tali:miscs!warna_tali_id(nama_item)')
         .eq('session_id', currentSession.id);
-
       cachedPascaLogs = data || [];
       const taliOptions = globalMiscs.filter(m => m.kategori === 'tali');
-
       let summaryMap = {};
 
       document.getElementById('tbodyPascaLog').innerHTML = cachedPascaLogs.map(l => {
-        const zakFormat = `${l.zak_total} Zak` + (l.sisa_biji > 0 ? ` + <small>(${l.sisa_biji})</small>` : '');
-        const pName = l.products ? l.products.nama_barang : '-';
-        
-        if(!summaryMap[pName]) {
-          summaryMap[pName] = { beratBiji: l.products ? l.products.berat_biji_kg : 0, zakTotal: 0, sisaArray: [], tali: l.tali ? l.tali.nama_item : '-' };
-        }
+        let zakFormat = `${l.zak_total} Zak` + (l.sisa_biji > 0 ? ` + <small>(${l.sisa_biji})</small>` : '');
+        let pName = l.products ? l.products.nama_barang : '-';
+        if(!summaryMap[pName]) summaryMap[pName] = { beratBiji: l.products?.berat_biji_kg || 0, zakTotal: 0, sisaArray: [], tali: l.tali?.nama_item || '-' };
         summaryMap[pName].zakTotal += l.zak_total;
         if(l.sisa_biji > 0) summaryMap[pName].sisaArray.push(l.sisa_biji);
 
         let taliSelectHTML = `<select onchange="updateLogTali(${l.id}, this.value)" style="padding: 6px; font-size: 0.9rem; margin:0;">`;
-        taliOptions.forEach(t => {
-          let selected = (l.warna_tali_id === t.id) ? 'selected' : '';
-          taliSelectHTML += `<option value="${t.id}" ${selected}>${t.nama_item}</option>`;
-        });
+        taliOptions.forEach(t => { taliSelectHTML += `<option value="${t.id}" ${l.warna_tali_id === t.id ? 'selected' : ''}>${t.nama_item}</option>`; });
         taliSelectHTML += `</select>`;
 
-        return `
-          <tr>
-            <td><strong>${l.karyawan ? l.karyawan.nama_item : '-'}</strong></td>
-            <td>${pName}</td>
-            <td>${taliSelectHTML}</td>
-            <td>${l.jumlah_biji} biji</td>
-            <td><strong>${zakFormat}</strong></td>
-            <td style="display:flex; gap:4px;">
-              <button class="btn btn-warning" onclick="editPasca(${l.id})">Edit</button>
-              <button class="btn btn-danger" onclick="deletePasca(${l.id})">Hapus</button>
-            </td>
-          </tr>
-        `;
+        return `<tr><td><strong>${l.karyawan?.nama_item || '-'}</strong></td><td>${pName}</td><td>${taliSelectHTML}</td><td>${l.jumlah_biji} biji</td><td><strong>${zakFormat}</strong></td><td style="display:flex; gap:4px;"><button class="btn btn-warning" onclick="editPasca(${l.id})">Edit</button><button class="btn btn-danger" onclick="deletePasca(${l.id})">Hapus</button></td></tr>`;
       }).join('') || '<tr><td colspan="6" style="text-align:center;">Belum ada hasil.</td></tr>';
 
       document.getElementById('tbodySummaryPasca').innerHTML = Object.keys(summaryMap).map(p => {
-        const item = summaryMap[p];
-        const prodData = globalProducts.find(gp=>gp.nama_barang===p);
-        const totalBiji = (item.zakTotal * (prodData?.isi_per_zak || 50)) + item.sisaArray.reduce((a,b)=>a+b, 0);
-        const totalKg = (totalBiji * item.beratBiji).toFixed(1);
-        
-        let sisaStr = item.sisaArray.length > 0 ? ` + <small>(${item.sisaArray.join(' + ')})</small>` : '';
-        let zakFormat = `${item.zakTotal} Zak` + sisaStr;
-
-        return `
-          <tr>
-            <td><strong>${p}</strong></td>
-            <td>${totalBiji} biji</td>
-            <td><strong>${totalKg} kg</strong></td>
-            <td>${item.tali}</td>
-            <td><strong>${zakFormat}</strong></td>
-          </tr>
-        `;
+        let item = summaryMap[p], prodData = globalProducts.find(gp => gp.nama_barang === p);
+        let totalBiji = (item.zakTotal * (prodData?.isi_per_zak || 50)) + item.sisaArray.reduce((a, b) => a + b, 0);
+        let totalKg = (totalBiji * item.beratBiji).toFixed(1);
+        let zakFormat = `${item.zakTotal} Zak` + (item.sisaArray.length > 0 ? ` + <small>(${item.sisaArray.join(' + ')})</small>` : '');
+        return `<tr><td><strong>${p}</strong></td><td>${totalBiji} biji</td><td><strong>${totalKg} kg</strong></td><td>${item.tali}</td><td><strong>${zakFormat}</strong></td></tr>`;
       }).join('') || '<tr><td colspan="5" style="text-align:center;">Belum ada data.</td></tr>';
-
       renderAlokasiKustomer();
     }
 
     function renderAlokasiKustomer() {
       let customerOrderMap = {};
       cachedOrders.forEach(o => {
-        const cName = o.customers ? o.customers.nama : 'Lainnya';
-        const pName = o.products ? o.products.nama_barang : '-';
+        let cName = o.customers ? o.customers.nama : 'Lainnya', pName = o.products ? o.products.nama_barang : '-';
         if(!customerOrderMap[cName]) customerOrderMap[cName] = {};
         customerOrderMap[cName][pName] = (customerOrderMap[cName][pName] || 0) + o.jumlah_akhir;
       });
-
-      let container = document.getElementById('containerAlokasiKustomer');
-      let html = '';
-
-      if(Object.keys(customerOrderMap).length === 0) {
-        container.innerHTML = `<p style="color: var(--text-muted);">Belum ada data order kustomer pada sesi ini.</p>`;
-        return;
-      }
-
+      let container = document.getElementById('containerAlokasiKustomer'), html = '';
+      if(Object.keys(customerOrderMap).length === 0) { container.innerHTML = `<p style="color: var(--text-muted);">Belum ada data order kustomer.</p>`; return; }
       Object.keys(customerOrderMap).forEach(cName => {
-        let itemsObj = customerOrderMap[cName];
-        let totalBeratSemuaBarang = 0;
-        let beratItemsList = [];
-
-        html += `
-          <div class="allocation-card">
-            <h4 style="color: var(--primary); margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px;">👤 ${cName}</h4>
-            <ul style="list-style-type: none; padding-left: 0; margin-bottom: 10px;">
-        `;
-
+        let itemsObj = customerOrderMap[cName], totalBeratSemua = 0, beratList = [];
+        html += `<div class="allocation-card"><h4 style="color: var(--primary); margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px;">👤 ${cName}</h4><ul style="list-style-type: none; padding-left: 0; margin-bottom: 10px;">`;
         Object.keys(itemsObj).forEach(pName => {
-          let reqJml = itemsObj[pName];
-          let prodData = globalProducts.find(gp => gp.nama_barang === pName);
-          let isiZak = prodData ? prodData.isi_per_zak : 50;
-          let beratBiji = prodData ? prodData.berat_biji_kg : 0;
-          
-          let zak = Math.floor(reqJml / isiZak);
-          let sisa = reqJml % isiZak;
-          let formatReq = `${zak} Zak` + (sisa > 0 ? ` + ${sisa} biji` : '');
-          
-          let totalBeratBarang = reqJml * beratBiji;
-          totalBeratSemuaBarang += totalBeratBarang;
-          beratItemsList.push(totalBeratBarang.toFixed(1));
-
-          html += `<li style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.95rem;">
-            <span>${pName} (${reqJml} bj):</span>
-            <strong>${formatReq} <span style="color: var(--text-muted); font-weight:normal;">(${totalBeratBarang.toFixed(1)} kg)</span></strong>
-          </li>`;
+          let reqJml = itemsObj[pName], prod = globalProducts.find(gp => gp.nama_barang === pName);
+          let zak = Math.floor(reqJml / (prod?.isi_per_zak || 50)), sisa = reqJml % (prod?.isi_per_zak || 50);
+          let totalBerat = reqJml * (prod?.berat_biji_kg || 0); totalBeratSemua += totalBerat; beratList.push(totalBerat.toFixed(1));
+          html += `<li style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.95rem;"><span>${pName} (${reqJml} bj):</span><strong>${zak} Zak${sisa > 0 ? ' + ' + sisa + ' bj' : ''} <span style="color: var(--text-muted); font-weight:normal;">(${totalBerat.toFixed(1)} kg)</span></strong></li>`;
         });
-
-        html += `</ul>
-          <div style="border-top: 1px dashed var(--border); padding-top: 6px; font-size: 0.95rem; display: flex; justify-content: space-between;">
-            <span>Total Berat Keseluruhan:</span>
-            <strong>${beratItemsList.join(' + ')} = <span style="color: var(--primary);">${totalBeratSemuaBarang.toFixed(1)} kg</span></strong>
-          </div>
-        </div>`;
+        html += `</ul><div style="border-top: 1px dashed var(--border); padding-top: 6px; font-size: 0.95rem; display: flex; justify-content: space-between;"><span>Total Berat Keseluruhan:</span><strong>${beratList.join(' + ')} = <span style="color: var(--primary);">${totalBeratSemua.toFixed(1)} kg</span></strong></div></div>`;
       });
-
       container.innerHTML = html;
     }
 
     async function deletePasca(id) {
-      if(confirm('Hapus log?')) {
-        await supabaseClient.from('casting_production_logs').delete().eq('id', id);
-        loadPascaLogs();
-      }
+      if(confirm('Hapus log?')) { await supabaseClient.from('casting_production_logs').delete().eq('id', id); loadPascaLogs(); }
     }
 
     async function closeCastingSession() {
       if(!currentSession) return;
-      if(confirm('Yakin tutup sesi pencetakan ini? (Locked)')) {
+      if(confirm('Tutup sesi pencetakan ini? (Locked)')) {
         await supabaseClient.from('casting_sessions').update({ status: 'closed' }).eq('id', currentSession.id);
         loadCastingSession();
       }
     }
 
     function downloadSPK() {
-      const area = document.getElementById('spkPrintArea');
-      html2canvas(area).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `SPK_${document.getElementById('dateCor').value}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
+      html2canvas(document.getElementById('spkPrintArea')).then(canvas => {
+        let link = document.createElement('a');
+        link.download = `SPK_${document.getElementById('dateCor').value}.png`; link.href = canvas.toDataURL(); link.click();
       });
     }
 
     async function loadRiwayat() {
       const { data } = await supabaseClient.from('casting_sessions').select('*').order('tanggal_cor', { ascending: false }).limit(5);
       document.getElementById('tbodyRiwayat').innerHTML = (data || []).map(r => `
-        <tr>
-          <td><strong>${r.tanggal_cor}</strong></td>
-          <td><span class="badge ${r.status==='closed'?'badge-over':'badge-safe'}">${r.status.toUpperCase()}</span></td>
-          <td style="display:flex; gap:8px;">
-            <button class="btn btn-primary" onclick="viewHistoryDate('${r.tanggal_cor}')">Lihat</button>
-            <button class="btn btn-danger" onclick="deleteSession(${r.id})">Hapus</button>
-          </td>
-        </tr>
+        <tr><td><strong>${r.tanggal_cor}</strong></td><td><span class="badge ${r.status==='closed'?'badge-over':'badge-safe'}">${r.status.toUpperCase()}</span></td><td style="display:flex; gap:8px;"><button class="btn btn-primary" onclick="viewHistoryDate('${r.tanggal_cor}')">Lihat</button><button class="btn btn-danger" onclick="deleteSession(${r.id})">Hapus</button></td></tr>
       `).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada riwayat.</td></tr>';
     }
 
     async function deleteSession(id) {
-      if(confirm('Hapus sesi pencetakan beserta seluruh data order & log di dalamnya?')) {
-        await supabaseClient.from('casting_sessions').delete().eq('id', id);
-        loadRiwayat();
-      }
+      if(confirm('Hapus sesi beserta seluruh datanya?')) { await supabaseClient.from('casting_sessions').delete().eq('id', id); loadRiwayat(); }
     }
 
     function viewHistoryDate(tgl) {
-      document.getElementById('dateCor').value = tgl;
-      switchTab('tabPengecoran');
-      loadCastingSession();
+      document.getElementById('dateCor').value = tgl; switchTab('tabPengecoran'); loadCastingSession();
     }
   </script>
 </body>
