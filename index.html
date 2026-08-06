@@ -174,7 +174,7 @@
     .badge-safe { background-color: var(--success); }
     .badge-over { background-color: var(--danger); }
 
-    /* Modal / Pop-in */
+    /* Modal */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -227,6 +227,7 @@
       display: flex;
       gap: 8px;
       margin-bottom: 20px;
+      flex-wrap: wrap;
     }
     .sub-btn {
       padding: 10px 20px;
@@ -250,7 +251,7 @@
     <div class="modal-content" style="max-width: 400px; text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 12px;">MAJU LANCAR</h2>
       <p style="margin-bottom: 20px; color: var(--text-muted);">Masukkan PIN Akses Sistem</p>
-      <input type="password" id="inputPin" placeholder="Masukkan PIN (default: 1234)" style="text-align: center; font-size: 1.5rem; letter-spacing: 4px;" />
+      <input type="password" id="inputPin" placeholder="PIN (default: 1234)" style="text-align: center; font-size: 1.5rem; letter-spacing: 4px;" />
       <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="checkPin()">MASUK</button>
     </div>
   </div>
@@ -429,6 +430,7 @@
               <thead>
                 <tr>
                   <th>Nama Barang</th>
+                  <th>Lubang</th>
                   <th>Berat/Biji (kg)</th>
                   <th>Isi/Kotak</th>
                   <th>Isi/Zak</th>
@@ -436,7 +438,7 @@
                 </tr>
               </thead>
               <tbody id="tbodyBarang">
-                <tr><td colspan="5" style="text-align:center;">Memuat...</td></tr>
+                <tr><td colspan="6" style="text-align:center;">Memuat...</td></tr>
               </tbody>
             </table>
           </div>
@@ -522,9 +524,12 @@
         <button class="btn btn-secondary" onclick="closeModal('modalBarang')">X</button>
       </div>
       <label>Nama Barang:</label>
-      <input type="text" id="mBarangNama" />
+      <input type="text" id="mBarangNama" placeholder="Contoh: Buis Beton / Cover" />
       <div style="display: flex; gap: 12px;">
+        <div style="flex:1;"><label>Lubang / Ukuran:</label><input type="text" id="mBarangLubang" placeholder="Contoh: Lubang 20" /></div>
         <div style="flex:1;"><label>Berat/Biji (kg):</label><input type="number" step="0.001" id="mBarangBerat" value="1" /></div>
+      </div>
+      <div style="display: flex; gap: 12px;">
         <div style="flex:1;"><label>Isi / Kotak:</label><input type="number" id="mBarangKotak" value="10" /></div>
         <div style="flex:1;"><label>Isi / Zak:</label><input type="number" id="mBarangZak" value="50" /></div>
       </div>
@@ -622,8 +627,7 @@
   </div>
 
   <script>
-    // HARDCODED SUPABASE CREDENTIALS (PASTIKAN AMAN ATAU DIAMBIL OTOMATIS)
-    // Silakan ganti URL dan KEY dengan project Supabase Anda yang baru
+    // MASUKKAN SUPABASE URL & KEY ANDA DI BAWAH INI
     const SUPABASE_URL = "ISI_SUPABASE_URL_ANDA_DI_SINI"; 
     const SUPABASE_KEY = "ISI_SUPABASE_ANON_KEY_ANDA_DI_SINI";
     
@@ -633,7 +637,7 @@
 
     function checkPin() {
       const pin = document.getElementById('inputPin').value;
-      if(pin === "1234" || pin === "5678") { // PIN Bebas
+      if(pin === "1234" || pin === "5678") {
         document.getElementById('modalLogin').classList.remove('active');
         initSupabase();
       } else {
@@ -647,8 +651,6 @@
     }
 
     function initSupabase() {
-      // Jika Anda ingin menggunakan Supabase asli, masukkan URL & KEY di atas. 
-      // Atau otomatis baca dari localStorage jika sebelumnya pernah diset.
       const url = SUPABASE_URL !== "ISI_SUPABASE_URL_ANDA_DI_SINI" ? SUPABASE_URL : localStorage.getItem('ml_sp_url');
       const key = SUPABASE_KEY !== "ISI_SUPABASE_ANON_KEY_ANDA_DI_SINI" ? SUPABASE_KEY : localStorage.getItem('ml_sp_key');
       
@@ -656,7 +658,6 @@
         supabaseClient = supabase.createClient(url, key);
         loadMasterData();
       } else {
-        // Fallback prompt jika belum di-set di kode
         const u = prompt("Masukkan Supabase URL Anda:");
         const k = prompt("Masukkan Supabase Anon Key Anda:");
         if(u && k) {
@@ -721,7 +722,7 @@
     function populateDropdowns() {
       const pSel = document.getElementById('mOrderProduct');
       const pPasca = document.getElementById('mPascaProduct');
-      pSel.innerHTML = pPasca.innerHTML = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang}</option>`).join('');
+      pSel.innerHTML = pPasca.innerHTML = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang} ${p.lubang ? '('+p.lubang+')':''}</option>`).join('');
 
       const cSel = document.getElementById('mOrderCustomer');
       cSel.innerHTML = globalCustomers.map(c => `<option value="${c.id}">${c.nama} (${c.perusahaan || '-'})</option>`).join('');
@@ -733,11 +734,11 @@
       tSel.innerHTML = globalMiscs.filter(m => m.kategori === 'tali').map(t => `<option value="${t.id}">${t.nama_item}</option>`).join('');
     }
 
-    // SAFE DATABASE CRUD (FIXED ERROR GAGAL SIMPAN)
     async function saveBarang() {
       try {
         const payload = {
           nama_barang: document.getElementById('mBarangNama').value,
+          lubang: document.getElementById('mBarangLubang').value,
           berat_biji_kg: parseFloat(document.getElementById('mBarangBerat').value) || 0,
           isi_per_kotak: parseInt(document.getElementById('mBarangKotak').value) || 1,
           isi_per_zak: parseInt(document.getElementById('mBarangZak').value) || 1
@@ -787,12 +788,13 @@
       document.getElementById('tbodyBarang').innerHTML = globalProducts.map(p => `
         <tr>
           <td><strong>${p.nama_barang}</strong></td>
+          <td>${p.lubang || '-'}</td>
           <td>${p.berat_biji_kg} kg</td>
           <td>${p.isi_per_kotak}</td>
           <td>${p.isi_per_zak}</td>
           <td><button class="btn btn-danger" onclick="deleteItem('products', ${p.id})">Hapus</button></td>
         </tr>
-      `).join('') || '<tr><td colspan="5">Data Kosong</td></tr>';
+      `).join('') || '<tr><td colspan="6">Data Kosong</td></tr>';
     }
 
     function renderTableKustomer() {
@@ -877,7 +879,7 @@
 
     async function loadPraOrders() {
       if(!currentSession) return;
-      const { data } = await supabaseClient.from('casting_orders').select('*, customers(nama), products(nama_barang, berat_biji_kg)').eq('session_id', currentSession.id);
+      const { data } = await supabaseClient.from('casting_orders').select('*, customers(nama), products(nama_barang, lubang, berat_biji_kg)').eq('session_id', currentSession.id);
       cachedOrders = data || [];
       
       let totalKotak = 0;
@@ -885,12 +887,13 @@
 
       document.getElementById('tbodyPraOrder').innerHTML = cachedOrders.map(o => {
         totalKotak += o.kebutuhan_kotak;
-        spkSummary[o.products.nama_barang] = (spkSummary[o.products.nama_barang] || 0) + o.kebutuhan_kotak;
+        const pLabel = o.products ? `${o.products.nama_barang} ${o.products.lubang ? '('+o.products.lubang+')':''}` : '-';
+        spkSummary[pLabel] = (spkSummary[pLabel] || 0) + o.kebutuhan_kotak;
 
         return `
           <tr>
             <td>${o.customers ? o.customers.nama : '-'}</td>
-            <td><strong>${o.products ? o.products.nama_barang : '-'}</strong></td>
+            <td><strong>${pLabel}</strong></td>
             <td>${o.jumlah_awal}</td>
             <td>${o.pengurangan}</td>
             <td><strong>${o.jumlah_akhir} ${o.satuan}</strong></td>
@@ -962,14 +965,14 @@
     async function loadPascaLogs() {
       if(!currentSession) return;
       const { data } = await supabaseClient.from('casting_production_logs')
-        .select('*, products(nama_barang, berat_biji_kg), karyawan:miscs!karyawan_id(nama_item), tali:miscs!warna_tali_id(nama_item)')
+        .select('*, products(nama_barang, lubang, berat_biji_kg), karyawan:miscs!karyawan_id(nama_item), tali:miscs!warna_tali_id(nama_item)')
         .eq('session_id', currentSession.id);
 
       let summaryMap = {};
 
       document.getElementById('tbodyPascaLog').innerHTML = (data || []).map(l => {
         const zakFormat = `${l.zak_total} Zak` + (l.sisa_biji > 0 ? ` + <small>${l.sisa_biji}</small>` : '');
-        const pName = l.products ? l.products.nama_barang : '-';
+        const pName = l.products ? `${l.products.nama_barang} ${l.products.lubang ? '('+l.products.lubang+')':''}` : '-';
         
         if(!summaryMap[pName]) {
           summaryMap[pName] = { totalBiji: 0, beratBiji: l.products.berat_biji_kg, zakTotal: 0, sisaTotal: 0, tali: l.tali ? l.tali.nama_item : '-' };
@@ -981,7 +984,7 @@
         return `
           <tr>
             <td><strong>${l.karyawan ? l.karyawan.nama_item : '-'}</strong></td>
-            <td>${l.products ? l.products.nama_barang : '-'}</td>
+            <td>${pName}</td>
             <td>${l.tali ? l.tali.nama_item : '-'}</td>
             <td>${l.jumlah_biji} biji</td>
             <td><strong>${zakFormat}</strong></td>
