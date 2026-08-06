@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Maju Lancar - Sistem Pengecoran</title>
   
-  <!-- FAVICON & MOBILE HOME SCREEN APP ICON (Raw link dari GitHub) -->
+  <!-- FAVICON & MOBILE HOME SCREEN APP ICON -->
   <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/tomoxyo157/maju-lancar-app/d7ce4fd0fc6d47330c695961e50e36da149ae9dc/home.jpg" />
   <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/tomoxyo157/maju-lancar-app/d7ce4fd0fc6d47330c695961e50e36da149ae9dc/home.jpg" />
   
@@ -695,7 +695,7 @@
   </div>
 
   <script>
-    // KREDENSIAL SUPABASE YANG DISEDIAKAN
+    // KREDENSIAL SUPABASE ASLI
     const SUPABASE_URL = "https://movcjscdntwckaslnumn.supabase.co"; 
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vdmNqc2NkbnR3Y2thc2xudW1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0ODMxNDMsImV4cCI6MjA3NTA1OTE0M30.4qJ_0XwOex-43m0qL51Q43hH_oQ72K9vX911wK3V55o";
     
@@ -768,7 +768,6 @@
       document.getElementById('dbMiscs').style.display = (type === 'miscs') ? 'block' : 'none';
     }
 
-    // LOAD MASTER DATA SECARA PARALEL (OPTIMASI KECEPATAN)
     async function loadMasterData() {
       if(!supabaseClient) return;
       try {
