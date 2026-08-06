@@ -195,7 +195,7 @@
       background: white;
       border-radius: 16px;
       width: 90%;
-      max-width: 600px;
+      max-width: 650px;
       max-height: 90vh;
       overflow-y: auto;
       padding: 28px;
@@ -430,15 +430,18 @@
               <thead>
                 <tr>
                   <th>Nama Barang</th>
+                  <th>Berat/Biji</th>
+                  <th>Lingkar</th>
+                  <th>Tebal</th>
                   <th>Lubang</th>
-                  <th>Berat/Biji (kg)</th>
                   <th>Isi/Kotak</th>
-                  <th>Isi/Zak</th>
+                  <th>Kg/Kotak</th>
+                  <th>Isi/Karung</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
               <tbody id="tbodyBarang">
-                <tr><td colspan="6" style="text-align:center;">Memuat...</td></tr>
+                <tr><td colspan="9" style="text-align:center;">Memuat...</td></tr>
               </tbody>
             </table>
           </div>
@@ -524,15 +527,26 @@
         <button class="btn btn-secondary" onclick="closeModal('modalBarang')">X</button>
       </div>
       <label>Nama Barang:</label>
-      <input type="text" id="mBarangNama" placeholder="Contoh: Buis Beton / Cover" />
+      <input type="text" id="mBarangNama" placeholder="Contoh: Buis Beton" />
+      
       <div style="display: flex; gap: 12px;">
-        <div style="flex:1;"><label>Lubang / Ukuran:</label><input type="text" id="mBarangLubang" placeholder="Contoh: Lubang 20" /></div>
-        <div style="flex:1;"><label>Berat/Biji (kg):</label><input type="number" step="0.001" id="mBarangBerat" value="1" /></div>
+        <div style="flex:1;"><label>Berat / Biji (kg):</label><input type="number" step="0.001" id="mBarangBerat" value="1" /></div>
+        <div style="flex:1;"><label>Lingkar (cm):</label><input type="number" step="0.01" id="mBarangLingkar" value="0" /></div>
       </div>
+
       <div style="display: flex; gap: 12px;">
-        <div style="flex:1;"><label>Isi / Kotak:</label><input type="number" id="mBarangKotak" value="10" /></div>
-        <div style="flex:1;"><label>Isi / Zak:</label><input type="number" id="mBarangZak" value="50" /></div>
+        <div style="flex:1;"><label>Tebal (cm):</label><input type="number" step="0.01" id="mBarangTebal" value="0" /></div>
+        <div style="flex:1;"><label>Diameter Lubang (cm):</label><input type="number" step="0.01" id="mBarangLubang" value="0" /></div>
       </div>
+
+      <div style="display: flex; gap: 12px;">
+        <div style="flex:1;"><label>Pra Prod: Isi / Kotak:</label><input type="number" id="mBarangKotak" value="10" /></div>
+        <div style="flex:1;"><label>Kg per Kotak:</label><input type="number" step="0.001" id="mBarangKgKotak" value="0" /></div>
+      </div>
+
+      <label>Pasca Prod: Isi per Karung (Zak):</label>
+      <input type="number" id="mBarangZak" value="50" />
+
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('modalBarang')">Batal</button>
         <button class="btn btn-primary" onclick="saveBarang()">Simpan</button>
@@ -722,7 +736,7 @@
     function populateDropdowns() {
       const pSel = document.getElementById('mOrderProduct');
       const pPasca = document.getElementById('mPascaProduct');
-      pSel.innerHTML = pPasca.innerHTML = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang} ${p.lubang ? '('+p.lubang+')':''}</option>`).join('');
+      pSel.innerHTML = pPasca.innerHTML = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang} ${p.lubang_cm ? '(Lubang: '+p.lubang_cm+'cm)':''}</option>`).join('');
 
       const cSel = document.getElementById('mOrderCustomer');
       cSel.innerHTML = globalCustomers.map(c => `<option value="${c.id}">${c.nama} (${c.perusahaan || '-'})</option>`).join('');
@@ -738,9 +752,12 @@
       try {
         const payload = {
           nama_barang: document.getElementById('mBarangNama').value,
-          lubang: document.getElementById('mBarangLubang').value,
           berat_biji_kg: parseFloat(document.getElementById('mBarangBerat').value) || 0,
+          lingkar_cm: parseFloat(document.getElementById('mBarangLingkar').value) || 0,
+          tebal_cm: parseFloat(document.getElementById('mBarangTebal').value) || 0,
+          lubang_cm: parseFloat(document.getElementById('mBarangLubang').value) || 0,
           isi_per_kotak: parseInt(document.getElementById('mBarangKotak').value) || 1,
+          kg_per_kotak: parseFloat(document.getElementById('mBarangKgKotak').value) || 0,
           isi_per_zak: parseInt(document.getElementById('mBarangZak').value) || 1
         };
         const { error } = await supabaseClient.from('products').insert([payload]);
@@ -788,13 +805,16 @@
       document.getElementById('tbodyBarang').innerHTML = globalProducts.map(p => `
         <tr>
           <td><strong>${p.nama_barang}</strong></td>
-          <td>${p.lubang || '-'}</td>
           <td>${p.berat_biji_kg} kg</td>
+          <td>${p.lingkar_cm || 0} cm</td>
+          <td>${p.tebal_cm || 0} cm</td>
+          <td>${p.lubang_cm || 0} cm</td>
           <td>${p.isi_per_kotak}</td>
+          <td>${p.kg_per_kotak || 0} kg</td>
           <td>${p.isi_per_zak}</td>
           <td><button class="btn btn-danger" onclick="deleteItem('products', ${p.id})">Hapus</button></td>
         </tr>
-      `).join('') || '<tr><td colspan="6">Data Kosong</td></tr>';
+      `).join('') || '<tr><td colspan="9" style="text-align:center;">Data Kosong</td></tr>';
     }
 
     function renderTableKustomer() {
@@ -805,7 +825,7 @@
           <td>${c.lokasi || '-'}</td>
           <td><button class="btn btn-danger" onclick="deleteItem('customers', ${c.id})">Hapus</button></td>
         </tr>
-      `).join('') || '<tr><td colspan="4">Data Kosong</td></tr>';
+      `).join('') || '<tr><td colspan="4" style="text-align:center;">Data Kosong</td></tr>';
     }
 
     function renderTableMiscs() {
@@ -815,7 +835,7 @@
           <td>${m.nama_item}</td>
           <td><button class="btn btn-danger" onclick="deleteItem('miscs', ${m.id})">Hapus</button></td>
         </tr>
-      `).join('') || '<tr><td colspan="3">Data Kosong</td></tr>';
+      `).join('') || '<tr><td colspan="3" style="text-align:center;">Data Kosong</td></tr>';
     }
 
     async function loadCastingSession() {
@@ -879,7 +899,7 @@
 
     async function loadPraOrders() {
       if(!currentSession) return;
-      const { data } = await supabaseClient.from('casting_orders').select('*, customers(nama), products(nama_barang, lubang, berat_biji_kg)').eq('session_id', currentSession.id);
+      const { data } = await supabaseClient.from('casting_orders').select('*, customers(nama), products(nama_barang, lubang_cm, berat_biji_kg)').eq('session_id', currentSession.id);
       cachedOrders = data || [];
       
       let totalKotak = 0;
@@ -887,7 +907,7 @@
 
       document.getElementById('tbodyPraOrder').innerHTML = cachedOrders.map(o => {
         totalKotak += o.kebutuhan_kotak;
-        const pLabel = o.products ? `${o.products.nama_barang} ${o.products.lubang ? '('+o.products.lubang+')':''}` : '-';
+        const pLabel = o.products ? `${o.products.nama_barang} ${o.products.lubang_cm ? '(Lubang: '+o.products.lubang_cm+'cm)':''}` : '-';
         spkSummary[pLabel] = (spkSummary[pLabel] || 0) + o.kebutuhan_kotak;
 
         return `
@@ -965,14 +985,14 @@
     async function loadPascaLogs() {
       if(!currentSession) return;
       const { data } = await supabaseClient.from('casting_production_logs')
-        .select('*, products(nama_barang, lubang, berat_biji_kg), karyawan:miscs!karyawan_id(nama_item), tali:miscs!warna_tali_id(nama_item)')
+        .select('*, products(nama_barang, lubang_cm, berat_biji_kg), karyawan:miscs!karyawan_id(nama_item), tali:miscs!warna_tali_id(nama_item)')
         .eq('session_id', currentSession.id);
 
       let summaryMap = {};
 
       document.getElementById('tbodyPascaLog').innerHTML = (data || []).map(l => {
         const zakFormat = `${l.zak_total} Zak` + (l.sisa_biji > 0 ? ` + <small>${l.sisa_biji}</small>` : '');
-        const pName = l.products ? `${l.products.nama_barang} ${l.products.lubang ? '('+l.products.lubang+')':''}` : '-';
+        const pName = l.products ? `${l.products.nama_barang} ${l.products.lubang_cm ? '(Lubang: '+l.products.lubang_cm+'cm)':''}` : '-';
         
         if(!summaryMap[pName]) {
           summaryMap[pName] = { totalBiji: 0, beratBiji: l.products.berat_biji_kg, zakTotal: 0, sisaTotal: 0, tali: l.tali ? l.tali.nama_item : '-' };
