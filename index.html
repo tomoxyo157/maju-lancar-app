@@ -118,13 +118,13 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 12px 24px;
-      font-size: 1.1rem;
+      padding: 8px 16px;
+      font-size: 1rem;
       font-weight: bold;
-      border-radius: 8px;
+      border-radius: 6px;
       border: none;
       cursor: pointer;
-      gap: 8px;
+      gap: 6px;
       transition: background 0.2s, transform 0.1s;
     }
     .btn:active { transform: scale(0.98); }
@@ -134,6 +134,7 @@
     .btn-danger { background-color: var(--danger); color: white; }
     .btn-warning { background-color: var(--warning); color: white; }
     .btn-secondary { background-color: #64748b; color: white; }
+    .btn-info { background-color: #0284c7; color: white; }
 
     .table-responsive { overflow-x: auto; margin-top: 12px; }
     table {
@@ -242,17 +243,31 @@
       color: white;
       border-color: var(--primary);
     }
+
+    /* Grid Alokasi Kustomer */
+    .allocation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .allocation-card {
+      background: #f8fafc;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
   </style>
 </head>
 <body>
 
   <!-- LOGIN PIN MODAL -->
-  <div class="modal-overlay active" id="modalLogin" style="z-index: 2000;">
+  <div class="modal-overlay" id="modalLogin" style="z-index: 2000;">
     <div class="modal-content" style="max-width: 400px; text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 12px;">MAJU LANCAR</h2>
       <p style="margin-bottom: 20px; color: var(--text-muted);">Masukkan PIN Akses Sistem</p>
       <input type="password" id="inputPin" placeholder="PIN (default: 1234)" style="text-align: center; font-size: 1.5rem; letter-spacing: 4px;" />
-      <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="checkPin()">MASUK</button>
+      <button class="btn btn-primary" style="width: 100%; margin-top: 10px; padding: 12px;" onclick="checkPin()">MASUK</button>
     </div>
   </div>
 
@@ -276,14 +291,14 @@
       <div class="card">
         <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
           <div style="flex: 1; min-width: 250px;">
-            <label for="dateCor">Tanggal Pengecoran:</label>
+            <label for="dateCor">Tanggal Pencetakan:</label>
             <input type="date" id="dateCor" onchange="loadCastingSession()" />
           </div>
           <div>
             <span id="sessionStatusBadge" class="badge badge-safe" style="display:inline-block; margin-top:28px;">Sesi: AKTIF</span>
           </div>
           <div style="margin-top: 28px;">
-            <button class="btn btn-danger" onclick="closeCastingSession()" id="btnCloseSession">🔒 Tutup Sesi Cor</button>
+            <button class="btn btn-danger" onclick="closeCastingSession()" id="btnCloseSession">🔒 Tutup Sesi Pencetakan</button>
           </div>
         </div>
       </div>
@@ -307,6 +322,8 @@
                 <tr>
                   <th>Pelanggan</th>
                   <th>Nama Barang</th>
+                  <th>Berat/Biji</th>
+                  <th>Isi/Kotak</th>
                   <th>Awal</th>
                   <th>Adj</th>
                   <th>Akhir</th>
@@ -315,12 +332,12 @@
                 </tr>
               </thead>
               <tbody id="tbodyPraOrder">
-                <tr><td colspan="7" style="text-align:center;">Memuat data...</td></tr>
+                <tr><td colspan="9" style="text-align:center;">Memuat data...</td></tr>
               </tbody>
             </table>
           </div>
 
-          <!-- REALTIME INDICATOR KOTAK (Fleksibel Kapasitas) -->
+          <!-- REALTIME INDICATOR KOTAK -->
           <div class="indicator-box">
             <div>
               <strong style="font-size: 1.1rem;">Total Kotak Dipesan:</strong>
@@ -376,7 +393,7 @@
                   <th>Nama Barang</th>
                   <th>Warna Tali</th>
                   <th>Jumlah (Biji)</th>
-                  <th>Format Zak</th>
+                  <th>Karung/Zak</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
@@ -399,13 +416,24 @@
                   <th>Total Biji</th>
                   <th>Total Berat (Kg)</th>
                   <th>Warna Tali</th>
-                  <th>Format Zak (50+x)</th>
+                  <th>Karung/Zak</th>
                 </tr>
               </thead>
               <tbody id="tbodySummaryPasca">
                 <tr><td colspan="5" style="text-align:center;">Belum ada data.</td></tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- CARD ALOKASI KUSTOMER -->
+        <div class="card">
+          <div class="card-title">
+            <span>Alokasi Hasil Produksi per Kustomer</span>
+          </div>
+          <p style="color: var(--text-muted); margin-bottom: 12px;">Berikut pembagian alokasi barang jadi berdasarkan total order masing-masing kustomer:</p>
+          <div class="allocation-grid" id="containerAlokasiKustomer">
+            <!-- Render via JS -->
           </div>
         </div>
       </div>
@@ -423,7 +451,7 @@
         <div class="card">
           <div class="card-title">
             <span>Data Master Barang</span>
-            <button class="btn btn-primary" onclick="openModal('modalBarang')">+ Tambah Barang</button>
+            <button class="btn btn-primary" onclick="openModal('modalBarang'); resetFormBarang();">+ Tambah Barang</button>
           </div>
           <div class="table-responsive">
             <table>
@@ -436,7 +464,7 @@
                   <th>Lubang</th>
                   <th>Isi/Kotak</th>
                   <th>Kg/Kotak</th>
-                  <th>Isi/Karung</th>
+                  <th>Karung/Zak</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
@@ -452,7 +480,7 @@
         <div class="card">
           <div class="card-title">
             <span>Data Master Kustomer</span>
-            <button class="btn btn-primary" onclick="openModal('modalKustomer')">+ Tambah Kustomer</button>
+            <button class="btn btn-primary" onclick="openModal('modalKustomer'); resetFormKustomer();">+ Tambah Kustomer</button>
           </div>
           <div class="table-responsive">
             <table>
@@ -476,7 +504,7 @@
         <div class="card">
           <div class="card-title">
             <span>Data Miscs (Karyawan & Tali)</span>
-            <button class="btn btn-primary" onclick="openModal('modalMisc')">+ Tambah Misc</button>
+            <button class="btn btn-primary" onclick="openModal('modalMisc'); resetFormMisc();">+ Tambah Misc</button>
           </div>
           <div class="table-responsive">
             <table>
@@ -499,12 +527,12 @@
     <!-- TAB 3: RIWAYAT -->
     <div id="tabRiwayat" class="tab-content" style="display: none;">
       <div class="card">
-        <div class="card-title">Daftar Pengecoran Closed</div>
+        <div class="card-title">Daftar Sesi Pencetakan (Maksimal 5 Terakhir)</div>
         <div class="table-responsive">
           <table>
             <thead>
               <tr>
-                <th>Tanggal Cor</th>
+                <th>Tanggal Pencetakan</th>
                 <th>Status</th>
                 <th>Aksi</th>
               </tr>
@@ -519,15 +547,16 @@
 
   </div>
 
-  <!-- MODALS -->
+  <!-- MODALS MASTER BARANG -->
   <div class="modal-overlay" id="modalBarang">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Tambah Barang Baru</h3>
+        <h3 id="titleModalBarang">Tambah Barang Baru</h3>
         <button class="btn btn-secondary" onclick="closeModal('modalBarang')">X</button>
       </div>
+      <input type="hidden" id="mBarangId" />
       <label>Nama Barang:</label>
-      <input type="text" id="mBarangNama" placeholder="Contoh: Buis Beton" />
+      <input type="text" id="mBarangNama" placeholder="Contoh: 6tps" />
       
       <div style="display: flex; gap: 12px;">
         <div style="flex:1;"><label>Berat / Biji (kg):</label><input type="number" step="0.001" id="mBarangBerat" value="1" /></div>
@@ -544,7 +573,7 @@
         <div style="flex:1;"><label>Kg per Kotak:</label><input type="number" step="0.001" id="mBarangKgKotak" value="0" /></div>
       </div>
 
-      <label>Pasca Prod: Isi per Karung (Zak):</label>
+      <label>Pasca Prod: Isi per Karung/Zak:</label>
       <input type="number" id="mBarangZak" value="50" />
 
       <div class="modal-footer">
@@ -554,12 +583,14 @@
     </div>
   </div>
 
+  <!-- MODAL KUSTOMER -->
   <div class="modal-overlay" id="modalKustomer">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Tambah Kustomer</h3>
+        <h3 id="titleModalKustomer">Tambah Kustomer</h3>
         <button class="btn btn-secondary" onclick="closeModal('modalKustomer')">X</button>
       </div>
+      <input type="hidden" id="mKustId" />
       <label>Nama Kustomer:</label>
       <input type="text" id="mKustNama" />
       <label>Perusahaan:</label>
@@ -573,12 +604,14 @@
     </div>
   </div>
 
+  <!-- MODAL MISC -->
   <div class="modal-overlay" id="modalMisc">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Tambah Misc (Karyawan/Tali)</h3>
+        <h3 id="titleModalMisc">Tambah Misc (Karyawan/Tali)</h3>
         <button class="btn btn-secondary" onclick="closeModal('modalMisc')">X</button>
       </div>
+      <input type="hidden" id="mMiscId" />
       <label>Kategori:</label>
       <select id="mMiscKategori">
         <option value="karyawan">Karyawan</option>
@@ -593,6 +626,7 @@
     </div>
   </div>
 
+  <!-- MODAL ENTRY ORDER -->
   <div class="modal-overlay" id="modalEntryOrder">
     <div class="modal-content">
       <div class="modal-header">
@@ -619,6 +653,7 @@
     </div>
   </div>
 
+  <!-- MODAL ENTRY PASCA (Tanpa Tali) -->
   <div class="modal-overlay" id="modalEntryPasca">
     <div class="modal-content">
       <div class="modal-header">
@@ -629,8 +664,6 @@
       <select id="mPascaKaryawan"></select>
       <label>Nama Barang:</label>
       <select id="mPascaProduct"></select>
-      <label>Warna Tali:</label>
-      <select id="mPascaTali"></select>
       <label>Jumlah (Biji):</label>
       <input type="number" id="mPascaJumlah" value="0" />
       <div class="modal-footer">
@@ -649,17 +682,30 @@
     let currentSession = null;
     let cachedOrders = [];
 
-    function checkPin() {
-      const pin = document.getElementById('inputPin').value;
-      if(pin === "1234" || pin === "5678") {
+    // Cek Sesi Login di LocalStorage (Permanen Kecuali Logout)
+    window.addEventListener('DOMContentLoaded', () => {
+      const isAuth = localStorage.getItem('ml_auth_session');
+      if(isAuth === 'true') {
         document.getElementById('modalLogin').classList.remove('active');
         initSupabase();
       } else {
-        alert("PIN Salah! Gunakan 1234");
+        document.getElementById('modalLogin').classList.add('active');
+      }
+    });
+
+    function checkPin() {
+      const pin = document.getElementById('inputPin').value;
+      if(pin === "1234" || pin === "5678") {
+        localStorage.setItem('ml_auth_session', 'true');
+        document.getElementById('modalLogin').classList.remove('active');
+        initSupabase();
+      } else {
+        alert("PIN Salah!");
       }
     }
 
     function logoutSystem() {
+      localStorage.removeItem('ml_auth_session');
       document.getElementById('modalLogin').classList.add('active');
       document.getElementById('inputPin').value = "";
     }
@@ -736,20 +782,48 @@
     function populateDropdowns() {
       const pSel = document.getElementById('mOrderProduct');
       const pPasca = document.getElementById('mPascaProduct');
-      pSel.innerHTML = pPasca.innerHTML = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang} ${p.lubang_cm ? '(Lubang: '+p.lubang_cm+'cm)':''}</option>`).join('');
+      pSel.innerHTML = pPasca.innerHTML = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang}</option>`).join('');
 
       const cSel = document.getElementById('mOrderCustomer');
       cSel.innerHTML = globalCustomers.map(c => `<option value="${c.id}">${c.nama} (${c.perusahaan || '-'})</option>`).join('');
 
       const kSel = document.getElementById('mPascaKaryawan');
       kSel.innerHTML = globalMiscs.filter(m => m.kategori === 'karyawan').map(k => `<option value="${k.id}">${k.nama_item}</option>`).join('');
+    }
 
-      const tSel = document.getElementById('mPascaTali');
-      tSel.innerHTML = globalMiscs.filter(m => m.kategori === 'tali').map(t => `<option value="${t.id}">${t.nama_item}</option>`).join('');
+    // FORM RESET & EDIT HANDLERS
+    function resetFormBarang() {
+      document.getElementById('titleModalBarang').innerText = "Tambah Barang Baru";
+      document.getElementById('mBarangId').value = "";
+      document.getElementById('mBarangNama').value = "";
+      document.getElementById('mBarangBerat').value = "1";
+      document.getElementById('mBarangLingkar').value = "0";
+      document.getElementById('mBarangTebal').value = "0";
+      document.getElementById('mBarangLubang').value = "0";
+      document.getElementById('mBarangKotak').value = "10";
+      document.getElementById('mBarangKgKotak').value = "0";
+      document.getElementById('mBarangZak').value = "50";
+    }
+
+    function editBarang(id) {
+      const p = globalProducts.find(x => x.id === id);
+      if(!p) return;
+      document.getElementById('titleModalBarang').innerText = "Edit Barang";
+      document.getElementById('mBarangId').value = p.id;
+      document.getElementById('mBarangNama').value = p.nama_barang;
+      document.getElementById('mBarangBerat').value = p.berat_biji_kg || 0;
+      document.getElementById('mBarangLingkar').value = p.lingkar_cm || 0;
+      document.getElementById('mBarangTebal').value = p.tebal_cm || 0;
+      document.getElementById('mBarangLubang').value = p.lubang_cm || 0;
+      document.getElementById('mBarangKotak').value = p.isi_per_kotak || 1;
+      document.getElementById('mBarangKgKotak').value = p.kg_per_kotak || 0;
+      document.getElementById('mBarangZak').value = p.isi_per_zak || 1;
+      openModal('modalBarang');
     }
 
     async function saveBarang() {
       try {
+        const id = document.getElementById('mBarangId').value;
         const payload = {
           nama_barang: document.getElementById('mBarangNama').value,
           berat_biji_kg: parseFloat(document.getElementById('mBarangBerat').value) || 0,
@@ -760,35 +834,88 @@
           kg_per_kotak: parseFloat(document.getElementById('mBarangKgKotak').value) || 0,
           isi_per_zak: parseInt(document.getElementById('mBarangZak').value) || 1
         };
-        const { error } = await supabaseClient.from('products').insert([payload]);
-        if(error) throw error;
+
+        if(id) {
+          const { error } = await supabaseClient.from('products').update(payload).eq('id', id);
+          if(error) throw error;
+        } else {
+          const { error } = await supabaseClient.from('products').insert([payload]);
+          if(error) throw error;
+        }
         closeModal('modalBarang');
         loadMasterData();
       } catch(e) { alert("Gagal menyimpan barang: " + e.message); }
     }
 
+    function resetFormKustomer() {
+      document.getElementById('titleModalKustomer').innerText = "Tambah Kustomer";
+      document.getElementById('mKustId').value = "";
+      document.getElementById('mKustNama').value = "";
+      document.getElementById('mKustPerusahaan').value = "";
+      document.getElementById('mKustLokasi').value = "";
+    }
+
+    function editKustomer(id) {
+      const c = globalCustomers.find(x => x.id === id);
+      if(!c) return;
+      document.getElementById('titleModalKustomer').innerText = "Edit Kustomer";
+      document.getElementById('mKustId').value = c.id;
+      document.getElementById('mKustNama').value = c.nama;
+      document.getElementById('mKustPerusahaan').value = c.perusahaan || '';
+      document.getElementById('mKustLokasi').value = c.lokasi || '';
+      openModal('modalKustomer');
+    }
+
     async function saveKustomer() {
       try {
+        const id = document.getElementById('mKustId').value;
         const payload = {
           nama: document.getElementById('mKustNama').value,
           perusahaan: document.getElementById('mKustPerusahaan').value,
           lokasi: document.getElementById('mKustLokasi').value
         };
-        const { error } = await supabaseClient.from('customers').insert([payload]);
-        if(error) throw error;
+        if(id) {
+          const { error } = await supabaseClient.from('customers').update(payload).eq('id', id);
+          if(error) throw error;
+        } else {
+          const { error } = await supabaseClient.from('customers').insert([payload]);
+          if(error) throw error;
+        }
         closeModal('modalKustomer');
         loadMasterData();
       } catch(e) { alert("Gagal menyimpan kustomer: " + e.message); }
     }
 
+    function resetFormMisc() {
+      document.getElementById('titleModalMisc').innerText = "Tambah Misc (Karyawan/Tali)";
+      document.getElementById('mMiscId').value = "";
+      document.getElementById('mMiscNama').value = "";
+    }
+
+    function editMisc(id) {
+      const m = globalMiscs.find(x => x.id === id);
+      if(!m) return;
+      document.getElementById('titleModalMisc').innerText = "Edit Misc";
+      document.getElementById('mMiscId').value = m.id;
+      document.getElementById('mMiscKategori').value = m.kategori;
+      document.getElementById('mMiscNama').value = m.nama_item;
+      openModal('modalMisc');
+    }
+
     async function saveMisc() {
       try {
+        const id = document.getElementById('mMiscId').value;
         const payload = {
           kategori: document.getElementById('mMiscKategori').value,
           nama_item: document.getElementById('mMiscNama').value
         };
-        const { error } = await supabaseClient.from('miscs').insert([payload]);
-        if(error) throw error;
+        if(id) {
+          const { error } = await supabaseClient.from('miscs').update(payload).eq('id', id);
+          if(error) throw error;
+        } else {
+          const { error } = await supabaseClient.from('miscs').insert([payload]);
+          if(error) throw error;
+        }
         closeModal('modalMisc');
         loadMasterData();
       } catch(e) { alert("Gagal menyimpan misc: " + e.message); }
@@ -812,7 +939,10 @@
           <td>${p.isi_per_kotak}</td>
           <td>${p.kg_per_kotak || 0} kg</td>
           <td>${p.isi_per_zak}</td>
-          <td><button class="btn btn-danger" onclick="deleteItem('products', ${p.id})">Hapus</button></td>
+          <td style="display:flex; gap:6px;">
+            <button class="btn btn-warning" onclick="editBarang(${p.id})">Edit</button>
+            <button class="btn btn-danger" onclick="deleteItem('products', ${p.id})">Hapus</button>
+          </td>
         </tr>
       `).join('') || '<tr><td colspan="9" style="text-align:center;">Data Kosong</td></tr>';
     }
@@ -823,7 +953,10 @@
           <td><strong>${c.nama}</strong></td>
           <td>${c.perusahaan || '-'}</td>
           <td>${c.lokasi || '-'}</td>
-          <td><button class="btn btn-danger" onclick="deleteItem('customers', ${c.id})">Hapus</button></td>
+          <td style="display:flex; gap:6px;">
+            <button class="btn btn-warning" onclick="editKustomer(${c.id})">Edit</button>
+            <button class="btn btn-danger" onclick="deleteItem('customers', ${c.id})">Hapus</button>
+          </td>
         </tr>
       `).join('') || '<tr><td colspan="4" style="text-align:center;">Data Kosong</td></tr>';
     }
@@ -833,7 +966,10 @@
         <tr>
           <td><strong>${m.kategori.toUpperCase()}</strong></td>
           <td>${m.nama_item}</td>
-          <td><button class="btn btn-danger" onclick="deleteItem('miscs', ${m.id})">Hapus</button></td>
+          <td style="display:flex; gap:6px;">
+            <button class="btn btn-warning" onclick="editMisc(${m.id})">Edit</button>
+            <button class="btn btn-danger" onclick="deleteItem('miscs', ${m.id})">Hapus</button>
+          </td>
         </tr>
       `).join('') || '<tr><td colspan="3" style="text-align:center;">Data Kosong</td></tr>';
     }
@@ -841,13 +977,14 @@
     async function loadCastingSession() {
       if(!supabaseClient) return;
       const tgl = document.getElementById('dateCor').value;
-      document.getElementById('spkDateText').innerText = `Tanggal: ${tgl}`;
+      document.getElementById('spkDateText').innerText = `Tanggal Pencetakan: ${tgl}`;
 
       let { data } = await supabaseClient.from('casting_sessions').select('*').eq('tanggal_cor', tgl).single();
       
       if(!data) {
         const ins = await supabaseClient.from('casting_sessions').insert([{ tanggal_cor: tgl, status: 'aktif' }]).select().single();
         currentSession = ins.data;
+        cleanupOldSessions();
       } else {
         currentSession = data;
       }
@@ -868,8 +1005,19 @@
       loadPascaLogs();
     }
 
+    // Auto delete sesi paling lama jika lebih dari 5
+    async function cleanupOldSessions() {
+      const { data } = await supabaseClient.from('casting_sessions').select('*').order('tanggal_cor', { ascending: false });
+      if(data && data.length > 5) {
+        const toDelete = data.slice(5);
+        for(let s of toDelete) {
+          await supabaseClient.from('casting_sessions').delete().eq('id', s.id);
+        }
+      }
+    }
+
     async function saveEntryOrder() {
-      if(currentSession.status === 'closed') return alert('Sesi cor sudah ditutup!');
+      if(currentSession.status === 'closed') return alert('Sesi pencetakan sudah ditutup!');
       
       const productId = parseInt(document.getElementById('mOrderProduct').value);
       const product = globalProducts.find(p => p.id === productId);
@@ -899,41 +1047,92 @@
 
     async function loadPraOrders() {
       if(!currentSession) return;
-      const { data } = await supabaseClient.from('casting_orders').select('*, customers(nama), products(nama_barang, lubang_cm, berat_biji_kg)').eq('session_id', currentSession.id);
+      const { data } = await supabaseClient.from('casting_orders').select('*, customers(nama), products(nama_barang, berat_biji_kg, isi_per_kotak)').eq('session_id', currentSession.id);
       cachedOrders = data || [];
       
       let totalKotak = 0;
       let spkSummary = {};
 
-      document.getElementById('tbodyPraOrder').innerHTML = cachedOrders.map(o => {
-        totalKotak += o.kebutuhan_kotak;
-        const pLabel = o.products ? `${o.products.nama_barang} ${o.products.lubang_cm ? '(Lubang: '+o.products.lubang_cm+'cm)':''}` : '-';
-        spkSummary[pLabel] = (spkSummary[pLabel] || 0) + o.kebutuhan_kotak;
+      // Kelompokkan berdasarkan kustomer untuk merge sel visual
+      let groupedByCustomer = {};
+      cachedOrders.forEach(o => {
+        const custName = o.customers ? o.customers.nama : '-';
+        if(!groupedByCustomer[custName]) groupedByCustomer[custName] = [];
+        groupedByCustomer[custName].push(o);
+      });
 
-        return `
-          <tr>
-            <td>${o.customers ? o.customers.nama : '-'}</td>
-            <td><strong>${pLabel}</strong></td>
-            <td>${o.jumlah_awal}</td>
-            <td>${o.pengurangan}</td>
-            <td><strong>${o.jumlah_akhir} ${o.satuan}</strong></td>
-            <td><strong>${o.kebutuhan_kotak} Kotak</strong></td>
-            <td><button class="btn btn-danger" onclick="deleteOrder(${o.id})">Hapus</button></td>
-          </tr>
-        `;
-      }).join('') || '<tr><td colspan="7" style="text-align:center;">Belum ada order.</td></tr>';
+      let tbodyHTML = '';
+      Object.keys(groupedByCustomer).forEach(custName => {
+        let items = groupedByCustomer[custName];
+        items.forEach((o, index) => {
+          totalKotak += o.kebutuhan_kotak;
+          const pName = o.products ? o.products.nama_barang : '-';
+          const pBerat = o.products ? o.products.berat_biji_kg : 0;
+          const pIsiKotak = o.products ? o.products.isi_per_kotak : 0;
+
+          spkSummary[pName] = (spkSummary[pName] || 0) + o.kebutuhan_kotak;
+
+          tbodyHTML += `
+            <tr>
+              ${index === 0 ? `<td rowspan="${items.length}" style="vertical-align: middle; background: #fafafa; font-weight: bold;">${custName}</td>` : ''}
+              <td><strong>${pName}</strong></td>
+              <td>${pBerat} kg</td>
+              <td>${pIsiKotak}</td>
+              <td>${o.jumlah_awal}</td>
+              <td>${o.pengurangan}</td>
+              <td><strong>${o.jumlah_akhir} ${o.satuan}</strong></td>
+              <td><strong>${o.kebutuhan_kotak} Kotak</strong></td>
+              <td><button class="btn btn-danger" onclick="deleteOrder(${o.id})">Hapus</button></td>
+            </tr>
+          `;
+        });
+      });
+
+      document.getElementById('tbodyPraOrder').innerHTML = tbodyHTML || '<tr><td colspan="9" style="text-align:center;">Belum ada order.</td></tr>';
 
       document.getElementById('txtTotalKotak').innerText = `${totalKotak} Kotak`;
       updateKotakIndicator();
 
+      // Urutkan SPK berdasarkan pola angka depan
+      let sortedKeys = Object.keys(spkSummary).sort((a, b) => {
+        let numA = parseInt(a) || 0;
+        let numB = parseInt(b) || 0;
+        if(numA !== numB) return numA - numB;
+        return a.localeCompare(b);
+      });
+
       let spkIndex = 1;
-      document.getElementById('tbodySPK').innerHTML = Object.keys(spkSummary).map(k => `
-        <tr>
-          <td>${spkIndex++}</td>
-          <td><strong>${k}</strong></td>
-          <td><strong>${spkSummary[k]} Kotak</strong></td>
+      let colorPalette = ['#1e3a8a', '#b91c1c', '#15803d', '#b45309', '#7c3aed', '#0891b2', '#db2777'];
+      let colorMap = {};
+      let colorIdx = 0;
+
+      let spkHTML = sortedKeys.map(k => {
+        let matchNum = k.match(/^\d+/);
+        let prefixKey = matchNum ? matchNum[0] : k;
+        if(!colorMap[prefixKey]) {
+          colorMap[prefixKey] = colorPalette[colorIdx % colorPalette.length];
+          colorIdx++;
+        }
+        let fontColor = colorMap[prefixKey];
+
+        return `
+          <tr>
+            <td>${spkIndex++}</td>
+            <td><strong style="color: ${fontColor};">${k}</strong></td>
+            <td><strong>${spkSummary[k]} Kotak</strong></td>
+          </tr>
+        `;
+      }).join('');
+
+      // Tambahkan Total Kotak di Paling Bawah SPK
+      spkHTML += `
+        <tr style="background-color: #f8fafc; border-top: 2px solid var(--border);">
+          <td colspan="2" style="text-align: right;"><strong>TOTAL KESELURUHAN KOTAK:</strong></td>
+          <td><strong style="color: var(--primary); font-size: 1.2rem;">${totalKotak} Kotak</strong></td>
         </tr>
-      `).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada data.</td></tr>';
+      `;
+
+      document.getElementById('tbodySPK').innerHTML = spkHTML || '<tr><td colspan="3" style="text-align:center;">Belum ada data.</td></tr>';
     }
 
     function updateKotakIndicator() {
@@ -958,7 +1157,7 @@
     }
 
     async function saveEntryPasca() {
-      if(currentSession.status === 'closed') return alert('Sesi cor sudah ditutup!');
+      if(currentSession.status === 'closed') return alert('Sesi pencetakan sudah ditutup!');
 
       const productId = parseInt(document.getElementById('mPascaProduct').value);
       const product = globalProducts.find(p => p.id === productId);
@@ -967,11 +1166,16 @@
       const zakTotal = Math.floor(jumlahBiji / product.isi_per_zak);
       const sisaBiji = jumlahBiji % product.isi_per_zak;
 
+      // Ambil default tali pertama jika ada
+      let defaultTaliId = null;
+      const taliList = globalMiscs.filter(m => m.kategori === 'tali');
+      if(taliList.length > 0) defaultTaliId = taliList[0].id;
+
       const payload = {
         session_id: currentSession.id,
         karyawan_id: parseInt(document.getElementById('mPascaKaryawan').value),
         product_id: productId,
-        warna_tali_id: parseInt(document.getElementById('mPascaTali').value),
+        warna_tali_id: defaultTaliId,
         jumlah_biji: jumlahBiji,
         zak_total: zakTotal,
         sisa_biji: sisaBiji
@@ -982,30 +1186,48 @@
       loadPascaLogs();
     }
 
+    async function updateLogTali(logId, newTaliId) {
+      await supabaseClient.from('casting_production_logs').update({ warna_tali_id: parseInt(newTaliId) }).eq('id', logId);
+    }
+
     async function loadPascaLogs() {
       if(!currentSession) return;
       const { data } = await supabaseClient.from('casting_production_logs')
-        .select('*, products(nama_barang, lubang_cm, berat_biji_kg), karyawan:miscs!karyawan_id(nama_item), tali:miscs!warna_tali_id(nama_item)')
+        .select('*, products(nama_barang, berat_biji_kg, isi_per_zak), karyawan:miscs!karyawan_id(nama_item), tali:miscs!warna_tali_id(nama_item)')
         .eq('session_id', currentSession.id);
 
+      const taliOptions = globalMiscs.filter(m => m.kategori === 'tali');
+
       let summaryMap = {};
+      let productTotals = {};
 
       document.getElementById('tbodyPascaLog').innerHTML = (data || []).map(l => {
-        const zakFormat = `${l.zak_total} Zak` + (l.sisa_biji > 0 ? ` + <small>${l.sisa_biji}</small>` : '');
-        const pName = l.products ? `${l.products.nama_barang} ${l.products.lubang_cm ? '(Lubang: '+l.products.lubang_cm+'cm)':''}` : '-';
+        const zakFormat = `${l.zak_total} Zak` + (l.sisa_biji > 0 ? ` + <small>(${l.sisa_biji})</small>` : '');
+        const pName = l.products ? l.products.nama_barang : '-';
         
+        // Buat struktur grouping untuk summary
         if(!summaryMap[pName]) {
-          summaryMap[pName] = { totalBiji: 0, beratBiji: l.products.berat_biji_kg, zakTotal: 0, sisaTotal: 0, tali: l.tali ? l.tali.nama_item : '-' };
+          summaryMap[pName] = { beratBiji: l.products.berat_biji_kg, zakTotal: 0, sisaArray: [], tali: l.tali ? l.tali.nama_item : '-' };
         }
-        summaryMap[pName].totalBiji += l.jumlah_biji;
         summaryMap[pName].zakTotal += l.zak_total;
-        summaryMap[pName].sisaTotal += l.sisa_biji;
+        if(l.sisa_biji > 0) summaryMap[pName].sisaArray.push(l.sisa_biji);
+
+        // Untuk alokasi kustomer
+        if(!productTotals[pName]) productTotals[pName] = 0;
+        productTotals[pName] += l.jumlah_biji;
+
+        let taliSelectHTML = `<select onchange="updateLogTali(${l.id}, this.value)" style="padding: 6px; font-size: 0.9rem; margin:0;">`;
+        taliOptions.forEach(t => {
+          let selected = (l.warna_tali_id === t.id) ? 'selected' : '';
+          taliSelectHTML += `<option value="${t.id}" ${selected}>${t.nama_item}</option>`;
+        });
+        taliSelectHTML += `</select>`;
 
         return `
           <tr>
             <td><strong>${l.karyawan ? l.karyawan.nama_item : '-'}</strong></td>
             <td>${pName}</td>
-            <td>${l.tali ? l.tali.nama_item : '-'}</td>
+            <td>${taliSelectHTML}</td>
             <td>${l.jumlah_biji} biji</td>
             <td><strong>${zakFormat}</strong></td>
             <td><button class="btn btn-danger" onclick="deletePasca(${l.id})">Hapus</button></td>
@@ -1013,20 +1235,71 @@
         `;
       }).join('') || '<tr><td colspan="6" style="text-align:center;">Belum ada hasil.</td></tr>';
 
+      // Render Summary Pasca (Support gabungan sisa misal 45+21)
       document.getElementById('tbodySummaryPasca').innerHTML = Object.keys(summaryMap).map(p => {
         const item = summaryMap[p];
-        const totalKg = (item.totalBiji * item.beratBiji).toFixed(1);
-        const zakFormat = `${item.zakTotal} Zak` + (item.sisaTotal > 0 ? ` + <small>${item.sisaTotal}</small>` : '');
+        const totalBiji = (item.zakTotal * (globalProducts.find(gp=>gp.nama_barang===p)?.isi_per_zak || 50)) + item.sisaArray.reduce((a,b)=>a+b, 0);
+        const totalKg = (totalBiji * item.beratBiji).toFixed(1);
+        
+        let sisaStr = item.sisaArray.length > 0 ? ` + <small>(${item.sisaArray.join(' + ')})</small>` : '';
+        let zakFormat = `${item.zakTotal} Zak` + sisaStr;
+
         return `
           <tr>
             <td><strong>${p}</strong></td>
-            <td>${item.totalBiji} biji</td>
+            <td>${totalBiji} biji</td>
             <td><strong>${totalKg} kg</strong></td>
             <td>${item.tali}</td>
             <td><strong>${zakFormat}</strong></td>
           </tr>
         `;
       }).join('') || '<tr><td colspan="5" style="text-align:center;">Belum ada data.</td></tr>';
+
+      // Render Kartu Alokasi Kustomer
+      renderAlokasiKustomer(productTotals);
+    }
+
+    function renderAlokasiKustomer(productTotals) {
+      let customerOrderMap = {};
+      cachedOrders.forEach(o => {
+        const cName = o.customers ? o.customers.nama : 'Lainnya';
+        const pName = o.products ? o.products.nama_barang : '-';
+        if(!customerOrderMap[cName]) customerOrderMap[cName] = {};
+        customerOrderMap[cName][pName] = (customerOrderMap[cName][pName] || 0) + o.jumlah_akhir;
+      });
+
+      let container = document.getElementById('containerAlokasiKustomer');
+      let html = '';
+
+      if(Object.keys(customerOrderMap).length === 0) {
+        container.innerHTML = `<p style="color: var(--text-muted);">Belum ada data order kustomer pada sesi ini.</p>`;
+        return;
+      }
+
+      Object.keys(customerOrderMap).forEach(cName => {
+        let itemsObj = customerOrderMap[cName];
+        html += `
+          <div class="allocation-card">
+            <h4 style="color: var(--primary); margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px;">👤 ${cName}</h4>
+            <ul style="list-style-type: none; padding-left: 0;">
+        `;
+        Object.keys(itemsObj).forEach(pName => {
+          let reqJml = itemsObj[pName];
+          let prodData = globalProducts.find(gp => gp.nama_barang === pName);
+          let isiZak = prodData ? prodData.isi_per_zak : 50;
+          let zak = Math.floor(reqJml / isiZak);
+          let sisa = reqJml % isiZak;
+          let formatReq = `${zak} Zak` + (sisa > 0 ? ` + ${sisa} biji` : '');
+
+          html += `<li style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.95rem;">
+            <span>${pName}:</span>
+            <strong>${reqJml} bj (${formatReq})</strong>
+          </li>`;
+        });
+        html += `</ul></div>`;
+      });
+
+      container.innerHTML = html;
     }
 
     async function deletePasca(id) {
@@ -1038,7 +1311,7 @@
 
     async function closeCastingSession() {
       if(!currentSession) return;
-      if(confirm('Yakin tutup sesi cor ini? (Locked)')) {
+      if(confirm('Yakin tutup sesi pencetakan ini? (Locked)')) {
         await supabaseClient.from('casting_sessions').update({ status: 'closed' }).eq('id', currentSession.id);
         loadCastingSession();
       }
@@ -1055,14 +1328,24 @@
     }
 
     async function loadRiwayat() {
-      const { data } = await supabaseClient.from('casting_sessions').select('*').order('tanggal_cor', { ascending: false });
+      const { data } = await supabaseClient.from('casting_sessions').select('*').order('tanggal_cor', { ascending: false }).limit(5);
       document.getElementById('tbodyRiwayat').innerHTML = (data || []).map(r => `
         <tr>
           <td><strong>${r.tanggal_cor}</strong></td>
           <td><span class="badge ${r.status==='closed'?'badge-over':'badge-safe'}">${r.status.toUpperCase()}</span></td>
-          <td><button class="btn btn-primary" onclick="viewHistoryDate('${r.tanggal_cor}')">Lihat</button></td>
+          <td style="display:flex; gap:8px;">
+            <button class="btn btn-primary" onclick="viewHistoryDate('${r.tanggal_cor}')">Lihat</button>
+            <button class="btn btn-danger" onclick="deleteSession(${r.id})">Hapus</button>
+          </td>
         </tr>
-      `).join('');
+      `).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada riwayat.</td></tr>';
+    }
+
+    async function deleteSession(id) {
+      if(confirm('Hapus sesi pencetakan beserta seluruh data order & log di dalamnya?')) {
+        await supabaseClient.from('casting_sessions').delete().eq('id', id);
+        loadRiwayat();
+      }
     }
 
     function viewHistoryDate(tgl) {
