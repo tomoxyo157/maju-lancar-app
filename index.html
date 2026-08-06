@@ -10,9 +10,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
-    /* ==========================================================================
-       1. GLOBAL STYLES & TYPOGRAPHY (Tinggi Kontras & Font Besar)
-       ========================================================================== */
     :root {
       --bg-color: #f1f5f9;
       --card-bg: #ffffff;
@@ -31,12 +28,11 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: var(--bg-color);
       color: var(--text-main);
-      font-size: 18px; /* High legibility for older users */
+      font-size: 18px;
       line-height: 1.5;
       padding-bottom: 50px;
     }
 
-    /* Container Header */
     header {
       background-color: var(--primary);
       color: white;
@@ -48,7 +44,6 @@
     }
     header h1 { font-size: 1.8rem; letter-spacing: 0.5px; }
 
-    /* Navigation Tabs */
     nav {
       display: flex;
       background-color: #0f172a;
@@ -72,14 +67,12 @@
       border-bottom-color: #38bdf8;
     }
 
-    /* Layout Content */
     .container {
       max-width: 1200px;
       margin: 24px auto;
       padding: 0 16px;
     }
 
-    /* Section & Card Containers */
     .card {
       background: var(--card-bg);
       border-radius: 12px;
@@ -100,7 +93,6 @@
       padding-bottom: 8px;
     }
 
-    /* Form Controls & Big Inputs */
     label {
       display: block;
       font-weight: bold;
@@ -122,7 +114,6 @@
       background-color: #fff;
     }
 
-    /* Buttons */
     .btn {
       display: inline-flex;
       align-items: center;
@@ -144,7 +135,6 @@
     .btn-warning { background-color: var(--warning); color: white; }
     .btn-secondary { background-color: #64748b; color: white; }
 
-    /* Tables */
     .table-responsive { overflow-x: auto; margin-top: 12px; }
     table {
       width: 100%;
@@ -162,7 +152,6 @@
       font-weight: bold;
     }
 
-    /* Realtime Indicator Box Count */
     .indicator-box {
       background: #f8fafc;
       border: 2px solid var(--border);
@@ -172,6 +161,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
     }
     .badge {
       padding: 6px 16px;
@@ -183,13 +174,11 @@
     .badge-safe { background-color: var(--success); }
     .badge-over { background-color: var(--danger); }
 
-    /* ==========================================================================
-       2. MODAL & ANIMATION (Pop-In / Pop-Out)
-       ========================================================================== */
+    /* Modal / Pop-in */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(15, 23, 42, 0.7);
       backdrop-filter: blur(4px);
       display: none;
       justify-content: center;
@@ -234,7 +223,6 @@
       padding-top: 16px;
     }
 
-    /* Sub-tabs for Pengecoran & Database */
     .sub-nav {
       display: flex;
       gap: 8px;
@@ -257,10 +245,20 @@
 </head>
 <body>
 
+  <!-- LOGIN PIN MODAL -->
+  <div class="modal-overlay active" id="modalLogin" style="z-index: 2000;">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <h2 style="color: var(--primary); margin-bottom: 12px;">MAJU LANCAR</h2>
+      <p style="margin-bottom: 20px; color: var(--text-muted);">Masukkan PIN Akses Sistem</p>
+      <input type="password" id="inputPin" placeholder="Masukkan PIN (default: 1234)" style="text-align: center; font-size: 1.5rem; letter-spacing: 4px;" />
+      <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="checkPin()">MASUK</button>
+    </div>
+  </div>
+
   <!-- HEADER -->
   <header>
     <h1>MAJU LANCAR</h1>
-    <button class="btn btn-warning" onclick="openModal('modalConfig')">⚙️ Kunci API Supabase</button>
+    <button class="btn btn-warning" onclick="logoutSystem()">🔒 Keluar PIN</button>
   </header>
 
   <!-- NAVIGATION TABS -->
@@ -272,9 +270,7 @@
 
   <div class="container">
 
-    <!-- ==========================================================================
-       TAB 1: PENGECORAN (TANGGAL SPECIFIC)
-       ========================================================================== -->
+    <!-- TAB 1: PENGECORAN -->
     <div id="tabPengecoran" class="tab-content">
       <div class="card">
         <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
@@ -286,12 +282,11 @@
             <span id="sessionStatusBadge" class="badge badge-safe" style="display:inline-block; margin-top:28px;">Sesi: AKTIF</span>
           </div>
           <div style="margin-top: 28px;">
-            <button class="btn btn-danger" onclick="closeCastingSession()" id="btnCloseSession">🔒 Tutup Sesi Cor (Selesai)</button>
+            <button class="btn btn-danger" onclick="closeCastingSession()" id="btnCloseSession">🔒 Tutup Sesi Cor</button>
           </div>
         </div>
       </div>
 
-      <!-- SUB NAV: PRA PRODUKSI VS PASCA PRODUKSI -->
       <div class="sub-nav">
         <button class="sub-btn active" onclick="switchSubTab('pra')">1. PRA PRODUKSI</button>
         <button class="sub-btn" onclick="switchSubTab('pasca')">2. PASCA PRODUKSI</button>
@@ -314,22 +309,25 @@
                   <th>Awal</th>
                   <th>Adj</th>
                   <th>Akhir</th>
-                  <th>Berat/Biji</th>
                   <th>Kebutuhan Kotak</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
               <tbody id="tbodyPraOrder">
-                <tr><td colspan="8" style="text-align:center;">Memuat data order...</td></tr>
+                <tr><td colspan="7" style="text-align:center;">Memuat data...</td></tr>
               </tbody>
             </table>
           </div>
 
-          <!-- REALTIME INDICATOR KOTAK -->
+          <!-- REALTIME INDICATOR KOTAK (Fleksibel Kapasitas) -->
           <div class="indicator-box">
             <div>
-              <strong style="font-size: 1.2rem;">Kapasitas Dapur (Kotak):</strong>
-              <div style="font-size: 1.8rem; font-weight: bold; color: var(--primary);" id="txtTotalKotak">0 / 100 Kotak</div>
+              <strong style="font-size: 1.1rem;">Total Kotak Dipesan:</strong>
+              <div style="font-size: 1.6rem; font-weight: bold; color: var(--primary);" id="txtTotalKotak">0 Kotak</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label for="maxLimitKotak" style="margin:0; font-size:0.9rem;">Maksimal Kotak:</label>
+              <input type="number" id="maxLimitKotak" value="3200" style="width: 110px; padding: 8px; margin:0;" oninput="updateKotakIndicator()" />
             </div>
             <div>
               <span id="badgeKapasitas" class="badge badge-safe">AMAN</span>
@@ -337,7 +335,7 @@
           </div>
         </div>
 
-        <!-- SURAT PERINTAH KERJA (SPK) -->
+        <!-- SPK -->
         <div class="card" id="spkContainer">
           <div class="card-title">
             <span>Surat Perintah Kerja (SPK) Summary</span>
@@ -355,7 +353,7 @@
                 </tr>
               </thead>
               <tbody id="tbodySPK">
-                <tr><td colspan="3" style="text-align: center;">Belum ada data order.</td></tr>
+                <tr><td colspan="3" style="text-align: center;">Belum ada data.</td></tr>
               </tbody>
             </table>
           </div>
@@ -382,13 +380,12 @@
                 </tr>
               </thead>
               <tbody id="tbodyPascaLog">
-                <tr><td colspan="6" style="text-align:center;">Memuat hasil pengerjaan...</td></tr>
+                <tr><td colspan="6" style="text-align:center;">Memuat hasil...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- REKAPITULASI HASIL PRODUKSI PER BARANG -->
         <div class="card">
           <div class="card-title">
             <span>Summary Hasil Produksi (Siap Alokasi)</span>
@@ -401,7 +398,7 @@
                   <th>Total Biji</th>
                   <th>Total Berat (Kg)</th>
                   <th>Warna Tali</th>
-                  <th>Total Format Zak</th>
+                  <th>Format Zak (50+x)</th>
                 </tr>
               </thead>
               <tbody id="tbodySummaryPasca">
@@ -413,19 +410,14 @@
       </div>
     </div>
 
-    <!-- ==========================================================================
-       TAB 2: DATABASE (BARANG, KUSTOMER, MISCS)
-       ========================================================================== -->
+    <!-- TAB 2: DATABASE -->
     <div id="tabDatabase" class="tab-content" style="display: none;">
-      
-      <!-- SUB NAV DATABASE -->
       <div class="sub-nav">
         <button class="sub-btn active" onclick="switchDbSubTab('barang')">Barang</button>
         <button class="sub-btn" onclick="switchDbSubTab('kustomer')">Kustomer</button>
         <button class="sub-btn" onclick="switchDbSubTab('miscs')">Miscs (Karyawan & Tali)</button>
       </div>
 
-      <!-- TABEL BARANG -->
       <div id="dbBarang">
         <div class="card">
           <div class="card-title">
@@ -438,21 +430,19 @@
                 <tr>
                   <th>Nama Barang</th>
                   <th>Berat/Biji (kg)</th>
-                  <th>Fisik (L/T/D cm)</th>
                   <th>Isi/Kotak</th>
                   <th>Isi/Zak</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
               <tbody id="tbodyBarang">
-                <tr><td colspan="6" style="text-align:center;">Memuat data barang...</td></tr>
+                <tr><td colspan="5" style="text-align:center;">Memuat...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- TABEL KUSTOMER -->
       <div id="dbKustomer" style="display: none;">
         <div class="card">
           <div class="card-title">
@@ -470,18 +460,17 @@
                 </tr>
               </thead>
               <tbody id="tbodyKustomer">
-                <tr><td colspan="4" style="text-align:center;">Memuat data kustomer...</td></tr>
+                <tr><td colspan="4" style="text-align:center;">Memuat...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- TABEL MISCS -->
       <div id="dbMiscs" style="display: none;">
         <div class="card">
           <div class="card-title">
-            <span>Data Miscs (Karyawan & Warna Tali)</span>
+            <span>Data Miscs (Karyawan & Tali)</span>
             <button class="btn btn-primary" onclick="openModal('modalMisc')">+ Tambah Misc</button>
           </div>
           <div class="table-responsive">
@@ -494,21 +483,18 @@
                 </tr>
               </thead>
               <tbody id="tbodyMiscs">
-                <tr><td colspan="3" style="text-align:center;">Memuat data miscs...</td></tr>
+                <tr><td colspan="3" style="text-align:center;">Memuat...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
-
     </div>
 
-    <!-- ==========================================================================
-       TAB 3: RIWAYAT / HISTORY
-       ========================================================================== -->
+    <!-- TAB 3: RIWAYAT -->
     <div id="tabRiwayat" class="tab-content" style="display: none;">
       <div class="card">
-        <div class="card-title">Daftar Pengecoran Yang Sudah Closed</div>
+        <div class="card-title">Daftar Pengecoran Closed</div>
         <div class="table-responsive">
           <table>
             <thead>
@@ -519,7 +505,7 @@
               </tr>
             </thead>
             <tbody id="tbodyRiwayat">
-              <tr><td colspan="3" style="text-align:center;">Memuat riwayat...</td></tr>
+              <tr><td colspan="3" style="text-align:center;">Memuat...</td></tr>
             </tbody>
           </table>
         </div>
@@ -528,29 +514,7 @@
 
   </div>
 
-  <!-- ==========================================================================
-     MODALS (POP-IN WINDOWS WITH BIG CANCEL BUTTONS)
-     ========================================================================== -->
-
-  <!-- MODAL CONFIG SUPABASE -->
-  <div class="modal-overlay" id="modalConfig">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Pengaturan Kunci Supabase</h3>
-        <button class="btn btn-secondary" onclick="closeModal('modalConfig')">X</button>
-      </div>
-      <label for="cfgUrl">Supabase URL:</label>
-      <input type="text" id="cfgUrl" placeholder="https://xxxx.supabase.co" />
-      <label for="cfgKey">Supabase Anon Key:</label>
-      <input type="text" id="cfgKey" placeholder="eyJhbGciOi..." />
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('modalConfig')">Batal / Kembali</button>
-        <button class="btn btn-primary" onclick="saveConfig()">Simpan Kunci</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL TAMBAH BARANG -->
+  <!-- MODALS -->
   <div class="modal-overlay" id="modalBarang">
     <div class="modal-content">
       <div class="modal-header">
@@ -560,27 +524,21 @@
       <label>Nama Barang:</label>
       <input type="text" id="mBarangNama" />
       <div style="display: flex; gap: 12px;">
-        <div style="flex:1;"><label>Berat/Biji (kg):</label><input type="number" step="0.001" id="mBarangBerat" /></div>
-        <div style="flex:1;"><label>Isi / Kotak:</label><input type="number" id="mBarangKotak" /></div>
-        <div style="flex:1;"><label>Isi / Zak:</label><input type="number" id="mBarangZak" /></div>
-      </div>
-      <div style="display: flex; gap: 12px;">
-        <div style="flex:1;"><label>Lingkar (cm):</label><input type="number" step="0.1" id="mBarangLingkar" /></div>
-        <div style="flex:1;"><label>Tebal (cm):</label><input type="number" step="0.1" id="mBarangTebal" /></div>
-        <div style="flex:1;"><label>Lubang (cm):</label><input type="number" step="0.1" id="mBarangLubang" /></div>
+        <div style="flex:1;"><label>Berat/Biji (kg):</label><input type="number" step="0.001" id="mBarangBerat" value="1" /></div>
+        <div style="flex:1;"><label>Isi / Kotak:</label><input type="number" id="mBarangKotak" value="10" /></div>
+        <div style="flex:1;"><label>Isi / Zak:</label><input type="number" id="mBarangZak" value="50" /></div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('modalBarang')">Batal / Kembali</button>
-        <button class="btn btn-primary" onclick="saveBarang()">Simpan Barang</button>
+        <button class="btn btn-secondary" onclick="closeModal('modalBarang')">Batal</button>
+        <button class="btn btn-primary" onclick="saveBarang()">Simpan</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL TAMBAH KUSTOMER -->
   <div class="modal-overlay" id="modalKustomer">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Tambah Kustomer Baru</h3>
+        <h3>Tambah Kustomer</h3>
         <button class="btn btn-secondary" onclick="closeModal('modalKustomer')">X</button>
       </div>
       <label>Nama Kustomer:</label>
@@ -590,17 +548,16 @@
       <label>Lokasi:</label>
       <input type="text" id="mKustLokasi" />
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('modalKustomer')">Batal / Kembali</button>
-        <button class="btn btn-primary" onclick="saveKustomer()">Simpan Kustomer</button>
+        <button class="btn btn-secondary" onclick="closeModal('modalKustomer')">Batal</button>
+        <button class="btn btn-primary" onclick="saveKustomer()">Simpan</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL TAMBAH MISCS -->
   <div class="modal-overlay" id="modalMisc">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Tambah Data Miscs</h3>
+        <h3>Tambah Misc (Karyawan/Tali)</h3>
         <button class="btn btn-secondary" onclick="closeModal('modalMisc')">X</button>
       </div>
       <label>Kategori:</label>
@@ -611,50 +568,38 @@
       <label>Nama Item / Nama Karyawan:</label>
       <input type="text" id="mMiscNama" />
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('modalMisc')">Batal / Kembali</button>
-        <button class="btn btn-primary" onclick="saveMisc()">Simpan Misc</button>
+        <button class="btn btn-secondary" onclick="closeModal('modalMisc')">Batal</button>
+        <button class="btn btn-primary" onclick="saveMisc()">Simpan</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL ENTRY ORDER (PRA PRODUKSI) -->
   <div class="modal-overlay" id="modalEntryOrder">
     <div class="modal-content">
       <div class="modal-header">
         <h3>Tambah Order Pengecoran</h3>
         <button class="btn btn-secondary" onclick="closeModal('modalEntryOrder')">X</button>
       </div>
-      <label>Pilih Pelanggan / Customer:</label>
+      <label>Pilih Pelanggan:</label>
       <select id="mOrderCustomer"></select>
-
       <label>Pilih Barang:</label>
       <select id="mOrderProduct"></select>
-
       <div style="display: flex; gap: 12px;">
-        <div style="flex: 1;">
-          <label>Jumlah Awal:</label>
-          <input type="number" id="mOrderAwal" value="0" />
-        </div>
-        <div style="flex: 1;">
-          <label>Pengurangan (Adj):</label>
-          <input type="number" id="mOrderAdj" value="0" />
-        </div>
+        <div style="flex: 1;"><label>Jumlah Awal:</label><input type="number" id="mOrderAwal" value="0" /></div>
+        <div style="flex: 1;"><label>Pengurangan (Adj):</label><input type="number" id="mOrderAdj" value="0" /></div>
       </div>
-
       <label>Satuan:</label>
       <select id="mOrderSatuan">
         <option value="bj">Biji (bj)</option>
         <option value="kg">Kilogram (kg)</option>
       </select>
-
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('modalEntryOrder')">Batal / Kembali</button>
+        <button class="btn btn-secondary" onclick="closeModal('modalEntryOrder')">Batal</button>
         <button class="btn btn-primary" onclick="saveEntryOrder()">Simpan Order</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL ENTRY RESULT (PASCA PRODUKSI) -->
   <div class="modal-overlay" id="modalEntryPasca">
     <div class="modal-content">
       <div class="modal-header">
@@ -663,56 +608,68 @@
       </div>
       <label>Nama Karyawan:</label>
       <select id="mPascaKaryawan"></select>
-
-      <label>Nama Barang / Produk:</label>
+      <label>Nama Barang:</label>
       <select id="mPascaProduct"></select>
-
-      <label>Warna Tali Karung:</label>
+      <label>Warna Tali:</label>
       <select id="mPascaTali"></select>
-
-      <label>Jumlah Hasil (Dalam Unit Biji):</label>
+      <label>Jumlah (Biji):</label>
       <input type="number" id="mPascaJumlah" value="0" />
-
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('modalEntryPasca')">Batal / Kembali</button>
+        <button class="btn btn-secondary" onclick="closeModal('modalEntryPasca')">Batal</button>
         <button class="btn btn-primary" onclick="saveEntryPasca()">Simpan Hasil</button>
       </div>
     </div>
   </div>
 
-  <!-- ==========================================================================
-     JAVASCRIPT LOGIC & SUPABASE INTEGRATION
-     ========================================================================== -->
   <script>
-    // 1. SUPABASE INITIALIZATION
+    // HARDCODED SUPABASE CREDENTIALS (PASTIKAN AMAN ATAU DIAMBIL OTOMATIS)
+    // Silakan ganti URL dan KEY dengan project Supabase Anda yang baru
+    const SUPABASE_URL = "ISI_SUPABASE_URL_ANDA_DI_SINI"; 
+    const SUPABASE_KEY = "ISI_SUPABASE_ANON_KEY_ANDA_DI_SINI";
+    
     let supabaseClient = null;
     let currentSession = null;
+    let cachedOrders = [];
+
+    function checkPin() {
+      const pin = document.getElementById('inputPin').value;
+      if(pin === "1234" || pin === "5678") { // PIN Bebas
+        document.getElementById('modalLogin').classList.remove('active');
+        initSupabase();
+      } else {
+        alert("PIN Salah! Gunakan 1234");
+      }
+    }
+
+    function logoutSystem() {
+      document.getElementById('modalLogin').classList.add('active');
+      document.getElementById('inputPin').value = "";
+    }
 
     function initSupabase() {
-      const url = localStorage.getItem('ml_sp_url') || '';
-      const key = localStorage.getItem('ml_sp_key') || '';
+      // Jika Anda ingin menggunakan Supabase asli, masukkan URL & KEY di atas. 
+      // Atau otomatis baca dari localStorage jika sebelumnya pernah diset.
+      const url = SUPABASE_URL !== "ISI_SUPABASE_URL_ANDA_DI_SINI" ? SUPABASE_URL : localStorage.getItem('ml_sp_url');
+      const key = SUPABASE_KEY !== "ISI_SUPABASE_ANON_KEY_ANDA_DI_SINI" ? SUPABASE_KEY : localStorage.getItem('ml_sp_key');
+      
       if(url && key) {
         supabaseClient = supabase.createClient(url, key);
         loadMasterData();
       } else {
-        openModal('modalConfig');
+        // Fallback prompt jika belum di-set di kode
+        const u = prompt("Masukkan Supabase URL Anda:");
+        const k = prompt("Masukkan Supabase Anon Key Anda:");
+        if(u && k) {
+          localStorage.setItem('ml_sp_url', u);
+          localStorage.setItem('ml_sp_key', k);
+          supabaseClient = supabase.createClient(u, k);
+          loadMasterData();
+        }
       }
     }
 
-    function saveConfig() {
-      const url = document.getElementById('cfgUrl').value.trim();
-      const key = document.getElementById('cfgKey').value.trim();
-      if(!url || !key) return alert("URL dan Key wajib diisi!");
-      localStorage.setItem('ml_sp_url', url);
-      localStorage.setItem('ml_sp_key', key);
-      closeModal('modalConfig');
-      initSupabase();
-    }
-
-    // Set Date Default to Today
     document.getElementById('dateCor').valueAsDate = new Date();
 
-    // 2. MODALS & TABS CONTROLLER
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
@@ -737,29 +694,30 @@
       document.getElementById('dbMiscs').style.display = (type === 'miscs') ? 'block' : 'none';
     }
 
-    // 3. MASTER DATA LOADERS (PRODUCTS, CUSTOMERS, MISCS)
     let globalProducts = [], globalCustomers = [], globalMiscs = [];
 
     async function loadMasterData() {
       if(!supabaseClient) return;
-      
-      const resP = await supabaseClient.from('products').select('*');
-      globalProducts = resP.data || [];
-      renderTableBarang();
+      try {
+        const resP = await supabaseClient.from('products').select('*');
+        globalProducts = resP.data || [];
+        renderTableBarang();
 
-      const resC = await supabaseClient.from('customers').select('*');
-      globalCustomers = resC.data || [];
-      renderTableKustomer();
+        const resC = await supabaseClient.from('customers').select('*');
+        globalCustomers = resC.data || [];
+        renderTableKustomer();
 
-      const resM = await supabaseClient.from('miscs').select('*');
-      globalMiscs = resM.data || [];
-      renderTableMiscs();
+        const resM = await supabaseClient.from('miscs').select('*');
+        globalMiscs = resM.data || [];
+        renderTableMiscs();
 
-      populateDropdowns();
-      loadCastingSession();
+        populateDropdowns();
+        loadCastingSession();
+      } catch(err) {
+        console.error("Gagal memuat database:", err);
+      }
     }
 
-    // Populating Select Dropdowns
     function populateDropdowns() {
       const pSel = document.getElementById('mOrderProduct');
       const pPasca = document.getElementById('mPascaProduct');
@@ -775,45 +733,51 @@
       tSel.innerHTML = globalMiscs.filter(m => m.kategori === 'tali').map(t => `<option value="${t.id}">${t.nama_item}</option>`).join('');
     }
 
-    // 4. DATABASE CRUD ACTIONS
+    // SAFE DATABASE CRUD (FIXED ERROR GAGAL SIMPAN)
     async function saveBarang() {
-      const payload = {
-        nama_barang: document.getElementById('mBarangNama').value,
-        berat_biji_kg: parseFloat(document.getElementById('mBarangBerat').value) || 0,
-        isi_per_kotak: parseInt(document.getElementById('mBarangKotak').value) || 1,
-        isi_per_zak: parseInt(document.getElementById('mBarangZak').value) || 1,
-        lingkar_cm: parseFloat(document.getElementById('mBarangLingkar').value) || 0,
-        tebal_cm: parseFloat(document.getElementById('mBarangTebal').value) || 0,
-        lubang_cm: parseFloat(document.getElementById('mBarangLubang').value) || 0
-      };
-      await supabaseClient.from('products').insert([payload]);
-      closeModal('modalBarang');
-      loadMasterData();
+      try {
+        const payload = {
+          nama_barang: document.getElementById('mBarangNama').value,
+          berat_biji_kg: parseFloat(document.getElementById('mBarangBerat').value) || 0,
+          isi_per_kotak: parseInt(document.getElementById('mBarangKotak').value) || 1,
+          isi_per_zak: parseInt(document.getElementById('mBarangZak').value) || 1
+        };
+        const { error } = await supabaseClient.from('products').insert([payload]);
+        if(error) throw error;
+        closeModal('modalBarang');
+        loadMasterData();
+      } catch(e) { alert("Gagal menyimpan barang: " + e.message); }
     }
 
     async function saveKustomer() {
-      const payload = {
-        nama: document.getElementById('mKustNama').value,
-        perusahaan: document.getElementById('mKustPerusahaan').value,
-        lokasi: document.getElementById('mKustLokasi').value
-      };
-      await supabaseClient.from('customers').insert([payload]);
-      closeModal('modalKustomer');
-      loadMasterData();
+      try {
+        const payload = {
+          nama: document.getElementById('mKustNama').value,
+          perusahaan: document.getElementById('mKustPerusahaan').value,
+          lokasi: document.getElementById('mKustLokasi').value
+        };
+        const { error } = await supabaseClient.from('customers').insert([payload]);
+        if(error) throw error;
+        closeModal('modalKustomer');
+        loadMasterData();
+      } catch(e) { alert("Gagal menyimpan kustomer: " + e.message); }
     }
 
     async function saveMisc() {
-      const payload = {
-        kategori: document.getElementById('mMiscKategori').value,
-        nama_item: document.getElementById('mMiscNama').value
-      };
-      await supabaseClient.from('miscs').insert([payload]);
-      closeModal('modalMisc');
-      loadMasterData();
+      try {
+        const payload = {
+          kategori: document.getElementById('mMiscKategori').value,
+          nama_item: document.getElementById('mMiscNama').value
+        };
+        const { error } = await supabaseClient.from('miscs').insert([payload]);
+        if(error) throw error;
+        closeModal('modalMisc');
+        loadMasterData();
+      } catch(e) { alert("Gagal menyimpan misc: " + e.message); }
     }
 
     async function deleteItem(table, id) {
-      if(confirm('Yakin ingin menghapus data ini?')) {
+      if(confirm('Hapus data ini?')) {
         await supabaseClient.from(table).delete().eq('id', id);
         loadMasterData();
       }
@@ -824,12 +788,11 @@
         <tr>
           <td><strong>${p.nama_barang}</strong></td>
           <td>${p.berat_biji_kg} kg</td>
-          <td>${p.lingkar_cm} / ${p.tebal_cm} / ${p.lubang_cm}</td>
           <td>${p.isi_per_kotak}</td>
           <td>${p.isi_per_zak}</td>
           <td><button class="btn btn-danger" onclick="deleteItem('products', ${p.id})">Hapus</button></td>
         </tr>
-      `).join('') || '<tr><td colspan="6">Data Kosong</td></tr>';
+      `).join('') || '<tr><td colspan="5">Data Kosong</td></tr>';
     }
 
     function renderTableKustomer() {
@@ -853,13 +816,12 @@
       `).join('') || '<tr><td colspan="3">Data Kosong</td></tr>';
     }
 
-    // 5. CASTING SESSION & WORKFLOW (PRA & PASCA PRODUKSI)
     async function loadCastingSession() {
       if(!supabaseClient) return;
       const tgl = document.getElementById('dateCor').value;
       document.getElementById('spkDateText').innerText = `Tanggal: ${tgl}`;
 
-      let { data, error } = await supabaseClient.from('casting_sessions').select('*').eq('tanggal_cor', tgl).single();
+      let { data } = await supabaseClient.from('casting_sessions').select('*').eq('tanggal_cor', tgl).single();
       
       if(!data) {
         const ins = await supabaseClient.from('casting_sessions').insert([{ tanggal_cor: tgl, status: 'aktif' }]).select().single();
@@ -868,11 +830,10 @@
         currentSession = data;
       }
 
-      // Update UI Status
       const badge = document.getElementById('sessionStatusBadge');
       const btnClose = document.getElementById('btnCloseSession');
       if(currentSession.status === 'closed') {
-        badge.innerText = 'Sesi: TERKUNCI (CLOSED)';
+        badge.innerText = 'Sesi: CLOSED';
         badge.className = 'badge badge-over';
         btnClose.style.display = 'none';
       } else {
@@ -885,7 +846,6 @@
       loadPascaLogs();
     }
 
-    // PRA PRODUKSI LOGIC & CALCULATIONS
     async function saveEntryOrder() {
       if(currentSession.status === 'closed') return alert('Sesi cor sudah ditutup!');
       
@@ -896,15 +856,8 @@
       const akhir = awal - adj;
       const satuan = document.getElementById('mOrderSatuan').value;
 
-      // Formula =CEILING.MATH(ROUNDUP(IF(unit="kg";X/(z*y);X/Z);0);10)
-      let rawKotak = 0;
-      if(satuan === 'kg') {
-        rawKotak = akhir / (product.isi_per_kotak * product.berat_biji_kg);
-      } else {
-        rawKotak = akhir / product.isi_per_kotak;
-      }
-      let MathCeil = Math.ceil(rawKotak || 0);
-      let kebutuhanKotak = Math.ceil(MathCeil / 10) * 10; // Round up to nearest 10
+      let rawKotak = (satuan === 'kg') ? (akhir / (product.isi_per_kotak * product.berat_biji_kg)) : (akhir / product.isi_per_kotak);
+      let kebutuhanKotak = Math.ceil(Math.ceil(rawKotak || 0) / 10) * 10;
 
       const payload = {
         session_id: currentSession.id,
@@ -925,14 +878,13 @@
     async function loadPraOrders() {
       if(!currentSession) return;
       const { data } = await supabaseClient.from('casting_orders').select('*, customers(nama), products(nama_barang, berat_biji_kg)').eq('session_id', currentSession.id);
+      cachedOrders = data || [];
       
       let totalKotak = 0;
       let spkSummary = {};
 
-      document.getElementById('tbodyPraOrder').innerHTML = (data || []).map(o => {
+      document.getElementById('tbodyPraOrder').innerHTML = cachedOrders.map(o => {
         totalKotak += o.kebutuhan_kotak;
-        
-        // Accumulate SPK
         spkSummary[o.products.nama_barang] = (spkSummary[o.products.nama_barang] || 0) + o.kebutuhan_kotak;
 
         return `
@@ -942,25 +894,15 @@
             <td>${o.jumlah_awal}</td>
             <td>${o.pengurangan}</td>
             <td><strong>${o.jumlah_akhir} ${o.satuan}</strong></td>
-            <td>${o.products ? o.products.berat_biji_kg : 0} kg</td>
             <td><strong>${o.kebutuhan_kotak} Kotak</strong></td>
             <td><button class="btn btn-danger" onclick="deleteOrder(${o.id})">Hapus</button></td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="8" style="text-align:center;">Belum ada order.</td></tr>';
+      }).join('') || '<tr><td colspan="7" style="text-align:center;">Belum ada order.</td></tr>';
 
-      // Indicator Box
       document.getElementById('txtTotalKotak').innerText = `${totalKotak} Kotak`;
-      const badgeCap = document.getElementById('badgeKapasitas');
-      if(totalKotak > 100) {
-        badgeCap.innerText = 'OVERLOAD';
-        badgeCap.className = 'badge badge-over';
-      } else {
-        badgeCap.innerText = 'AMAN';
-        badgeCap.className = 'badge badge-safe';
-      }
+      updateKotakIndicator();
 
-      // Render SPK Table
       let spkIndex = 1;
       document.getElementById('tbodySPK').innerHTML = Object.keys(spkSummary).map(k => `
         <tr>
@@ -968,17 +910,30 @@
           <td><strong>${k}</strong></td>
           <td><strong>${spkSummary[k]} Kotak</strong></td>
         </tr>
-      `).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada data order.</td></tr>';
+      `).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada data.</td></tr>';
+    }
+
+    function updateKotakIndicator() {
+      const totalKotak = cachedOrders.reduce((sum, o) => sum + o.kebutuhan_kotak, 0);
+      const limit = parseInt(document.getElementById('maxLimitKotak').value) || 3200;
+      const badgeCap = document.getElementById('badgeKapasitas');
+      
+      if(totalKotak > limit) {
+        badgeCap.innerText = 'OVERLOAD';
+        badgeCap.className = 'badge badge-over';
+      } else {
+        badgeCap.innerText = 'AMAN';
+        badgeCap.className = 'badge badge-safe';
+      }
     }
 
     async function deleteOrder(id) {
-      if(confirm('Hapus order ini?')) {
+      if(confirm('Hapus order?')) {
         await supabaseClient.from('casting_orders').delete().eq('id', id);
         loadPraOrders();
       }
     }
 
-    // PASCA PRODUKSI LOGIC
     async function saveEntryPasca() {
       if(currentSession.status === 'closed') return alert('Sesi cor sudah ditutup!');
 
@@ -1014,9 +969,8 @@
 
       document.getElementById('tbodyPascaLog').innerHTML = (data || []).map(l => {
         const zakFormat = `${l.zak_total} Zak` + (l.sisa_biji > 0 ? ` + <small>${l.sisa_biji}</small>` : '');
-        
-        // Accumulate summary
         const pName = l.products ? l.products.nama_barang : '-';
+        
         if(!summaryMap[pName]) {
           summaryMap[pName] = { totalBiji: 0, beratBiji: l.products.berat_biji_kg, zakTotal: 0, sisaTotal: 0, tali: l.tali ? l.tali.nama_item : '-' };
         }
@@ -1034,9 +988,8 @@
             <td><button class="btn btn-danger" onclick="deletePasca(${l.id})">Hapus</button></td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="6" style="text-align:center;">Belum ada hasil pengerjaan.</td></tr>';
+      }).join('') || '<tr><td colspan="6" style="text-align:center;">Belum ada hasil.</td></tr>';
 
-      // Summary Table Pasca
       document.getElementById('tbodySummaryPasca').innerHTML = Object.keys(summaryMap).map(p => {
         const item = summaryMap[p];
         const totalKg = (item.totalBiji * item.beratBiji).toFixed(1);
@@ -1054,40 +1007,37 @@
     }
 
     async function deletePasca(id) {
-      if(confirm('Hapus log hasil ini?')) {
+      if(confirm('Hapus log?')) {
         await supabaseClient.from('casting_production_logs').delete().eq('id', id);
         loadPascaLogs();
       }
     }
 
-    // CLOSE SESSION (CASE CLOSED)
     async function closeCastingSession() {
       if(!currentSession) return;
-      if(confirm('Yakin ingin menutup sesi cor ini? Setelah dikunci, data tidak dapat diubah lagi.')) {
+      if(confirm('Yakin tutup sesi cor ini? (Locked)')) {
         await supabaseClient.from('casting_sessions').update({ status: 'closed' }).eq('id', currentSession.id);
         loadCastingSession();
       }
     }
 
-    // 6. DOWNLOAD SPK AS IMAGE
     function downloadSPK() {
       const area = document.getElementById('spkPrintArea');
       html2canvas(area).then(canvas => {
         const link = document.createElement('a');
-        link.download = `SPK_MajuLancar_${document.getElementById('dateCor').value}.png`;
+        link.download = `SPK_${document.getElementById('dateCor').value}.png`;
         link.href = canvas.toDataURL();
         link.click();
       });
     }
 
-    // 7. RIWAYAT / HISTORY LOAD
     async function loadRiwayat() {
       const { data } = await supabaseClient.from('casting_sessions').select('*').order('tanggal_cor', { ascending: false });
       document.getElementById('tbodyRiwayat').innerHTML = (data || []).map(r => `
         <tr>
           <td><strong>${r.tanggal_cor}</strong></td>
           <td><span class="badge ${r.status==='closed'?'badge-over':'badge-safe'}">${r.status.toUpperCase()}</span></td>
-          <td><button class="btn btn-primary" onclick="viewHistoryDate('${r.tanggal_cor}')">Lihat Data</button></td>
+          <td><button class="btn btn-primary" onclick="viewHistoryDate('${r.tanggal_cor}')">Lihat</button></td>
         </tr>
       `).join('');
     }
@@ -1097,9 +1047,6 @@
       switchTab('tabPengecoran');
       loadCastingSession();
     }
-
-    // INIT
-    window.onload = initSupabase;
   </script>
 </body>
 </html>
