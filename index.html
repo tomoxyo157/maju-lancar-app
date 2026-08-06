@@ -5,6 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Maju Lancar - Sistem Pengecoran</title>
   
+  <!-- FAVICON & MOBILE HOME SCREEN APP ICON (Langsung dari GitHub) -->
+  <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/USERNAME/REPOSITORY/main/home.jpg" />
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/USERNAME/REPOSITORY/main/home.jpg" />
+  
+  <!-- PWA MANIFEST INLINE/DATA -->
+  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,{
+    %22name%22: %22Maju Lancar App%22,
+    %22short_name%22: %22MajuLancar%22,
+    %22start_url%22: %22.%22,
+    %22display%22: %22standalone%22,
+    %22background_color%22: %22%23f1f5f9%22,
+    %22theme_color%22: %22%231e3a8a%22,
+    %22icons%22: [{
+      %22src%22: %22https://raw.githubusercontent.com/USERNAME/REPOSITORY/main/home.jpg%22,
+      %22sizes%22: %22512x512%22,
+      %22type%22: %22image/jpeg%22
+    }]
+  }">
+  <meta name="theme-color" content="#1e3a8a">
+
   <!-- Supabase JS & html2canvas CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -250,7 +270,6 @@
       border-color: var(--primary);
     }
 
-    /* Grid Alokasi Kustomer */
     .allocation-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -267,7 +286,7 @@
 </head>
 <body>
 
-  <!-- LOGIN PIN MODAL (Tanpa Watermark/Clue) -->
+  <!-- LOGIN PIN MODAL -->
   <div class="modal-overlay" id="modalLogin" style="z-index: 2000;">
     <div class="modal-content" style="max-width: 400px; text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 12px;">MAJU LANCAR</h2>
@@ -319,7 +338,7 @@
         <div class="card">
           <div class="card-title">
             <span>Daftar Order Yang Dicetak</span>
-            <button class="btn btn-primary" onclick="openModal('modalEntryOrder')">+ Tambah Order</button>
+            <button class="btn btn-primary" onclick="openModal('modalEntryOrder'); resetFormOrder();">+ Tambah Order</button>
           </div>
 
           <div class="table-responsive">
@@ -343,7 +362,6 @@
             </table>
           </div>
 
-          <!-- REALTIME INDICATOR KOTAK -->
           <div class="indicator-box">
             <div>
               <strong style="font-size: 1.1rem;">Total Kotak Dipesan:</strong>
@@ -389,7 +407,7 @@
         <div class="card">
           <div class="card-title">
             <span>Pengecekan Hasil Produksi</span>
-            <button class="btn btn-primary" onclick="openModal('modalEntryPasca')">+ Tambah Hasil</button>
+            <button class="btn btn-primary" onclick="openModal('modalEntryPasca'); resetFormPasca();">+ Tambah Hasil</button>
           </div>
           <div class="table-responsive">
             <table>
@@ -563,25 +581,20 @@
       <input type="hidden" id="mBarangId" />
       <label>Nama Barang:</label>
       <input type="text" id="mBarangNama" placeholder="Contoh: 6tps" />
-      
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
         <div style="flex:1; min-width: 200px;"><label>Berat / Biji (kg):</label><input type="number" step="0.001" id="mBarangBerat" value="1" /></div>
         <div style="flex:1; min-width: 200px;"><label>Lingkar (cm):</label><input type="number" step="0.01" id="mBarangLingkar" value="0" /></div>
       </div>
-
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
         <div style="flex:1; min-width: 200px;"><label>Tebal (cm):</label><input type="number" step="0.01" id="mBarangTebal" value="0" /></div>
         <div style="flex:1; min-width: 200px;"><label>Diameter Lubang (cm):</label><input type="number" step="0.01" id="mBarangLubang" value="0" /></div>
       </div>
-
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
         <div style="flex:1; min-width: 200px;"><label>Pra Prod: Isi / Kotak:</label><input type="number" id="mBarangKotak" value="10" /></div>
         <div style="flex:1; min-width: 200px;"><label>Kg per Kotak:</label><input type="number" step="0.001" id="mBarangKgKotak" value="0" /></div>
       </div>
-
       <label>Pasca Prod: Isi per Karung/Zak:</label>
       <input type="number" id="mBarangZak" value="50" />
-
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('modalBarang')">Batal</button>
         <button class="btn btn-primary" onclick="saveBarang()">Simpan</button>
@@ -632,13 +645,14 @@
     </div>
   </div>
 
-  <!-- MODAL ENTRY ORDER -->
+  <!-- MODAL ENTRY ORDER (PRA PRODUKSI) -->
   <div class="modal-overlay" id="modalEntryOrder">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Tambah Order Pengecoran</h3>
+        <h3 id="titleModalEntryOrder">Tambah Order Pengecoran</h3>
         <button class="btn btn-secondary" onclick="closeModal('modalEntryOrder')">X</button>
       </div>
+      <input type="hidden" id="mOrderId" />
       <label>Pilih Pelanggan:</label>
       <select id="mOrderCustomer"></select>
       <label>Pilih Barang:</label>
@@ -663,9 +677,10 @@
   <div class="modal-overlay" id="modalEntryPasca">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Tambah Hasil Pengerjaan</h3>
+        <h3 id="titleModalEntryPasca">Tambah Hasil Pengerjaan</h3>
         <button class="btn btn-secondary" onclick="closeModal('modalEntryPasca')">X</button>
       </div>
+      <input type="hidden" id="mPascaId" />
       <label>Nama Karyawan:</label>
       <select id="mPascaKaryawan"></select>
       <label>Nama Barang:</label>
@@ -680,15 +695,15 @@
   </div>
 
   <script>
-    // KREDENSIAL SUPABASE TERTANAM (LANGSUNG KONEK TANPA PROMPT)
+    // GANTI USERNAME DAN REPOSITORY DENGAN AKUN GITHUB ANDA
     const SUPABASE_URL = "https://your-supabase-project.supabase.co"; 
     const SUPABASE_KEY = "your-supabase-anon-key";
     
     let supabaseClient = null;
     let currentSession = null;
     let cachedOrders = [];
+    let globalProducts = [], globalCustomers = [], globalMiscs = [];
 
-    // INISIALISASI OTOMATIS & ESCAPE KEY LISTENER
     window.addEventListener('DOMContentLoaded', () => {
       const isAuth = localStorage.getItem('ml_auth_session');
       if(isAuth === 'true') {
@@ -698,7 +713,6 @@
         document.getElementById('modalLogin').classList.add('active');
       }
 
-      // Tombol ESC untuk close semua modal
       window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
           document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
@@ -754,23 +768,23 @@
       document.getElementById('dbMiscs').style.display = (type === 'miscs') ? 'block' : 'none';
     }
 
-    let globalProducts = [], globalCustomers = [], globalMiscs = [];
-
+    // LOAD MASTER DATA SECARA PARALEL (OPTIMASI KECEPATAN)
     async function loadMasterData() {
       if(!supabaseClient) return;
       try {
-        const resP = await supabaseClient.from('products').select('*');
+        const [resP, resC, resM] = await Promise.all([
+          supabaseClient.from('products').select('*'),
+          supabaseClient.from('customers').select('*'),
+          supabaseClient.from('miscs').select('*')
+        ]);
+
         globalProducts = resP.data || [];
-        renderTableBarang();
-
-        const resC = await supabaseClient.from('customers').select('*');
         globalCustomers = resC.data || [];
-        renderTableKustomer();
-
-        const resM = await supabaseClient.from('miscs').select('*');
         globalMiscs = resM.data || [];
-        renderTableMiscs();
 
+        renderTableBarang();
+        renderTableKustomer();
+        renderTableMiscs();
         populateDropdowns();
         loadCastingSession();
       } catch(err) {
@@ -781,7 +795,8 @@
     function populateDropdowns() {
       const pSel = document.getElementById('mOrderProduct');
       const pPasca = document.getElementById('mPascaProduct');
-      pSel.innerHTML = pPasca.innerHTML = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang}</option>`).join('');
+      const prodOptions = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang}</option>`).join('');
+      pSel.innerHTML = pPasca.innerHTML = prodOptions;
 
       const cSel = document.getElementById('mOrderCustomer');
       cSel.innerHTML = globalCustomers.map(c => `<option value="${c.id}">${c.nama} (${c.perusahaan || '-'})</option>`).join('');
@@ -834,11 +849,9 @@
         };
 
         if(id) {
-          const { error } = await supabaseClient.from('products').update(payload).eq('id', id);
-          if(error) throw error;
+          await supabaseClient.from('products').update(payload).eq('id', id);
         } else {
-          const { error } = await supabaseClient.from('products').insert([payload]);
-          if(error) throw error;
+          await supabaseClient.from('products').insert([payload]);
         }
         closeModal('modalBarang');
         loadMasterData();
@@ -873,11 +886,9 @@
           lokasi: document.getElementById('mKustLokasi').value
         };
         if(id) {
-          const { error } = await supabaseClient.from('customers').update(payload).eq('id', id);
-          if(error) throw error;
+          await supabaseClient.from('customers').update(payload).eq('id', id);
         } else {
-          const { error } = await supabaseClient.from('customers').insert([payload]);
-          if(error) throw error;
+          await supabaseClient.from('customers').insert([payload]);
         }
         closeModal('modalKustomer');
         loadMasterData();
@@ -908,11 +919,9 @@
           nama_item: document.getElementById('mMiscNama').value
         };
         if(id) {
-          const { error } = await supabaseClient.from('miscs').update(payload).eq('id', id);
-          if(error) throw error;
+          await supabaseClient.from('miscs').update(payload).eq('id', id);
         } else {
-          const { error } = await supabaseClient.from('miscs').insert([payload]);
-          if(error) throw error;
+          await supabaseClient.from('miscs').insert([payload]);
         }
         closeModal('modalMisc');
         loadMasterData();
@@ -1013,9 +1022,30 @@
       }
     }
 
+    function resetFormOrder() {
+      document.getElementById('titleModalEntryOrder').innerText = "Tambah Order Pengecoran";
+      document.getElementById('mOrderId').value = "";
+      document.getElementById('mOrderAwal').value = "0";
+      document.getElementById('mOrderAdj').value = "0";
+    }
+
+    function editOrder(id) {
+      const o = cachedOrders.find(x => x.id === id);
+      if(!o) return;
+      document.getElementById('titleModalEntryOrder').innerText = "Edit Order Pengecoran";
+      document.getElementById('mOrderId').value = o.id;
+      document.getElementById('mOrderCustomer').value = o.customer_id;
+      document.getElementById('mOrderProduct').value = o.product_id;
+      document.getElementById('mOrderAwal').value = o.jumlah_awal;
+      document.getElementById('mOrderAdj').value = o.pengurangan;
+      document.getElementById('mOrderSatuan').value = o.satuan;
+      openModal('modalEntryOrder');
+    }
+
     async function saveEntryOrder() {
       if(currentSession.status === 'closed') return alert('Sesi pencetakan sudah ditutup!');
       
+      const orderId = document.getElementById('mOrderId').value;
       const productId = parseInt(document.getElementById('mOrderProduct').value);
       const product = globalProducts.find(p => p.id === productId);
       const awal = parseInt(document.getElementById('mOrderAwal').value) || 0;
@@ -1037,7 +1067,11 @@
         kebutuhan_kotak: kebutuhanKotak
       };
 
-      await supabaseClient.from('casting_orders').insert([payload]);
+      if(orderId) {
+        await supabaseClient.from('casting_orders').update(payload).eq('id', orderId);
+      } else {
+        await supabaseClient.from('casting_orders').insert([payload]);
+      }
       closeModal('modalEntryOrder');
       loadPraOrders();
     }
@@ -1049,8 +1083,8 @@
       
       let totalKotak = 0;
       let spkSummary = {};
-
       let groupedByCustomer = {};
+
       cachedOrders.forEach(o => {
         const custName = o.customers ? o.customers.nama : '-';
         if(!groupedByCustomer[custName]) groupedByCustomer[custName] = [];
@@ -1078,14 +1112,16 @@
               <td>${o.pengurangan}</td>
               <td><strong>${o.jumlah_akhir} ${o.satuan}</strong></td>
               <td><strong>${o.kebutuhan_kotak} Kotak</strong></td>
-              <td><button class="btn btn-danger" onclick="deleteOrder(${o.id})">Hapus</button></td>
+              <td style="display:flex; gap:4px;">
+                <button class="btn btn-warning" onclick="editOrder(${o.id})">Edit</button>
+                <button class="btn btn-danger" onclick="deleteOrder(${o.id})">Hapus</button>
+              </td>
             </tr>
           `;
         });
       });
 
       document.getElementById('tbodyPraOrder').innerHTML = tbodyHTML || '<tr><td colspan="9" style="text-align:center;">Belum ada order.</td></tr>';
-
       document.getElementById('txtTotalKotak').innerText = `${totalKotak} Kotak`;
       updateKotakIndicator();
 
@@ -1127,6 +1163,7 @@
       `;
 
       document.getElementById('tbodySPK').innerHTML = spkHTML || '<tr><td colspan="3" style="text-align:center;">Belum ada data.</td></tr>';
+      renderAlokasiKustomer();
     }
 
     function updateKotakIndicator() {
@@ -1150,9 +1187,29 @@
       }
     }
 
+    let cachedPascaLogs = [];
+
+    function resetFormPasca() {
+      document.getElementById('titleModalEntryPasca').innerText = "Tambah Hasil Pengerjaan";
+      document.getElementById('mPascaId').value = "";
+      document.getElementById('mPascaJumlah').value = "0";
+    }
+
+    function editPasca(id) {
+      const l = cachedPascaLogs.find(x => x.id === id);
+      if(!l) return;
+      document.getElementById('titleModalEntryPasca').innerText = "Edit Hasil Pengerjaan";
+      document.getElementById('mPascaId').value = l.id;
+      document.getElementById('mPascaKaryawan').value = l.karyawan_id;
+      document.getElementById('mPascaProduct').value = l.product_id;
+      document.getElementById('mPascaJumlah').value = l.jumlah_biji;
+      openModal('modalEntryPasca');
+    }
+
     async function saveEntryPasca() {
       if(currentSession.status === 'closed') return alert('Sesi pencetakan sudah ditutup!');
 
+      const pascaId = document.getElementById('mPascaId').value;
       const productId = parseInt(document.getElementById('mPascaProduct').value);
       const product = globalProducts.find(p => p.id === productId);
       const jumlahBiji = parseInt(document.getElementById('mPascaJumlah').value) || 0;
@@ -1174,7 +1231,11 @@
         sisa_biji: sisaBiji
       };
 
-      await supabaseClient.from('casting_production_logs').insert([payload]);
+      if(pascaId) {
+        await supabaseClient.from('casting_production_logs').update(payload).eq('id', pascaId);
+      } else {
+        await supabaseClient.from('casting_production_logs').insert([payload]);
+      }
       closeModal('modalEntryPasca');
       loadPascaLogs();
     }
@@ -1189,23 +1250,20 @@
         .select('*, products(nama_barang, berat_biji_kg, isi_per_zak), karyawan:miscs!karyawan_id(nama_item), tali:miscs!warna_tali_id(nama_item)')
         .eq('session_id', currentSession.id);
 
+      cachedPascaLogs = data || [];
       const taliOptions = globalMiscs.filter(m => m.kategori === 'tali');
 
       let summaryMap = {};
-      let productTotals = {};
 
-      document.getElementById('tbodyPascaLog').innerHTML = (data || []).map(l => {
+      document.getElementById('tbodyPascaLog').innerHTML = cachedPascaLogs.map(l => {
         const zakFormat = `${l.zak_total} Zak` + (l.sisa_biji > 0 ? ` + <small>(${l.sisa_biji})</small>` : '');
         const pName = l.products ? l.products.nama_barang : '-';
         
         if(!summaryMap[pName]) {
-          summaryMap[pName] = { beratBiji: l.products.berat_biji_kg, zakTotal: 0, sisaArray: [], tali: l.tali ? l.tali.nama_item : '-' };
+          summaryMap[pName] = { beratBiji: l.products ? l.products.berat_biji_kg : 0, zakTotal: 0, sisaArray: [], tali: l.tali ? l.tali.nama_item : '-' };
         }
         summaryMap[pName].zakTotal += l.zak_total;
         if(l.sisa_biji > 0) summaryMap[pName].sisaArray.push(l.sisa_biji);
-
-        if(!productTotals[pName]) productTotals[pName] = 0;
-        productTotals[pName] += l.jumlah_biji;
 
         let taliSelectHTML = `<select onchange="updateLogTali(${l.id}, this.value)" style="padding: 6px; font-size: 0.9rem; margin:0;">`;
         taliOptions.forEach(t => {
@@ -1221,14 +1279,18 @@
             <td>${taliSelectHTML}</td>
             <td>${l.jumlah_biji} biji</td>
             <td><strong>${zakFormat}</strong></td>
-            <td><button class="btn btn-danger" onclick="deletePasca(${l.id})">Hapus</button></td>
+            <td style="display:flex; gap:4px;">
+              <button class="btn btn-warning" onclick="editPasca(${l.id})">Edit</button>
+              <button class="btn btn-danger" onclick="deletePasca(${l.id})">Hapus</button>
+            </td>
           </tr>
         `;
       }).join('') || '<tr><td colspan="6" style="text-align:center;">Belum ada hasil.</td></tr>';
 
       document.getElementById('tbodySummaryPasca').innerHTML = Object.keys(summaryMap).map(p => {
         const item = summaryMap[p];
-        const totalBiji = (item.zakTotal * (globalProducts.find(gp=>gp.nama_barang===p)?.isi_per_zak || 50)) + item.sisaArray.reduce((a,b)=>a+b, 0);
+        const prodData = globalProducts.find(gp=>gp.nama_barang===p);
+        const totalBiji = (item.zakTotal * (prodData?.isi_per_zak || 50)) + item.sisaArray.reduce((a,b)=>a+b, 0);
         const totalKg = (totalBiji * item.beratBiji).toFixed(1);
         
         let sisaStr = item.sisaArray.length > 0 ? ` + <small>(${item.sisaArray.join(' + ')})</small>` : '';
