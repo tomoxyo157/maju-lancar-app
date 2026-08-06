@@ -105,7 +105,7 @@
       <div class="card">
         <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
           <div style="flex: 1; min-width: 250px;">
-            <label for="dateCor">Tanggal Pencetakan:</label>
+            <label for="dateCor">Tanggal Pencetakan (WIB):</label>
             <input type="date" id="dateCor" onchange="loadCastingSession()" />
           </div>
           <div>
@@ -476,7 +476,17 @@
     let supabaseClient = null, currentSession = null, cachedOrders = [];
     let globalProducts = [], globalCustomers = [], globalMiscs = [];
 
+    // Fungsi utilitas mendapatkan tanggal hari ini dalam format YYYY-MM-DD berbasis WIB (Asia/Jakarta)
+    function getWibDateString() {
+      const options = { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' };
+      const formatter = new Intl.DateTimeFormat('en-CA', options); // en-CA menghasilkan format YYYY-MM-DD
+      return formatter.format(new Date());
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
+      // Set tanggal default ke hari ini berdasarkan zona waktu WIB
+      document.getElementById('dateCor').value = getWibDateString();
+
       if(localStorage.getItem('ml_auth_session') === 'true') {
         document.getElementById('modalLogin').classList.remove('active');
         initSupabase();
@@ -506,8 +516,6 @@
       supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
       loadMasterData();
     }
-
-    document.getElementById('dateCor').valueAsDate = new Date();
 
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
@@ -545,7 +553,7 @@
         globalCustomers = resC.data || [];
         globalMiscs = resM.data || [];
         renderTableBarang(); renderTableKustomer(); renderTableMiscs(); populateDropdowns(); loadCastingSession();
-      } catch(err) { console.error(err); }
+      } catch(err) { console.error("Gagal memuat master data:", err); }
     }
 
     function populateDropdowns() {
@@ -589,10 +597,13 @@
           kg_per_kotak: parseFloat(document.getElementById('mBarangKgKotak').value) || 0,
           isi_per_zak: parseInt(document.getElementById('mBarangZak').value) || 1
         };
-        if(id) await supabaseClient.from('products').update(payload).eq('id', id);
-        else await supabaseClient.from('products').insert([payload]);
+        let res;
+        if(id) res = await supabaseClient.from('products').update(payload).eq('id', id);
+        else res = await supabaseClient.from('products').insert([payload]);
+        
+        if(res.error) throw res.error;
         closeModal('modalBarang'); loadMasterData();
-      } catch(e) { alert("Gagal: " + e.message); }
+      } catch(e) { alert("Gagal menyimpan barang: " + e.message); }
     }
 
     function resetFormKustomer() {
@@ -614,10 +625,13 @@
       try {
         const id = document.getElementById('mKustId').value;
         const payload = { nama: document.getElementById('mKustNama').value, perusahaan: document.getElementById('mKustPerusahaan').value, lokasi: document.getElementById('mKustLokasi').value };
-        if(id) await supabaseClient.from('customers').update(payload).eq('id', id);
-        else await supabaseClient.from('customers').insert([payload]);
+        let res;
+        if(id) res = await supabaseClient.from('customers').update(payload).eq('id', id);
+        else res = await supabaseClient.from('customers').insert([payload]);
+
+        if(res.error) throw res.error;
         closeModal('modalKustomer'); loadMasterData();
-      } catch(e) { alert("Gagal: " + e.message); }
+      } catch(e) { alert("Gagal menyimpan kustomer: " + e.message); }
     }
 
     function resetFormMisc() {
@@ -638,14 +652,21 @@
       try {
         const id = document.getElementById('mMiscId').value;
         const payload = { kategori: document.getElementById('mMiscKategori').value, nama_item: document.getElementById('mMiscNama').value };
-        if(id) await supabaseClient.from('miscs').update(payload).eq('id', id);
-        else await supabaseClient.from('miscs').insert([payload]);
+        let res;
+        if(id) res = await supabaseClient.from('miscs').update(payload).eq('id', id);
+        else res = await supabaseClient.from('miscs').insert([payload]);
+
+        if(res.error) throw res.error;
         closeModal('modalMisc'); loadMasterData();
-      } catch(e) { alert("Gagal: " + e.message); }
+      } catch(e) { alert("Gagal menyimpan misc: " + e.message); }
     }
 
     async function deleteItem(table, id) {
-      if(confirm('Hapus data ini?')) { await supabaseClient.from(table).delete().eq('id', id); loadMasterData(); }
+      if(confirm('Hapus data ini?')) { 
+        const { error } = await supabaseClient.from(table).delete().eq('id', id); 
+        if(error) alert("Gagal menghapus: " + error.message);
+        else loadMasterData(); 
+      }
     }
 
     function renderTableBarang() {
@@ -668,13 +689,19 @@
 
     async function loadCastingSession() {
       if(!supabaseClient) return;
-      const tgl = document.getElementById('dateCor').value;
+      const tgl = document.getElementById('dateCor').value || getWibDateString();
       document.getElementById('spkDateText').innerText = `Tanggal Pencetakan: ${tgl}`;
-      let { data } = await supabaseClient.from('casting_sessions').select('*').eq('tanggal_cor', tgl).maybeSingle();
+      
+      let { data, error } = await supabaseClient.from('casting_sessions').select('*').eq('tanggal_cor', tgl).maybeSingle();
+      if(error) { console.error("Error load session:", error); return; }
+
       if(!data) {
         const ins = await supabaseClient.from('casting_sessions').insert([{ tanggal_cor: tgl, status: 'aktif' }]).select().single();
-        currentSession = ins.data; cleanupOldSessions();
-      } else { currentSession = data; }
+        currentSession = ins.data; 
+        cleanupOldSessions();
+      } else { 
+        currentSession = data; 
+      }
 
       const badge = document.getElementById('sessionStatusBadge'), btnClose = document.getElementById('btnCloseSession');
       if(currentSession && currentSession.status === 'closed') {
@@ -706,19 +733,48 @@
     }
 
     async function saveEntryOrder() {
-      if(currentSession.status === 'closed') return alert('Sesi ditutup!');
-      const orderId = document.getElementById('mOrderId').value, productId = parseInt(document.getElementById('mOrderProduct').value);
-      const product = globalProducts.find(p => p.id === productId), awal = parseInt(document.getElementById('mOrderAwal').value) || 0;
-      const adj = parseInt(document.getElementById('mOrderAdj').value) || 0, akhir = awal - adj, satuan = document.getElementById('mOrderSatuan').value;
-      let rawKotak = (satuan === 'kg') ? (akhir / (product.isi_per_kotak * product.berat_biji_kg)) : (akhir / product.isi_per_kotak);
-      let kebutuhanKotak = Math.ceil(Math.ceil(rawKotak || 0) / 10) * 10;
-      const payload = {
-        session_id: currentSession.id, customer_id: parseInt(document.getElementById('mOrderCustomer').value),
-        product_id: productId, jumlah_awal: awal, pengurangan: adj, jumlah_akhir: akhir, satuan: satuan, kebutuhan_kotak: kebutuhanKotak
-      };
-      if(orderId) await supabaseClient.from('casting_orders').update(payload).eq('id', orderId);
-      else await supabaseClient.from('casting_orders').insert([payload]);
-      closeModal('modalEntryOrder'); loadPraOrders();
+      if(!currentSession || currentSession.status === 'closed') return alert('Sesi sedang ditutup/tidak aktif!');
+      try {
+        const orderId = document.getElementById('mOrderId').value;
+        const productId = parseInt(document.getElementById('mOrderProduct').value);
+        const customerId = parseInt(document.getElementById('mOrderCustomer').value);
+        const product = globalProducts.find(p => p.id === productId);
+        
+        if (!product) return alert('Pilih barang yang valid!');
+
+        const awal = parseInt(document.getElementById('mOrderAwal').value) || 0;
+        const adj = parseInt(document.getElementById('mOrderAdj').value) || 0; 
+        const akhir = awal - adj; 
+        const satuan = document.getElementById('mOrderSatuan').value;
+        
+        let rawKotak = (satuan === 'kg') ? (akhir / (product.isi_per_kotak * product.berat_biji_kg)) : (akhir / product.isi_per_kotak);
+        let kebutuhanKotak = Math.ceil(Math.ceil(rawKotak || 0) / 10) * 10;
+        
+        const payload = {
+          session_id: currentSession.id, 
+          customer_id: customerId,
+          product_id: productId, 
+          jumlah_awal: awal, 
+          pengurangan: adj, 
+          jumlah_akhir: akhir, 
+          satuan: satuan, 
+          kebutuhan_kotak: kebutuhanKotak
+        };
+
+        let res;
+        if(orderId) {
+          res = await supabaseClient.from('casting_orders').update(payload).eq('id', orderId);
+        } else {
+          res = await supabaseClient.from('casting_orders').insert([payload]);
+        }
+
+        if(res.error) throw res.error;
+
+        closeModal('modalEntryOrder'); 
+        loadPraOrders();
+      } catch(e) { 
+        alert("Gagal menyimpan order: " + e.message); 
+      }
     }
 
     async function loadPraOrders() {
@@ -766,7 +822,11 @@
     }
 
     async function deleteOrder(id) {
-      if(confirm('Hapus order?')) { await supabaseClient.from('casting_orders').delete().eq('id', id); loadPraOrders(); }
+      if(confirm('Hapus order?')) { 
+        const { error } = await supabaseClient.from('casting_orders').delete().eq('id', id); 
+        if(error) alert("Gagal menghapus: " + error.message);
+        else loadPraOrders(); 
+      }
     }
 
     let cachedPascaLogs = [];
@@ -785,17 +845,42 @@
     }
 
     async function saveEntryPasca() {
-      if(currentSession.status === 'closed') return alert('Sesi ditutup!');
-      const pascaId = document.getElementById('mPascaId').value, productId = parseInt(document.getElementById('mPascaProduct').value);
-      const product = globalProducts.find(p => p.id === productId), jumlahBiji = parseInt(document.getElementById('mPascaJumlah').value) || 0;
-      const payload = {
-        session_id: currentSession.id, karyawan_id: parseInt(document.getElementById('mPascaKaryawan').value),
-        product_id: productId, warna_tali_id: globalMiscs.filter(m => m.kategori === 'tali')[0]?.id || null,
-        jumlah_biji: jumlahBiji, zak_total: Math.floor(jumlahBiji / product.isi_per_zak), sisa_biji: jumlahBiji % product.isi_per_zak
-      };
-      if(pascaId) await supabaseClient.from('casting_production_logs').update(payload).eq('id', pascaId);
-      else await supabaseClient.from('casting_production_logs').insert([payload]);
-      closeModal('modalEntryPasca'); loadPascaLogs();
+      if(!currentSession || currentSession.status === 'closed') return alert('Sesi sedang ditutup/tidak aktif!');
+      try {
+        const pascaId = document.getElementById('mPascaId').value;
+        const productId = parseInt(document.getElementById('mPascaProduct').value);
+        const karyawanId = parseInt(document.getElementById('mPascaKaryawan').value);
+        const product = globalProducts.find(p => p.id === productId);
+
+        if(!product) return alert('Pilih barang yang valid!');
+
+        const jumlahBiji = parseInt(document.getElementById('mPascaJumlah').value) || 0;
+        const defaultTali = globalMiscs.filter(m => m.kategori === 'tali')[0]?.id || null;
+
+        const payload = {
+          session_id: currentSession.id, 
+          karyawan_id: karyawanId,
+          product_id: productId, 
+          warna_tali_id: defaultTali,
+          jumlah_biji: jumlahBiji, 
+          zak_total: Math.floor(jumlahBiji / product.isi_per_zak), 
+          sisa_biji: jumlahBiji % product.isi_per_zak
+        };
+
+        let res;
+        if(pascaId) {
+          res = await supabaseClient.from('casting_production_logs').update(payload).eq('id', pascaId);
+        } else {
+          res = await supabaseClient.from('casting_production_logs').insert([payload]);
+        }
+
+        if(res.error) throw res.error;
+
+        closeModal('modalEntryPasca'); 
+        loadPascaLogs();
+      } catch(e) {
+        alert("Gagal menyimpan hasil pasca produksi: " + e.message);
+      }
     }
 
     async function updateLogTali(logId, newTaliId) {
@@ -859,7 +944,11 @@
     }
 
     async function deletePasca(id) {
-      if(confirm('Hapus log?')) { await supabaseClient.from('casting_production_logs').delete().eq('id', id); loadPascaLogs(); }
+      if(confirm('Hapus log?')) { 
+        const { error } = await supabaseClient.from('casting_production_logs').delete().eq('id', id); 
+        if(error) alert("Gagal menghapus: " + error.message);
+        else loadPascaLogs(); 
+      }
     }
 
     async function closeCastingSession() {
@@ -885,7 +974,11 @@
     }
 
     async function deleteSession(id) {
-      if(confirm('Hapus sesi beserta seluruh datanya?')) { await supabaseClient.from('casting_sessions').delete().eq('id', id); loadRiwayat(); }
+      if(confirm('Hapus sesi beserta seluruh datanya?')) { 
+        const { error } = await supabaseClient.from('casting_sessions').delete().eq('id', id); 
+        if(error) alert("Gagal menghapus sesi: " + error.message);
+        else loadRiwayat(); 
+      }
     }
 
     function viewHistoryDate(tgl) {
