@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maju Lancar - Sistem Pengecoran</title>
+  
+  <!-- Supabase JS & html2canvas CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       1. GLOBAL STYLES & TYPOGRAPHY (Tinggi Kontras & Font Besar)
+       ========================================================================== */
+    :root {
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --primary: #1e3a8a;
+      --primary-hover: #1e40af;
+      --success: #15803d;
+      --danger: #b91c1c;
+      --warning: #b45309;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-size: 18px; /* High legibility for older users */
+      line-height: 1.5;
+      padding-bottom: 50px;
+    }
+
+    /* Container Header */
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    header h1 { font-size: 1.8rem; letter-spacing: 0.5px; }
+
+    /* Navigation Tabs */
+    nav {
+      display: flex;
+      background-color: #0f172a;
+      padding: 4px 16px;
+      gap: 8px;
+    }
+    .nav-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      padding: 14px 24px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      border-bottom: 4px solid transparent;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover { color: white; }
+    .nav-btn.active {
+      color: #38bdf8;
+      border-bottom-color: #38bdf8;
+    }
+
+    /* Layout Content */
+    .container {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    /* Section & Card Containers */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .card-title {
+      font-size: 1.4rem;
+      font-weight: bold;
+      margin-bottom: 16px;
+      color: var(--primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 8px;
+    }
+
+    /* Form Controls & Big Inputs */
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+      font-size: 1rem;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 1.1rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      background-color: #f8fafc;
+    }
+    input:focus, select:focus {
+      border-color: var(--primary);
+      outline: none;
+      background-color: #fff;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      gap: 8px;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background-color: var(--primary); color: white; }
+    .btn-primary:hover { background-color: var(--primary-hover); }
+    .btn-success { background-color: var(--success); color: white; }
+    .btn-danger { background-color: var(--danger); color: white; }
+    .btn-warning { background-color: var(--warning); color: white; }
+    .btn-secondary { background-color: #64748b; color: white; }
+
+    /* Tables */
+    .table-responsive { overflow-x: auto; margin-top: 12px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th, td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 1rem;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: var(--text-main);
+      font-weight: bold;
+    }
+
+    /* Realtime Indicator Box Count */
+    .indicator-box {
+      background: #f8fafc;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin: 16px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .badge {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 1rem;
+      color: white;
+    }
+    .badge-safe { background-color: var(--success); }
+    .badge-over { background-color: var(--danger); }
+
+    /* ==========================================================================
+       2. MODAL & ANIMATION (Pop-In / Pop-Out)
+       ========================================================================== */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.25s ease-out;
+    }
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      transform: scale(0.85);
+      transition: transform 0.25s ease-out;
+    }
+    .modal-overlay.active .modal-content {
+      transform: scale(1);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      border-top: 2px solid #f1f5f9;
+      padding-top: 16px;
+    }
+
+    /* Sub-tabs for Pengecoran & Database */
+    .sub-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .sub-btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 2px solid var(--border);
+      background: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .sub-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <h1>MAJU LANCAR</h1>
+    <button class="btn btn-warning" onclick="openModal('modalConfig')">⚙️ Kunci API Supabase</button>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <nav>
+    <button class="nav-btn active" onclick="switchTab('tabPengecoran')">🔥 Pengecoran</button>
+    <button class="nav-btn" onclick="switchTab('tabDatabase')">🗄️ Database</button>
+    <button class="nav-btn" onclick="switchTab('tabRiwayat')">📜 Riwayat</button>
+  </nav>
+
+  <div class="container">
+
+    <!-- ==========================================================================
+       TAB 1: PENGECORAN (TANGGAL SPECIFIC)
+       ========================================================================== -->
+    <div id="tabPengecoran" class="tab-content">
+      <div class="card">
+        <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 250px;">
+            <label for="dateCor">Tanggal Pengecoran:</label>
+            <input type="date" id="dateCor" onchange="loadCastingSession()" />
+          </div>
+          <div>
+            <span id="sessionStatusBadge" class="badge badge-safe" style="display:inline-block; margin-top:28px;">Sesi: AKTIF</span>
+          </div>
+          <div style="margin-top: 28px;">
+            <button class="btn btn-danger" onclick="closeCastingSession()" id="btnCloseSession">🔒 Tutup Sesi Cor (Selesai)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB NAV: PRA PRODUKSI VS PASCA PRODUKSI -->
+      <div class="sub-nav">
+        <button class="sub-btn active" onclick="switchSubTab('pra')">1. PRA PRODUKSI</button>
+        <button class="sub-btn" onclick="switchSubTab('pasca')">2. PASCA PRODUKSI</button>
+      </div>
+
+      <!-- SECTION PRA PRODUKSI -->
+      <div id="subPra">
+        <div class="card">
+          <div class="card-title">
+            <span>Daftar Order Yang Dicetak</span>
+            <button class="btn btn-primary" onclick="openModal('modalEntryOrder')">+ Tambah Order</button>
+          </div>
+
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pelanggan</th>
+                  <th>Nama Barang</th>
+                  <th>Awal</th>
+                  <th>Adj</th>
+                  <th>Akhir</th>
+                  <th>Berat/Biji</th>
+                  <th>Kebutuhan Kotak</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyPraOrder">
+                <tr><td colspan="8" style="text-align:center;">Memuat data order...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- REALTIME INDICATOR KOTAK -->
+          <div class="indicator-box">
+            <div>
+              <strong style="font-size: 1.2rem;">Kapasitas Dapur (Kotak):</strong>
+              <div style="font-size: 1.8rem; font-weight: bold; color: var(--primary);" id="txtTotalKotak">0 / 100 Kotak</div>
+            </div>
+            <div>
+              <span id="badgeKapasitas" class="badge badge-safe">AMAN</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SURAT PERINTAH KERJA (SPK) -->
+        <div class="card" id="spkContainer">
+          <div class="card-title">
+            <span>Surat Perintah Kerja (SPK) Summary</span>
+            <button class="btn btn-success" onclick="downloadSPK()">📸 Unduh SPK (Gambar)</button>
+          </div>
+          <div id="spkPrintArea" style="padding: 16px; background: white; border: 1px dashed var(--border);">
+            <h3 style="text-align: center; margin-bottom: 8px;">MAJU LANCAR - SURAT PERINTAH KERJA</h3>
+            <p style="text-align: center; margin-bottom: 16px;" id="spkDateText">Tanggal: -</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Nama Barang</th>
+                  <th>Jumlah Kotak</th>
+                </tr>
+              </thead>
+              <tbody id="tbodySPK">
+                <tr><td colspan="3" style="text-align: center;">Belum ada data order.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION PASCA PRODUKSI -->
+      <div id="subPasca" style="display: none;">
+        <div class="card">
+          <div class="card-title">
+            <span>Pengecekan Hasil Produksi (Harian Karyawan)</span>
+            <button class="btn btn-primary" onclick="openModal('modalEntryPasca')">+ Tambah Hasil Pengerjaan</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Karyawan</th>
+                  <th>Nama Barang</th>
+                  <th>Warna Tali</th>
+                  <th>Jumlah (Biji)</th>
+                  <th>Format Zak</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyPascaLog">
+                <tr><td colspan="6" style="text-align:center;">Memuat hasil pengerjaan...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- REKAPITULASI HASIL PRODUKSI PER BARANG -->
+        <div class="card">
+          <div class="card-title">
+            <span>Summary Hasil Produksi (Siap Alokasi)</span>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nama Barang</th>
+                  <th>Total Biji</th>
+                  <th>Total Berat (Kg)</th>
+                  <th>Warna Tali</th>
+                  <th>Total Format Zak</th>
+                </tr>
+              </thead>
+              <tbody id="tbodySummaryPasca">
+                <tr><td colspan="5" style="text-align:center;">Belum ada data.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+       TAB 2: DATABASE (BARANG, KUSTOMER, MISCS)
+       ========================================================================== -->
+    <div id="tabDatabase" class="tab-content" style="display: none;">
+      
+      <!-- SUB NAV DATABASE -->
+      <div class="sub-nav">
+        <button class="sub-btn active" onclick="switchDbSubTab('barang')">Barang</button>
+        <button class="sub-btn" onclick="switchDbSubTab('kustomer')">Kustomer</button>
+        <button class="sub-btn" onclick="switchDbSubTab('miscs')">Miscs (Karyawan & Tali)</button>
+      </div>
+
+      <!-- TABEL BARANG -->
+      <div id="dbBarang">
+        <div class="card">
+          <div class="card-title">
+            <span>Data Master Barang</span>
+            <button class="btn btn-primary" onclick="openModal('modalBarang')">+ Tambah Barang</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nama Barang</th>
+                  <th>Berat/Biji (kg)</th>
+                  <th>Fisik (L/T/D cm)</th>
+                  <th>Isi/Kotak</th>
+                  <th>Isi/Zak</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyBarang">
+                <tr><td colspan="6" style="text-align:center;">Memuat data barang...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABEL KUSTOMER -->
+      <div id="dbKustomer" style="display: none;">
+        <div class="card">
+          <div class="card-title">
+            <span>Data Master Kustomer</span>
+            <button class="btn btn-primary" onclick="openModal('modalKustomer')">+ Tambah Kustomer</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nama</th>
+                  <th>Perusahaan</th>
+                  <th>Lokasi</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyKustomer">
+                <tr><td colspan="4" style="text-align:center;">Memuat data kustomer...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABEL MISCS -->
+      <div id="dbMiscs" style="display: none;">
+        <div class="card">
+          <div class="card-title">
+            <span>Data Miscs (Karyawan & Warna Tali)</span>
+            <button class="btn btn-primary" onclick="openModal('modalMisc')">+ Tambah Misc</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Kategori</th>
+                  <th>Nama Item</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyMiscs">
+                <tr><td colspan="3" style="text-align:center;">Memuat data miscs...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==========================================================================
+       TAB 3: RIWAYAT / HISTORY
+       ========================================================================== -->
+    <div id="tabRiwayat" class="tab-content" style="display: none;">
+      <div class="card">
+        <div class="card-title">Daftar Pengecoran Yang Sudah Closed</div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Tanggal Cor</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyRiwayat">
+              <tr><td colspan="3" style="text-align:center;">Memuat riwayat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==========================================================================
+     MODALS (POP-IN WINDOWS WITH BIG CANCEL BUTTONS)
+     ========================================================================== -->
+
+  <!-- MODAL CONFIG SUPABASE -->
+  <div class="modal-overlay" id="modalConfig">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Pengaturan Kunci Supabase</h3>
+        <button class="btn btn-secondary" onclick="closeModal('modalConfig')">X</button>
+      </div>
+      <label for="cfgUrl">Supabase URL:</label>
+      <input type="text" id="cfgUrl" placeholder="https://xxxx.supabase.co" />
+      <label for="cfgKey">Supabase Anon Key:</label>
+      <input type="text" id="cfgKey" placeholder="eyJhbGciOi..." />
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalConfig')">Batal / Kembali</button>
+        <button class="btn btn-primary" onclick="saveConfig()">Simpan Kunci</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAH BARANG -->
+  <div class="modal-overlay" id="modalBarang">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Tambah Barang Baru</h3>
+        <button class="btn btn-secondary" onclick="closeModal('modalBarang')">X</button>
+      </div>
+      <label>Nama Barang:</label>
+      <input type="text" id="mBarangNama" />
+      <div style="display: flex; gap: 12px;">
+        <div style="flex:1;"><label>Berat/Biji (kg):</label><input type="number" step="0.001" id="mBarangBerat" /></div>
+        <div style="flex:1;"><label>Isi / Kotak:</label><input type="number" id="mBarangKotak" /></div>
+        <div style="flex:1;"><label>Isi / Zak:</label><input type="number" id="mBarangZak" /></div>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <div style="flex:1;"><label>Lingkar (cm):</label><input type="number" step="0.1" id="mBarangLingkar" /></div>
+        <div style="flex:1;"><label>Tebal (cm):</label><input type="number" step="0.1" id="mBarangTebal" /></div>
+        <div style="flex:1;"><label>Lubang (cm):</label><input type="number" step="0.1" id="mBarangLubang" /></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalBarang')">Batal / Kembali</button>
+        <button class="btn btn-primary" onclick="saveBarang()">Simpan Barang</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAH KUSTOMER -->
+  <div class="modal-overlay" id="modalKustomer">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Tambah Kustomer Baru</h3>
+        <button class="btn btn-secondary" onclick="closeModal('modalKustomer')">X</button>
+      </div>
+      <label>Nama Kustomer:</label>
+      <input type="text" id="mKustNama" />
+      <label>Perusahaan:</label>
+      <input type="text" id="mKustPerusahaan" />
+      <label>Lokasi:</label>
+      <input type="text" id="mKustLokasi" />
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalKustomer')">Batal / Kembali</button>
+        <button class="btn btn-primary" onclick="saveKustomer()">Simpan Kustomer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAH MISCS -->
+  <div class="modal-overlay" id="modalMisc">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Tambah Data Miscs</h3>
+        <button class="btn btn-secondary" onclick="closeModal('modalMisc')">X</button>
+      </div>
+      <label>Kategori:</label>
+      <select id="mMiscKategori">
+        <option value="karyawan">Karyawan</option>
+        <option value="tali">Warna Tali</option>
+      </select>
+      <label>Nama Item / Nama Karyawan:</label>
+      <input type="text" id="mMiscNama" />
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalMisc')">Batal / Kembali</button>
+        <button class="btn btn-primary" onclick="saveMisc()">Simpan Misc</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ENTRY ORDER (PRA PRODUKSI) -->
+  <div class="modal-overlay" id="modalEntryOrder">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Tambah Order Pengecoran</h3>
+        <button class="btn btn-secondary" onclick="closeModal('modalEntryOrder')">X</button>
+      </div>
+      <label>Pilih Pelanggan / Customer:</label>
+      <select id="mOrderCustomer"></select>
+
+      <label>Pilih Barang:</label>
+      <select id="mOrderProduct"></select>
+
+      <div style="display: flex; gap: 12px;">
+        <div style="flex: 1;">
+          <label>Jumlah Awal:</label>
+          <input type="number" id="mOrderAwal" value="0" />
+        </div>
+        <div style="flex: 1;">
+          <label>Pengurangan (Adj):</label>
+          <input type="number" id="mOrderAdj" value="0" />
+        </div>
+      </div>
+
+      <label>Satuan:</label>
+      <select id="mOrderSatuan">
+        <option value="bj">Biji (bj)</option>
+        <option value="kg">Kilogram (kg)</option>
+      </select>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalEntryOrder')">Batal / Kembali</button>
+        <button class="btn btn-primary" onclick="saveEntryOrder()">Simpan Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ENTRY RESULT (PASCA PRODUKSI) -->
+  <div class="modal-overlay" id="modalEntryPasca">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Tambah Hasil Pengerjaan</h3>
+        <button class="btn btn-secondary" onclick="closeModal('modalEntryPasca')">X</button>
+      </div>
+      <label>Nama Karyawan:</label>
+      <select id="mPascaKaryawan"></select>
+
+      <label>Nama Barang / Produk:</label>
+      <select id="mPascaProduct"></select>
+
+      <label>Warna Tali Karung:</label>
+      <select id="mPascaTali"></select>
+
+      <label>Jumlah Hasil (Dalam Unit Biji):</label>
+      <input type="number" id="mPascaJumlah" value="0" />
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalEntryPasca')">Batal / Kembali</button>
+        <button class="btn btn-primary" onclick="saveEntryPasca()">Simpan Hasil</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+     JAVASCRIPT LOGIC & SUPABASE INTEGRATION
+     ========================================================================== -->
+  <script>
+    // 1. SUPABASE INITIALIZATION
+    let supabaseClient = null;
+    let currentSession = null;
+
+    function initSupabase() {
+      const url = localStorage.getItem('ml_sp_url') || '';
+      const key = localStorage.getItem('ml_sp_key') || '';
+      if(url && key) {
+        supabaseClient = supabase.createClient(url, key);
+        loadMasterData();
+      } else {
+        openModal('modalConfig');
+      }
+    }
+
+    function saveConfig() {
+      const url = document.getElementById('cfgUrl').value.trim();
+      const key = document.getElementById('cfgKey').value.trim();
+      if(!url || !key) return alert("URL dan Key wajib diisi!");
+      localStorage.setItem('ml_sp_url', url);
+      localStorage.setItem('ml_sp_key', key);
+      closeModal('modalConfig');
+      initSupabase();
+    }
+
+    // Set Date Default to Today
+    document.getElementById('dateCor').valueAsDate = new Date();
+
+    // 2. MODALS & TABS CONTROLLER
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).style.display = 'block';
+      event.target.classList.add('active');
+      if(tabId === 'tabRiwayat') loadRiwayat();
+    }
+
+    function switchSubTab(type) {
+      document.querySelectorAll('.sub-nav .sub-btn').forEach(el => el.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('subPra').style.display = (type === 'pra') ? 'block' : 'none';
+      document.getElementById('subPasca').style.display = (type === 'pasca') ? 'block' : 'none';
+    }
+
+    function switchDbSubTab(type) {
+      document.getElementById('dbBarang').style.display = (type === 'barang') ? 'block' : 'none';
+      document.getElementById('dbKustomer').style.display = (type === 'kustomer') ? 'block' : 'none';
+      document.getElementById('dbMiscs').style.display = (type === 'miscs') ? 'block' : 'none';
+    }
+
+    // 3. MASTER DATA LOADERS (PRODUCTS, CUSTOMERS, MISCS)
+    let globalProducts = [], globalCustomers = [], globalMiscs = [];
+
+    async function loadMasterData() {
+      if(!supabaseClient) return;
+      
+      const resP = await supabaseClient.from('products').select('*');
+      globalProducts = resP.data || [];
+      renderTableBarang();
+
+      const resC = await supabaseClient.from('customers').select('*');
+      globalCustomers = resC.data || [];
+      renderTableKustomer();
+
+      const resM = await supabaseClient.from('miscs').select('*');
+      globalMiscs = resM.data || [];
+      renderTableMiscs();
+
+      populateDropdowns();
+      loadCastingSession();
+    }
+
+    // Populating Select Dropdowns
+    function populateDropdowns() {
+      const pSel = document.getElementById('mOrderProduct');
+      const pPasca = document.getElementById('mPascaProduct');
+      pSel.innerHTML = pPasca.innerHTML = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang}</option>`).join('');
+
+      const cSel = document.getElementById('mOrderCustomer');
+      cSel.innerHTML = globalCustomers.map(c => `<option value="${c.id}">${c.nama} (${c.perusahaan || '-'})</option>`).join('');
+
+      const kSel = document.getElementById('mPascaKaryawan');
+      kSel.innerHTML = globalMiscs.filter(m => m.kategori === 'karyawan').map(k => `<option value="${k.id}">${k.nama_item}</option>`).join('');
+
+      const tSel = document.getElementById('mPascaTali');
+      tSel.innerHTML = globalMiscs.filter(m => m.kategori === 'tali').map(t => `<option value="${t.id}">${t.nama_item}</option>`).join('');
+    }
+
+    // 4. DATABASE CRUD ACTIONS
+    async function saveBarang() {
+      const payload = {
+        nama_barang: document.getElementById('mBarangNama').value,
+        berat_biji_kg: parseFloat(document.getElementById('mBarangBerat').value) || 0,
+        isi_per_kotak: parseInt(document.getElementById('mBarangKotak').value) || 1,
+        isi_per_zak: parseInt(document.getElementById('mBarangZak').value) || 1,
+        lingkar_cm: parseFloat(document.getElementById('mBarangLingkar').value) || 0,
+        tebal_cm: parseFloat(document.getElementById('mBarangTebal').value) || 0,
+        lubang_cm: parseFloat(document.getElementById('mBarangLubang').value) || 0
+      };
+      await supabaseClient.from('products').insert([payload]);
+      closeModal('modalBarang');
+      loadMasterData();
+    }
+
+    async function saveKustomer() {
+      const payload = {
+        nama: document.getElementById('mKustNama').value,
+        perusahaan: document.getElementById('mKustPerusahaan').value,
+        lokasi: document.getElementById('mKustLokasi').value
+      };
+      await supabaseClient.from('customers').insert([payload]);
+      closeModal('modalKustomer');
+      loadMasterData();
+    }
+
+    async function saveMisc() {
+      const payload = {
+        kategori: document.getElementById('mMiscKategori').value,
+        nama_item: document.getElementById('mMiscNama').value
+      };
+      await supabaseClient.from('miscs').insert([payload]);
+      closeModal('modalMisc');
+      loadMasterData();
+    }
+
+    async function deleteItem(table, id) {
+      if(confirm('Yakin ingin menghapus data ini?')) {
+        await supabaseClient.from(table).delete().eq('id', id);
+        loadMasterData();
+      }
+    }
+
+    function renderTableBarang() {
+      document.getElementById('tbodyBarang').innerHTML = globalProducts.map(p => `
+        <tr>
+          <td><strong>${p.nama_barang}</strong></td>
+          <td>${p.berat_biji_kg} kg</td>
+          <td>${p.lingkar_cm} / ${p.tebal_cm} / ${p.lubang_cm}</td>
+          <td>${p.isi_per_kotak}</td>
+          <td>${p.isi_per_zak}</td>
+          <td><button class="btn btn-danger" onclick="deleteItem('products', ${p.id})">Hapus</button></td>
+        </tr>
+      `).join('') || '<tr><td colspan="6">Data Kosong</td></tr>';
+    }
+
+    function renderTableKustomer() {
+      document.getElementById('tbodyKustomer').innerHTML = globalCustomers.map(c => `
+        <tr>
+          <td><strong>${c.nama}</strong></td>
+          <td>${c.perusahaan || '-'}</td>
+          <td>${c.lokasi || '-'}</td>
+          <td><button class="btn btn-danger" onclick="deleteItem('customers', ${c.id})">Hapus</button></td>
+        </tr>
+      `).join('') || '<tr><td colspan="4">Data Kosong</td></tr>';
+    }
+
+    function renderTableMiscs() {
+      document.getElementById('tbodyMiscs').innerHTML = globalMiscs.map(m => `
+        <tr>
+          <td><strong>${m.kategori.toUpperCase()}</strong></td>
+          <td>${m.nama_item}</td>
+          <td><button class="btn btn-danger" onclick="deleteItem('miscs', ${m.id})">Hapus</button></td>
+        </tr>
+      `).join('') || '<tr><td colspan="3">Data Kosong</td></tr>';
+    }
+
+    // 5. CASTING SESSION & WORKFLOW (PRA & PASCA PRODUKSI)
+    async function loadCastingSession() {
+      if(!supabaseClient) return;
+      const tgl = document.getElementById('dateCor').value;
+      document.getElementById('spkDateText').innerText = `Tanggal: ${tgl}`;
+
+      let { data, error } = await supabaseClient.from('casting_sessions').select('*').eq('tanggal_cor', tgl).single();
+      
+      if(!data) {
+        const ins = await supabaseClient.from('casting_sessions').insert([{ tanggal_cor: tgl, status: 'aktif' }]).select().single();
+        currentSession = ins.data;
+      } else {
+        currentSession = data;
+      }
+
+      // Update UI Status
+      const badge = document.getElementById('sessionStatusBadge');
+      const btnClose = document.getElementById('btnCloseSession');
+      if(currentSession.status === 'closed') {
+        badge.innerText = 'Sesi: TERKUNCI (CLOSED)';
+        badge.className = 'badge badge-over';
+        btnClose.style.display = 'none';
+      } else {
+        badge.innerText = 'Sesi: AKTIF';
+        badge.className = 'badge badge-safe';
+        btnClose.style.display = 'inline-block';
+      }
+
+      loadPraOrders();
+      loadPascaLogs();
+    }
+
+    // PRA PRODUKSI LOGIC & CALCULATIONS
+    async function saveEntryOrder() {
+      if(currentSession.status === 'closed') return alert('Sesi cor sudah ditutup!');
+      
+      const productId = parseInt(document.getElementById('mOrderProduct').value);
+      const product = globalProducts.find(p => p.id === productId);
+      const awal = parseInt(document.getElementById('mOrderAwal').value) || 0;
+      const adj = parseInt(document.getElementById('mOrderAdj').value) || 0;
+      const akhir = awal - adj;
+      const satuan = document.getElementById('mOrderSatuan').value;
+
+      // Formula =CEILING.MATH(ROUNDUP(IF(unit="kg";X/(z*y);X/Z);0);10)
+      let rawKotak = 0;
+      if(satuan === 'kg') {
+        rawKotak = akhir / (product.isi_per_kotak * product.berat_biji_kg);
+      } else {
+        rawKotak = akhir / product.isi_per_kotak;
+      }
+      let MathCeil = Math.ceil(rawKotak || 0);
+      let kebutuhanKotak = Math.ceil(MathCeil / 10) * 10; // Round up to nearest 10
+
+      const payload = {
+        session_id: currentSession.id,
+        customer_id: parseInt(document.getElementById('mOrderCustomer').value),
+        product_id: productId,
+        jumlah_awal: awal,
+        pengurangan: adj,
+        jumlah_akhir: akhir,
+        satuan: satuan,
+        kebutuhan_kotak: kebutuhanKotak
+      };
+
+      await supabaseClient.from('casting_orders').insert([payload]);
+      closeModal('modalEntryOrder');
+      loadPraOrders();
+    }
+
+    async function loadPraOrders() {
+      if(!currentSession) return;
+      const { data } = await supabaseClient.from('casting_orders').select('*, customers(nama), products(nama_barang, berat_biji_kg)').eq('session_id', currentSession.id);
+      
+      let totalKotak = 0;
+      let spkSummary = {};
+
+      document.getElementById('tbodyPraOrder').innerHTML = (data || []).map(o => {
+        totalKotak += o.kebutuhan_kotak;
+        
+        // Accumulate SPK
+        spkSummary[o.products.nama_barang] = (spkSummary[o.products.nama_barang] || 0) + o.kebutuhan_kotak;
+
+        return `
+          <tr>
+            <td>${o.customers ? o.customers.nama : '-'}</td>
+            <td><strong>${o.products ? o.products.nama_barang : '-'}</strong></td>
+            <td>${o.jumlah_awal}</td>
+            <td>${o.pengurangan}</td>
+            <td><strong>${o.jumlah_akhir} ${o.satuan}</strong></td>
+            <td>${o.products ? o.products.berat_biji_kg : 0} kg</td>
+            <td><strong>${o.kebutuhan_kotak} Kotak</strong></td>
+            <td><button class="btn btn-danger" onclick="deleteOrder(${o.id})">Hapus</button></td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="8" style="text-align:center;">Belum ada order.</td></tr>';
+
+      // Indicator Box
+      document.getElementById('txtTotalKotak').innerText = `${totalKotak} Kotak`;
+      const badgeCap = document.getElementById('badgeKapasitas');
+      if(totalKotak > 100) {
+        badgeCap.innerText = 'OVERLOAD';
+        badgeCap.className = 'badge badge-over';
+      } else {
+        badgeCap.innerText = 'AMAN';
+        badgeCap.className = 'badge badge-safe';
+      }
+
+      // Render SPK Table
+      let spkIndex = 1;
+      document.getElementById('tbodySPK').innerHTML = Object.keys(spkSummary).map(k => `
+        <tr>
+          <td>${spkIndex++}</td>
+          <td><strong>${k}</strong></td>
+          <td><strong>${spkSummary[k]} Kotak</strong></td>
+        </tr>
+      `).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada data order.</td></tr>';
+    }
+
+    async function deleteOrder(id) {
+      if(confirm('Hapus order ini?')) {
+        await supabaseClient.from('casting_orders').delete().eq('id', id);
+        loadPraOrders();
+      }
+    }
+
+    // PASCA PRODUKSI LOGIC
+    async function saveEntryPasca() {
+      if(currentSession.status === 'closed') return alert('Sesi cor sudah ditutup!');
+
+      const productId = parseInt(document.getElementById('mPascaProduct').value);
+      const product = globalProducts.find(p => p.id === productId);
+      const jumlahBiji = parseInt(document.getElementById('mPascaJumlah').value) || 0;
+
+      const zakTotal = Math.floor(jumlahBiji / product.isi_per_zak);
+      const sisaBiji = jumlahBiji % product.isi_per_zak;
+
+      const payload = {
+        session_id: currentSession.id,
+        karyawan_id: parseInt(document.getElementById('mPascaKaryawan').value),
+        product_id: productId,
+        warna_tali_id: parseInt(document.getElementById('mPascaTali').value),
+        jumlah_biji: jumlahBiji,
+        zak_total: zakTotal,
+        sisa_biji: sisaBiji
+      };
+
+      await supabaseClient.from('casting_production_logs').insert([payload]);
+      closeModal('modalEntryPasca');
+      loadPascaLogs();
+    }
+
+    async function loadPascaLogs() {
+      if(!currentSession) return;
+      const { data } = await supabaseClient.from('casting_production_logs')
+        .select('*, products(nama_barang, berat_biji_kg), karyawan:miscs!karyawan_id(nama_item), tali:miscs!warna_tali_id(nama_item)')
+        .eq('session_id', currentSession.id);
+
+      let summaryMap = {};
+
+      document.getElementById('tbodyPascaLog').innerHTML = (data || []).map(l => {
+        const zakFormat = `${l.zak_total} Zak` + (l.sisa_biji > 0 ? ` + <small>${l.sisa_biji}</small>` : '');
+        
+        // Accumulate summary
+        const pName = l.products ? l.products.nama_barang : '-';
+        if(!summaryMap[pName]) {
+          summaryMap[pName] = { totalBiji: 0, beratBiji: l.products.berat_biji_kg, zakTotal: 0, sisaTotal: 0, tali: l.tali ? l.tali.nama_item : '-' };
+        }
+        summaryMap[pName].totalBiji += l.jumlah_biji;
+        summaryMap[pName].zakTotal += l.zak_total;
+        summaryMap[pName].sisaTotal += l.sisa_biji;
+
+        return `
+          <tr>
+            <td><strong>${l.karyawan ? l.karyawan.nama_item : '-'}</strong></td>
+            <td>${l.products ? l.products.nama_barang : '-'}</td>
+            <td>${l.tali ? l.tali.nama_item : '-'}</td>
+            <td>${l.jumlah_biji} biji</td>
+            <td><strong>${zakFormat}</strong></td>
+            <td><button class="btn btn-danger" onclick="deletePasca(${l.id})">Hapus</button></td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="6" style="text-align:center;">Belum ada hasil pengerjaan.</td></tr>';
+
+      // Summary Table Pasca
+      document.getElementById('tbodySummaryPasca').innerHTML = Object.keys(summaryMap).map(p => {
+        const item = summaryMap[p];
+        const totalKg = (item.totalBiji * item.beratBiji).toFixed(1);
+        const zakFormat = `${item.zakTotal} Zak` + (item.sisaTotal > 0 ? ` + <small>${item.sisaTotal}</small>` : '');
+        return `
+          <tr>
+            <td><strong>${p}</strong></td>
+            <td>${item.totalBiji} biji</td>
+            <td><strong>${totalKg} kg</strong></td>
+            <td>${item.tali}</td>
+            <td><strong>${zakFormat}</strong></td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="5" style="text-align:center;">Belum ada data.</td></tr>';
+    }
+
+    async function deletePasca(id) {
+      if(confirm('Hapus log hasil ini?')) {
+        await supabaseClient.from('casting_production_logs').delete().eq('id', id);
+        loadPascaLogs();
+      }
+    }
+
+    // CLOSE SESSION (CASE CLOSED)
+    async function closeCastingSession() {
+      if(!currentSession) return;
+      if(confirm('Yakin ingin menutup sesi cor ini? Setelah dikunci, data tidak dapat diubah lagi.')) {
+        await supabaseClient.from('casting_sessions').update({ status: 'closed' }).eq('id', currentSession.id);
+        loadCastingSession();
+      }
+    }
+
+    // 6. DOWNLOAD SPK AS IMAGE
+    function downloadSPK() {
+      const area = document.getElementById('spkPrintArea');
+      html2canvas(area).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `SPK_MajuLancar_${document.getElementById('dateCor').value}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    }
+
+    // 7. RIWAYAT / HISTORY LOAD
+    async function loadRiwayat() {
+      const { data } = await supabaseClient.from('casting_sessions').select('*').order('tanggal_cor', { ascending: false });
+      document.getElementById('tbodyRiwayat').innerHTML = (data || []).map(r => `
+        <tr>
+          <td><strong>${r.tanggal_cor}</strong></td>
+          <td><span class="badge ${r.status==='closed'?'badge-over':'badge-safe'}">${r.status.toUpperCase()}</span></td>
+          <td><button class="btn btn-primary" onclick="viewHistoryDate('${r.tanggal_cor}')">Lihat Data</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function viewHistoryDate(tgl) {
+      document.getElementById('dateCor').value = tgl;
+      switchTab('tabPengecoran');
+      loadCastingSession();
+    }
+
+    // INIT
+    window.onload = initSupabase;
+  </script>
+</body>
+</html>
