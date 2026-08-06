@@ -471,7 +471,7 @@
 
   <script>
     const SUPABASE_URL = "https://movcjscdntwckaslnumn.supabase.co"; 
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1a3JydGttaXFuaHRhg3dscXhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5OTkwMTEsImV4cCI6MjEwMTU3NTAxMX0.Jzi14b1heGTt1ObUau64KO2wPq2ri1qLcdR-IsJvi1E";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1a3JydGttaXFuaHRnc3dscXhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5OTkwMTEsImV4cCI6MjEwMTU3NTAxMX0.Jzi14b1heGTt1ObUau64KO2wPq2ri1qLcdR-IsJvi1E";
     
     let supabaseClient = null, currentSession = null, cachedOrders = [];
     let globalProducts = [], globalCustomers = [], globalMiscs = [];
@@ -550,9 +550,9 @@
 
     function populateDropdowns() {
       const prodOptions = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang}</option>`).join('');
-      document.getElementById('mOrderProduct').innerHTML = document.getElementById('mPascaProduct').innerHTML = prodOptions;
-      document.getElementById('mOrderCustomer').innerHTML = globalCustomers.map(c => `<option value="${c.id}">${c.nama} (${c.perusahaan || '-'})</option>`).join('');
-      document.getElementById('mPascaKaryawan').innerHTML = globalMiscs.filter(m => m.kategori === 'karyawan').map(k => `<option value="${k.id}">${k.nama_item}</option>`).join('');
+      document.getElementById('mOrderProduct').innerHTML = document.getElementById('mPascaProduct').innerHTML = prodOptions || '<option value="">(Kosong)</option>';
+      document.getElementById('mOrderCustomer').innerHTML = globalCustomers.map(c => `<option value="${c.id}">${c.nama} (${c.perusahaan || '-'})</option>`).join('') || '<option value="">(Kosong)</option>';
+      document.getElementById('mPascaKaryawan').innerHTML = globalMiscs.filter(m => m.kategori === 'karyawan').map(k => `<option value="${k.id}">${k.nama_item}</option>`).join('') || '<option value="">(Kosong)</option>';
     }
 
     function resetFormBarang() {
@@ -670,14 +670,14 @@
       if(!supabaseClient) return;
       const tgl = document.getElementById('dateCor').value;
       document.getElementById('spkDateText').innerText = `Tanggal Pencetakan: ${tgl}`;
-      let { data } = await supabaseClient.from('casting_sessions').select('*').eq('tanggal_cor', tgl).single();
+      let { data } = await supabaseClient.from('casting_sessions').select('*').eq('tanggal_cor', tgl).maybeSingle();
       if(!data) {
         const ins = await supabaseClient.from('casting_sessions').insert([{ tanggal_cor: tgl, status: 'aktif' }]).select().single();
         currentSession = ins.data; cleanupOldSessions();
       } else { currentSession = data; }
 
       const badge = document.getElementById('sessionStatusBadge'), btnClose = document.getElementById('btnCloseSession');
-      if(currentSession.status === 'closed') {
+      if(currentSession && currentSession.status === 'closed') {
         badge.innerText = 'Sesi: CLOSED'; badge.className = 'badge badge-over'; btnClose.style.display = 'none';
       } else {
         badge.innerText = 'Sesi: AKTIF'; badge.className = 'badge badge-safe'; btnClose.style.display = 'inline-block';
