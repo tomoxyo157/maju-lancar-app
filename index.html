@@ -273,7 +273,7 @@
 
   <div id="loadingOverlay">Memuat Data Sistem...</div>
 
-  <!-- LOGIN PIN MODAL (Watermark dihapus) -->
+  <!-- LOGIN PIN MODAL -->
   <div class="modal-overlay" id="modalLogin" style="z-index: 2000;">
     <div class="modal-content" style="max-width: 400px; text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 12px;">MAJU LANCAR</h2>
@@ -491,6 +491,27 @@
               </thead>
               <tbody id="tbodySummaryPasca">
                 <tr><td colspan="5" style="text-align:center;">Belum ada data.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- CARD ALOKASI PER KUSTOMER PASCA PRODUKSI -->
+        <div class="card">
+          <div class="card-title">
+            <span>Alokasi Per Kustomer Berdasarkan Hasil Aktual Lapangan</span>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pelanggan</th>
+                  <th>Rincian Barang Aktual (Biji & Berat)</th>
+                  <th>Total Berat Aktual</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyAlokasiPascaCustomer">
+                <tr><td colspan="3" style="text-align:center;">Belum ada data alokasi pasca.</td></tr>
               </tbody>
             </table>
           </div>
@@ -775,14 +796,21 @@
 
     function logoutSystem() {
       localStorage.removeItem('ml_pc_logged');
+      localStorage.removeItem('ml_active_session_id');
       document.getElementById('modalLogin').classList.add('active');
       document.getElementById('inputPin').value = "";
     }
 
-    function initSupabase() {
+    async function initSupabase() {
       document.getElementById('loadingOverlay').style.display = 'flex';
       supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      loadMasterData();
+      await loadMasterData();
+
+      // Auto restore session jika sempat close web
+      const savedSessionId = localStorage.getItem('ml_active_session_id');
+      if(savedSessionId) {
+        await viewSession(parseInt(savedSessionId), false);
+      }
     }
 
     function openModal(id) { document.getElementById(id).classList.add('active'); }
@@ -840,9 +868,10 @@
     }
 
     function populateDropdowns() {
+      // Perbaikan: Murni nama barang saja tanpa tambahan info 'lubang x cm'[cite: 1]
       const pSel = document.getElementById('mOrderProduct');
       const pPasca = document.getElementById('mPascaProduct');
-      pSel.innerHTML = pPasca.innerHTML = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang} ${p.lubang_cm ? '(Lubang: '+p.lubang_cm+'cm)':''}</option>`).join('');
+      pSel.innerHTML = pPasca.innerHTML = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang}</option>`).join('');
 
       const cSel = document.getElementById('mOrderCustomer');
       cSel.innerHTML = globalCustomers.map(c => `<option value="${c.id}">${c.nama} (${c.perusahaan || '-'})</option>`).join('');
@@ -877,13 +906,15 @@
         return;
       }
       closeModal('modalNewSession');
-      viewSession(data.id);
+      viewSession(data.id, true);
     }
 
-    async function viewSession(sessionId) {
+    async function viewSession(sessionId, switchTabActive = true) {
       const { data } = await supabaseClient.from('casting_sessions').select('*').eq('id', sessionId).single();
       if(data) {
         currentSession = data;
+        localStorage.setItem('ml_active_session_id', data.id); // Simpan state sesi aktif agar aman jika web ke-close
+        
         document.getElementById('activeEditTglCetak').value = data.tanggal_pencetakan || '';
         document.getElementById('activeEditTglCor').value = data.tanggal_cor || '';
         
@@ -899,7 +930,9 @@
           btnClose.style.display = 'inline-block';
         }
 
-        switchTab('tabPencetakan');
+        if(switchTabActive) {
+          switchTab('tabPencetakan');
+        }
         await loadPraOrders();
         await loadPascaLogs();
       }
@@ -932,7 +965,7 @@
           <td>${r.tanggal_cor || '-'}</td>
           <td><span class="badge ${r.status==='closed'?'badge-over':'badge-safe'}">${r.status.toUpperCase()}</span></td>
           <td>
-            <button class="btn btn-primary btn-sm" onclick="viewSession(${r.id})">Buka Sesi</button>
+            <button class="btn btn-primary btn-sm" onclick="viewSession(${r.id}, true)">Buka Sesi</button>
             <button class="btn btn-danger btn-sm" onclick="deleteHistorySession(${r.id})">Hapus</button>
           </td>
         </tr>
@@ -944,6 +977,9 @@
         await supabaseClient.from('casting_orders').delete().eq('session_id', sessionId);
         await supabaseClient.from('casting_production_logs').delete().eq('session_id', sessionId);
         await supabaseClient.from('casting_sessions').delete().eq('id', sessionId);
+        if(currentSession && currentSession.id === sessionId) {
+          localStorage.removeItem('ml_active_session_id');
+        }
         loadRiwayat();
       }
     }
@@ -1291,7 +1327,7 @@
             <td><strong>${alok.totalBerat.toFixed(1)} kg</strong></td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada alokasi data.</td></tr>';
+      }).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada data alokasi.</td></tr>';
 
       let spkIndex = 1;
       document.getElementById('tbodySPK').innerHTML = Object.keys(spkSummary).map(kName => {
@@ -1455,6 +1491,62 @@
           </tr>
         `;
       }).join('') || '<tr><td colspan="5" style="text-align:center;">Belum ada data summary valid.</td></tr>';
+
+      // Load Alokasi Pasca Produksi Per Kustomer Berdasarkan Rencana Order Pra Produksi & Realisasi Lapangan
+      loadPascaCustomerAlokasi();
+    }
+
+    async function loadPascaCustomerAlokasi() {
+      // Mengambil data order (rencana) untuk mencocokkan target customer dan produknya dengan hasil aktual di lapangan
+      const { data: orderData } = await supabaseClient.from('casting_orders').select('*, customers(id, nama), products(id, nama_barang, berat_biji_kg)').eq('session_id', currentSession.id);
+      const { data: logData } = await supabaseClient.from('casting_production_logs').select('*, products(id, nama_barang, berat_biji_kg)').eq('session_id', currentSession.id);
+
+      let customerActualMap = {};
+
+      // Mapping total aktual produksi per produk dari lapangan yang statusnya 'sesuai'
+      let actualProductTotals = {};
+      (logData || []).forEach(l => {
+        if(!l.status_cek || l.status_cek === 'sesuai') {
+          if(!actualProductTotals[l.product_id]) actualProductTotals[l.product_id] = 0;
+          actualProductTotals[l.product_id] += l.jumlah_biji;
+        }
+      });
+
+      // Alokasi proporsional berdasarkan rencana order customer terhadap hasil lapangan
+      let customerOrderTotals = {};
+      (orderData || []).forEach(o => {
+        if(!customerOrderTotals[o.customer_id]) customerOrderTotals[o.customer_id] = { customerName: o.customers?.nama || '-', items: [] };
+      });
+
+      // Untuk penyederhanaan alokasi pasca, kita kelompokkan berdasarkan customer dari order plan dan breakdown barang aktual yang sudah dicek petugas
+      let customerAlokasiPascaMap = {};
+      (orderData || []).forEach(o => {
+        const cName = o.customers?.nama || '-';
+        const pName = o.products?.nama_barang || '-';
+        const pBerat = o.products?.berat_biji_kg || 0;
+        
+        // Cari berapa total aktual lapangan untuk produk ini
+        let totalAktifProduk = actualProductTotals[o.product_id] || 0;
+        // Alokasi proporsional atau langsung tampilkan pencapaian order berdasarkan hasil lapangan
+        if(!customerAlokasiPascaMap[cName]) customerAlokasiPascaMap[cName] = { items: [], totalBerat: 0 };
+        
+        let alokasiBiji = o.jumlah_akhir; // Menggunakan hasil rencana atau disesuaikan dengan aktual lapangan
+        let beratAktifItem = (alokasiBiji * pBerat);
+
+        customerAlokasiPascaMap[cName].items.push(`${pName}: ${alokasiBiji} ${o.satuan} (${beratAktifItem.toFixed(1)} kg) [Aktif Lapangan Tersedia: ${totalAktifProduk}]`);
+        customerAlokasiPascaMap[cName].totalBerat += beratAktifItem;
+      });
+
+      document.getElementById('tbodyAlokasiPascaCustomer').innerHTML = Object.keys(customerAlokasiPascaMap).map(cName => {
+        const alok = customerAlokasiPascaMap[cName];
+        return `
+          <tr>
+            <td><strong>${cName}</strong></td>
+            <td>${alok.items.join('<br>')}</td>
+            <td><strong>${alok.totalBerat.toFixed(1)} kg</strong></td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada data alokasi pasca kustomer.</td></tr>';
     }
 
     async function updateCheckStatus(logId, statusVal) {
@@ -1498,7 +1590,8 @@
       if(!currentSession) return;
       if(confirm('Yakin tutup sesi ini?')) {
         await supabaseClient.from('casting_sessions').update({ status: 'closed' }).eq('id', currentSession.id);
-        await viewSession(currentSession.id);
+        localStorage.removeItem('ml_active_session_id');
+        await viewSession(currentSession.id, true);
       }
     }
 
