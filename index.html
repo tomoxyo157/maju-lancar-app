@@ -890,10 +890,8 @@
       tSel.innerHTML = globalMiscs.filter(m => m.kategori === 'tali').map(t => `<option value="${t.id}">${t.nama_item}</option>`).join('');
     }
 
-    // Membatasi barang pada pasca produksi hanya dari barang yang terdaftar di rencana cetak (session ini)
     function populatePascaProductDropdown() {
       const pPasca = document.getElementById('mPascaProduct');
-      // Ambil product_id unik dari cachedOrders
       const productIdsInOrder = [...new Set(cachedOrders.map(o => o.product_id))];
       const filteredProducts = globalProducts.filter(p => productIdsInOrder.includes(p.id));
 
@@ -1325,7 +1323,6 @@
             const pBerat = o.products ? o.products.berat_biji_kg : 0;
             const pKotakIsi = o.products ? o.products.isi_per_kotak : 1;
 
-            // Kalkulasi real-time kelipatan ceiling math
             let rawVal = (o.satuan === 'kg') ? (o.jumlah_akhir / ((pBerat || 1) * (pKotakIsi || 1))) : (o.jumlah_akhir / (pKotakIsi || 1));
             o.kebutuhan_kotak = Math.ceil(Math.ceil(rawVal || 0) / qVal) * qVal;
 
@@ -1413,7 +1410,6 @@
       document.getElementById('txtTotalBeratPraSummary').innerText = `Total Berat Cetak: ${totalBeratCetakGlobal.toFixed(1)} kg`;
       updateKotakIndicator();
 
-      // Render grid card alokasi pra produksi
       const gridPra = document.getElementById('gridAlokasiCustomerPra');
       const keysPra = Object.keys(customerAlokasiMap);
       if(keysPra.length > 0) {
@@ -1453,7 +1449,6 @@
         `;
       }).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada data.</td></tr>';
 
-      // Refresh dropdown pasca product jika aktif
       populatePascaProductDropdown();
     }
 
@@ -1512,8 +1507,8 @@
       const product = globalProducts.find(p => p.id === productId);
       const jumlahBiji = parseInt(document.getElementById('mPascaJumlah').value) || 0;
 
-      const zakTotal = Math.floor(jumlahBiji / (product.isi_per_zak || 50));
-      const sisaBiji = jumlahBiji % (product.isi_per_zak || 50);
+      const zakOtomatis = Math.floor(jumlahBiji / (product.isi_per_zak || 50));
+      const sisaOtomatis = jumlahBiji % (product.isi_per_zak || 50);
 
       const payload = {
         session_id: currentSession.id,
@@ -1521,10 +1516,12 @@
         product_id: productId,
         warna_tali_id: parseInt(document.getElementById('mPascaTali').value),
         jumlah_biji: jumlahBiji,
-        zak_total: zakTotal,
-        sisa_biji: sisaBiji,
+        zak_total: zakOtomatis,
+        sisa_biji: sisaOtomatis,
         status_cek: 'sesuai',
-        catatan_ketidaksesuaian: ''
+        catatan_ketidaksesuaian: '',
+        zak_manual: 0,
+        sisa_biji_manual: 0
       };
 
       let error;
@@ -1546,23 +1543,20 @@
         .select('*, products(nama_barang, lubang_cm, berat_biji_kg, isi_per_zak), karyawan:miscs!karyawan_id(nama_item), tali:miscs!warna_tali_id(nama_item)')
         .eq('session_id', currentSession.id);
 
+      // FILTER: Hanya ambil data yang status_cek-nya tidak null
+      const filteredData = (data || []).filter(l => l.status_cek !== null);
+
       let summaryMap = {};
 
       document.getElementById('tbodyPascaLog').innerHTML = (data || []).map(l => {
-        const isSesuai = (!l.status_cek || l.status_cek === 'sesuai');
-        const zakFormat = isSesuai ? (`${l.zak_total} Karung/Zak` + (l.sisa_biji > 0 ? ` + <small style="font-size:0.8rem; color:var(--text-muted);">${l.sisa_biji} kecil</small>` : '')) : '-';
+        const isSesuai = (l.status_cek === 'sesuai');
         const pName = l.products ? `${l.products.nama_barang}` : '-';
         const karyName = l.karyawan ? l.karyawan.nama_item : '-';
         
-        const summaryKey = `${pName}_${l.tali ? l.tali.nama_item : '-'}_${karyName}`;
-        if(isSesuai) {
-          if(!summaryMap[summaryKey]) {
-            summaryMap[summaryKey] = { productName: pName, karyawanName: karyName, totalBiji: 0, beratBiji: l.products ? l.products.berat_biji_kg : 0, zakTotal: 0, sisaTotal: 0, isiZak: l.products ? l.products.isi_per_zak : 50, tali: l.tali ? l.tali.nama_item : '-' };
-          }
-          summaryMap[summaryKey].totalBiji += l.jumlah_biji;
-          summaryMap[summaryKey].zakTotal += l.zak_total;
-          summaryMap[summaryKey].sisaTotal += l.sisa_biji;
-        }
+        const inputZak = isSesuai 
+          ? `<strong>${l.zak_total} Karung + ${l.sisa_biji} bj</strong>`
+          : `<input type="number" placeholder="Input Karung..." title="Masukkan jumlah karung manual" value="${l.zak_manual || 0}" style="width: 80px; display: inline-block; padding: 4px; margin-right: 4px;" onchange="updateManualZak(${l.id}, this.value)">
+             <input type="number" placeholder="Input Biji..." title="Masukkan sisa biji manual" value="${l.sisa_biji_manual || 0}" style="width: 70px; display: inline-block; padding: 4px;" onchange="updateManualSisa(${l.id}, this.value)">`;
 
         return `
           <tr>
@@ -1581,7 +1575,7 @@
                 `<input type="text" placeholder="Catatan ketidaksesuaian..." value="${l.catatan_ketidaksesuaian || ''}" style="width: 240px; padding: 4px; margin:0;" onchange="updateCatatan(${l.id}, this.value)">`
               }
             </td>
-            <td><strong>${zakFormat}</strong></td>
+            <td>${inputZak}</td>
             <td>
               <button class="btn btn-warning btn-sm" onclick="openModalPasca(${l.id})">Edit</button>
               <button class="btn btn-danger btn-sm" onclick="deletePasca(${l.id})">Hapus</button>
@@ -1589,6 +1583,35 @@
           </tr>
         `;
       }).join('') || '<tr><td colspan="7" style="text-align:center;">Belum ada hasil.</td></tr>';
+
+      // Gunakan filteredData untuk logic Summary & Alokasi
+      filteredData.forEach(l => {
+        const pName = l.products ? `${l.products.nama_barang}` : '-';
+        const karyName = l.karyawan ? l.karyawan.nama_item : '-';
+        const summaryKey = `${pName}_${l.tali ? l.tali.nama_item : '-'}_${karyName}`;
+        
+        if(!summaryMap[summaryKey]) {
+          summaryMap[summaryKey] = { 
+            productName: pName, 
+            karyawanName: karyName, 
+            totalBiji: 0, 
+            beratBiji: l.products ? l.products.berat_biji_kg : 0, 
+            zakTotal: 0, 
+            sisaTotal: 0, 
+            isiZak: l.products ? l.products.isi_per_zak : 50, 
+            tali: l.tali ? l.tali.nama_item : '-' 
+          };
+        }
+        
+        summaryMap[summaryKey].totalBiji += l.jumlah_biji;
+        if (l.status_cek === 'sesuai') {
+          summaryMap[summaryKey].zakTotal += l.zak_total;
+          summaryMap[summaryKey].sisaTotal += l.sisa_biji;
+        } else {
+          summaryMap[summaryKey].zakTotal += (l.zak_manual || 0);
+          summaryMap[summaryKey].sisaTotal += (l.sisa_biji_manual || 0);
+        }
+      });
 
       document.getElementById('tbodySummaryPasca').innerHTML = Object.keys(summaryMap).map(key => {
         const item = summaryMap[key];
@@ -1615,8 +1638,8 @@
       const gridPasca = document.getElementById('gridAlokasiPascaCustomer');
       const txtTotalPascaSummary = document.getElementById('txtTotalBeratPascaSummary');
 
-      // Pengecekan lapangan belum dilakukan jika logData kosong -> Kosongkan card alokasi pasca
-      if(!logData || logData.length === 0) {
+      const filteredLogs = (logData || []).filter(l => l.status_cek !== null);
+      if(!filteredLogs || filteredLogs.length === 0) {
         gridPasca.innerHTML = '<div style="text-align:center; grid-column: 1/-1; padding: 20px; color: var(--text-muted);">Belum ada data alokasi pasca (pengecekan lapangan belum dilakukan).</div>';
         txtTotalPascaSummary.innerText = `Total Berat Cor: 0 kg`;
         return;
@@ -1682,6 +1705,22 @@
       await loadPascaLogs();
     }
 
+    async function updateManualZak(logId, val) {
+      const valZak = parseInt(val) || 0;
+      await supabaseClient.from('casting_production_logs').update({
+        zak_manual: valZak
+      }).eq('id', logId);
+      await loadPascaLogs();
+    }
+
+    async function updateManualSisa(logId, val) {
+      const valSisa = parseInt(val) || 0;
+      await supabaseClient.from('casting_production_logs').update({
+        sisa_biji_manual: valSisa
+      }).eq('id', logId);
+      await loadPascaLogs();
+    }
+
     async function updateQuickBiji(logId, newBijiVal) {
       const biji = parseInt(newBijiVal) || 0;
       const { data: logData } = await supabaseClient.from('casting_production_logs').select('*, products(isi_per_zak)').eq('id', logId).single();
@@ -1725,3 +1764,4 @@
   </script>
 </body>
 </html>
+```[cite: 1]
