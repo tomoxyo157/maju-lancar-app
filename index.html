@@ -79,7 +79,6 @@
       padding: 0 16px;
     }
 
-    /* Grid Layout untuk Card Alokasi */
     .grid-cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -204,7 +203,6 @@
     .badge-safe { background-color: var(--success); }
     .badge-over { background-color: var(--danger); }
 
-    /* Modal */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -295,7 +293,6 @@
     </div>
   </div>
 
-  <!-- HEADER -->
   <header>
     <div style="display: flex; align-items: center; gap: 12px;">
       <img src="https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg" alt="Logo" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;">
@@ -304,7 +301,6 @@
     <button class="btn btn-warning" onclick="logoutSystem()">Keluar</button>
   </header>
 
-  <!-- NAVIGATION TABS -->
   <nav>
     <button class="nav-btn active" onclick="switchTab('tabRiwayat')">Riwayat & Dashboard</button>
     <button class="nav-btn" onclick="switchTab('tabPencetakan')">Sesi Pencetakan Aktif</button>
@@ -338,7 +334,7 @@
       </div>
     </div>
 
-    <!-- TAB 2: SESI PENCETAKAN (PRA & PASCA PRODUKSI) -->
+    <!-- TAB 2: SESI PENCETAKAN -->
     <div id="tabPencetakan" class="tab-content" style="display: none;">
       <div class="card">
         <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
@@ -402,7 +398,6 @@
             </table>
           </div>
 
-          <!-- REALTIME INDICATOR KOTAK -->
           <div class="indicator-box">
             <div>
               <strong style="font-size: 1.1rem;">Total Kotak Dipesan:</strong>
@@ -427,7 +422,6 @@
           </div>
         </div>
 
-        <!-- GRID CARDS UNTUK ALOKASI PRA PRODUKSI -->
         <div class="card">
           <div class="card-title">
             <span>Alokasi Per Kustomer (Pra Produksi)</span>
@@ -438,7 +432,6 @@
           </div>
         </div>
 
-        <!-- SPK FULL WIDTH -->
         <div class="card full-width" id="spkContainer">
           <div class="card-title">
             <span>Surat Perintah Kerja (SPK) Summary</span>
@@ -478,14 +471,15 @@
                   <th>Karyawan</th>
                   <th>Nama Barang</th>
                   <th>Warna Tali</th>
-                  <th>Status Cek</th>
-                  <th>Jumlah (Biji) / Keterangan</th>
-                  <th>Format Karung/Zak</th>
+                  <th>Jumlah (Biji)</th>
+                  <th>Kesesuaian</th>
+                  <th>Karung/Zak</th>
+                  <th>Keterangan</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
               <tbody id="tbodyPascaLog">
-                <tr><td colspan="7" style="text-align:center;">Memuat hasil...</td></tr>
+                <tr><td colspan="8" style="text-align:center;">Memuat hasil...</td></tr>
               </tbody>
             </table>
           </div>
@@ -513,7 +507,6 @@
           </div>
         </div>
 
-        <!-- CARD ALOKASI PER KUSTOMER PASCA PRODUKSI -->
         <div class="card">
           <div class="card-title">
             <span>Alokasi Per Kustomer Berdasarkan Hasil Aktual Lapangan</span>
@@ -769,7 +762,6 @@
   </div>
 
   <script>
-    // Konfigurasi Supabase Anda
     const SUPABASE_URL = "https://qukrrtkmiqnhtgswlqxm.supabase.co"; 
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1a3JydGttaXFuaHRnc3dscXhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5OTkwMTEsImV4cCI6MjEwMTU3NTAxMX0.Jzi14b1heGTt1ObUau64KO2wPq2ri1qLcdR-IsJvi1E";
     
@@ -1543,49 +1535,55 @@
         .select('*, products(nama_barang, lubang_cm, berat_biji_kg, isi_per_zak), karyawan:miscs!karyawan_id(nama_item), tali:miscs!warna_tali_id(nama_item)')
         .eq('session_id', currentSession.id);
 
-      // FILTER: Hanya ambil data yang status_cek-nya tidak null
-      const filteredData = (data || []).filter(l => l.status_cek !== null);
-
+      const logs = data || [];
       let summaryMap = {};
 
-      document.getElementById('tbodyPascaLog').innerHTML = (data || []).map(l => {
+      document.getElementById('tbodyPascaLog').innerHTML = logs.map(l => {
         const isSesuai = (l.status_cek === 'sesuai');
         const pName = l.products ? `${l.products.nama_barang}` : '-';
         const karyName = l.karyawan ? l.karyawan.nama_item : '-';
         
-        const inputZak = isSesuai 
-          ? `<strong>${l.zak_total} Karung + ${l.sisa_biji} bj</strong>`
-          : `<input type="number" placeholder="Input Karung..." title="Masukkan jumlah karung manual" value="${l.zak_manual || 0}" style="width: 80px; display: inline-block; padding: 4px; margin-right: 4px;" onchange="updateManualZak(${l.id}, this.value)">
-             <input type="number" placeholder="Input Biji..." title="Masukkan sisa biji manual" value="${l.sisa_biji_manual || 0}" style="width: 70px; display: inline-block; padding: 4px;" onchange="updateManualSisa(${l.id}, this.value)">`;
+        let displayKarungZak = "";
+        let displayKeterangan = "";
+
+        if(isSesuai) {
+          displayKarungZak = `<strong>${l.zak_total} Karung + ${l.sisa_biji} bj</strong>`;
+          displayKeterangan = `<input type="text" placeholder="Keterangan..." value="${l.catatan_ketidaksesuaian || ''}" disabled style="background:#e2e8f0; width:100%; padding:6px; margin:0;" />`;
+        } else {
+          displayKarungZak = `
+            <div style="display: flex; gap: 4px;">
+              <input type="number" placeholder="Karung Full" title="Karung Full (Kiri)" value="${l.zak_manual !== undefined ? l.zak_manual : 0}" style="width: 75px; padding: 6px; margin:0;" onchange="updateManualZak(${l.id}, this.value)">
+              <input type="number" placeholder="Karung Sisa" title="Karung Sisa Sisa Unit (Kanan)" value="${l.sisa_biji_manual !== undefined ? l.sisa_biji_manual : 0}" style="width: 75px; padding: 6px; margin:0;" onchange="updateManualSisa(${l.id}, this.value)">
+            </div>
+          `;
+          displayKeterangan = `<input type="text" placeholder="Masukkan catatan ketidaksesuaian..." value="${l.catatan_ketidaksesuaian || ''}" style="width: 100%; padding: 6px; margin:0;" onchange="updateCatatan(${l.id}, this.value)">`;
+        }
 
         return `
           <tr>
             <td><strong>${karyName}</strong></td>
             <td>${pName}</td>
             <td>${l.tali ? l.tali.nama_item : '-'}</td>
+            <td><strong>${l.jumlah_biji} Biji</strong></td>
             <td>
-              <select style="width: 130px; padding: 4px; margin:0;" onchange="updateCheckStatus(${l.id}, this.value)">
+              <select style="width: 130px; padding: 6px; margin:0;" onchange="updateCheckStatus(${l.id}, this.value)">
                 <option value="sesuai" ${isSesuai?'selected':''}>Sesuai</option>
                 <option value="tidak_sesuai" ${!isSesuai?'selected':''}>Tidak Sesuai</option>
               </select>
             </td>
-            <td>
-              ${isSesuai ? 
-                `<input type="number" value="${l.jumlah_biji}" style="width: 100px; padding: 4px; margin:0;" onchange="updateQuickBiji(${l.id}, this.value)">` :
-                `<input type="text" placeholder="Catatan ketidaksesuaian..." value="${l.catatan_ketidaksesuaian || ''}" style="width: 240px; padding: 4px; margin:0;" onchange="updateCatatan(${l.id}, this.value)">`
-              }
-            </td>
-            <td>${inputZak}</td>
+            <td>${displayKarungZak}</td>
+            <td>${displayKeterangan}</td>
             <td>
               <button class="btn btn-warning btn-sm" onclick="openModalPasca(${l.id})">Edit</button>
               <button class="btn btn-danger btn-sm" onclick="deletePasca(${l.id})">Hapus</button>
             </td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="7" style="text-align:center;">Belum ada hasil.</td></tr>';
+      }).join('') || '<tr><td colspan="8" style="text-align:center;">Belum ada hasil.</td></tr>';
 
-      // Gunakan filteredData untuk logic Summary & Alokasi
-      filteredData.forEach(l => {
+      // FILTER HANYA DATA LOG YANG VALID / DIISI
+      const filteredLogs = logs.filter(l => l.status_cek !== null);
+      filteredLogs.forEach(l => {
         const pName = l.products ? `${l.products.nama_barang}` : '-';
         const karyName = l.karyawan ? l.karyawan.nama_item : '-';
         const summaryKey = `${pName}_${l.tali ? l.tali.nama_item : '-'}_${karyName}`;
@@ -1616,7 +1614,7 @@
       document.getElementById('tbodySummaryPasca').innerHTML = Object.keys(summaryMap).map(key => {
         const item = summaryMap[key];
         const totalKg = (item.totalBiji * item.beratBiji).toFixed(1);
-        const zakFormat = `${item.zakTotal} Karung/Zak` + (item.sisaTotal > 0 ? ` + <small style="font-size:0.8rem; color:var(--text-muted);">${item.sisaTotal} kecil</small>` : '');
+        const zakFormat = `${item.zakTotal} Karung/Zak` + (item.sisaTotal > 0 ? ` + <small style="font-size:0.8rem; color:var(--text-muted);">${item.sisaTotal} bj</small>` : '');
         return `
           <tr>
             <td><strong>${item.productName}</strong> <br><small>(${item.karyawanName})</small></td>
@@ -1628,22 +1626,20 @@
         `;
       }).join('') || '<tr><td colspan="5" style="text-align:center;">Belum ada data summary valid.</td></tr>';
 
-      loadPascaCustomerAlokasi();
+      loadPascaCustomerAlokasi(filteredLogs);
     }
 
-    async function loadPascaCustomerAlokasi() {
-      const { data: orderData } = await supabaseClient.from('casting_orders').select('*, customers(id, nama), products(id, nama_barang, berat_biji_kg, isi_per_zak)').eq('session_id', currentSession.id);
-      const { data: logData } = await supabaseClient.from('casting_production_logs').select('*, products(id, nama_barang, berat_biji_kg, isi_per_zak)').eq('session_id', currentSession.id);
-
+    async function loadPascaCustomerAlokasi(filteredLogs) {
       const gridPasca = document.getElementById('gridAlokasiPascaCustomer');
       const txtTotalPascaSummary = document.getElementById('txtTotalBeratPascaSummary');
 
-      const filteredLogs = (logData || []).filter(l => l.status_cek !== null);
       if(!filteredLogs || filteredLogs.length === 0) {
         gridPasca.innerHTML = '<div style="text-align:center; grid-column: 1/-1; padding: 20px; color: var(--text-muted);">Belum ada data alokasi pasca (pengecekan lapangan belum dilakukan).</div>';
         txtTotalPascaSummary.innerText = `Total Berat Cor: 0 kg`;
         return;
       }
+
+      const { data: orderData } = await supabaseClient.from('casting_orders').select('*, customers(id, nama), products(id, nama_barang, berat_biji_kg, isi_per_zak)').eq('session_id', currentSession.id);
 
       let totalBeratCorGlobal = 0;
       let customerAlokasiPascaMap = {};
@@ -1693,7 +1689,7 @@
     async function updateCheckStatus(logId, statusVal) {
       await supabaseClient.from('casting_production_logs').update({
         status_cek: statusVal,
-        catatan_ketidaksesuaian: statusVal === 'tidak_sesuai' ? 'Barang tidak sesuai' : ''
+        catatan_ketidaksesuaian: statusVal === 'sesuai' ? '' : 'Barang tidak sesuai'
       }).eq('id', logId);
       await loadPascaLogs();
     }
@@ -1702,7 +1698,6 @@
       await supabaseClient.from('casting_production_logs').update({
         catatan_ketidaksesuaian: textVal
       }).eq('id', logId);
-      await loadPascaLogs();
     }
 
     async function updateManualZak(logId, val) {
@@ -1710,7 +1705,6 @@
       await supabaseClient.from('casting_production_logs').update({
         zak_manual: valZak
       }).eq('id', logId);
-      await loadPascaLogs();
     }
 
     async function updateManualSisa(logId, val) {
@@ -1718,22 +1712,6 @@
       await supabaseClient.from('casting_production_logs').update({
         sisa_biji_manual: valSisa
       }).eq('id', logId);
-      await loadPascaLogs();
-    }
-
-    async function updateQuickBiji(logId, newBijiVal) {
-      const biji = parseInt(newBijiVal) || 0;
-      const { data: logData } = await supabaseClient.from('casting_production_logs').select('*, products(isi_per_zak)').eq('id', logId).single();
-      if(logData && logData.products) {
-        const zakTotal = Math.floor(biji / (logData.products.isi_per_zak || 50));
-        const sisaBiji = biji % (logData.products.isi_per_zak || 50);
-        await supabaseClient.from('casting_production_logs').update({
-          jumlah_biji: biji,
-          zak_total: zakTotal,
-          sisa_biji: sisaBiji
-        }).eq('id', logId);
-        await loadPascaLogs();
-      }
     }
 
     async function deletePasca(id) {
@@ -1764,4 +1742,3 @@
   </script>
 </body>
 </html>
-```[cite: 1]
