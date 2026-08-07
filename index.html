@@ -1639,18 +1639,47 @@
         return;
       }
 
+      // 1. Kalkulasi total stok valid (pasca produksi) yang ada per product_id berdasarkan logs lapangan
+      let aktualPerProduk = {};
+      filteredLogs.forEach(l => {
+        const pid = l.product_id;
+        if(!aktualPerProduk[pid]) aktualPerProduk[pid] = 0;
+
+        const isiZak = l.products ? l.products.isi_per_zak : 50;
+        let validBiji = 0;
+        if (l.status_cek === 'sesuai') {
+          validBiji = l.jumlah_biji; 
+        } else {
+          validBiji = ((l.zak_manual || 0) * isiZak) + (l.sisa_biji_manual || 0);
+        }
+        aktualPerProduk[pid] += validBiji;
+      });
+
+      // 2. Ambil data order pra-produksi untuk acuan distribusi pemenuhan pesanan
       const { data: orderData } = await supabaseClient.from('casting_orders').select('*, customers(id, nama), products(id, nama_barang, berat_biji_kg, isi_per_zak)').eq('session_id', currentSession.id);
 
       let totalBeratCorGlobal = 0;
       let customerAlokasiPascaMap = {};
 
+      // 3. Alokasikan stok lapangan ke order kustomer
       (orderData || []).forEach(o => {
+        const pid = o.product_id;
         const cName = o.customers?.nama || '-';
         const pName = o.products?.nama_barang || '-';
         const pBerat = o.products?.berat_biji_kg || 0;
         const isiZak = o.products?.isi_per_zak || 50;
         
-        let alokasiBiji = o.jumlah_akhir;
+        let demand = o.jumlah_akhir; // Jumlah yang dipesan
+        let available = aktualPerProduk[pid] || 0; // Jumlah lapangan yang tersedia
+        
+        // Distribusi: alokasikan maksimal sebesar yang dipesan, atau seadanya stok
+        let alokasiBiji = Math.min(demand, available);
+        
+        // Kurangi stok yang tersedia setelah diberikan ke kustomer ini
+        if(aktualPerProduk[pid] !== undefined) {
+           aktualPerProduk[pid] -= alokasiBiji;
+        }
+
         let beratAktifItem = (alokasiBiji * pBerat);
         let zakCustomer = Math.floor(alokasiBiji / isiZak);
         let sisaCustomer = alokasiBiji % isiZak;
@@ -1659,9 +1688,42 @@
         totalBeratCorGlobal += beratAktifItem;
 
         if(!customerAlokasiPascaMap[cName]) customerAlokasiPascaMap[cName] = { items: [], totalBerat: 0 };
-        customerAlokasiPascaMap[cName].items.push(`${pName}: <strong>${alokasiBiji} ${o.satuan}</strong> (${beratAktifItem.toFixed(1)} kg) [Karung: ${formatZakCustomer}]`);
+        
+        // Buat flag/status pemenuhan (Apakah order terpenuhi 100% atau kurang dari rencana karena cetakan reject/kurang)
+        let statusTeks = alokasiBiji < demand ? `<span style="color:var(--danger); font-weight:bold; font-size:0.85em;">(Kurang ${demand - alokasiBiji} bj)</span>` : `<span style="color:var(--success); font-weight:bold; font-size:0.85em;">(Terpenuhi)</span>`;
+
+        customerAlokasiPascaMap[cName].items.push(`${pName}: <strong>${alokasiBiji} ${o.satuan}</strong> ${statusTeks} (${beratAktifItem.toFixed(1)} kg) <br><small style="color:var(--text-muted);">Karung: ${formatZakCustomer}</small>`);
         customerAlokasiPascaMap[cName].totalBerat += beratAktifItem;
       });
+
+      // 4. Masukkan sisa produksi (Overproduksi) yang tidak teralokasi ke pelanggan manapun menjadi "Stok Gudang"
+      let sisaOverproduksi = [];
+      let totalBeratSisa = 0;
+      Object.keys(aktualPerProduk).forEach(pid => {
+         if(aktualPerProduk[pid] > 0) {
+            let prodInfo = globalProducts.find(p => p.id == pid);
+            if(prodInfo) {
+                let sisaBiji = aktualPerProduk[pid];
+                let beratAktifItem = (sisaBiji * (prodInfo.berat_biji_kg || 0));
+                let isiZak = prodInfo.isi_per_zak || 50;
+                let zakCustomer = Math.floor(sisaBiji / isiZak);
+                let sisaCustomer = sisaBiji % isiZak;
+                let formatZakCustomer = `${zakCustomer} Karung/Zak` + (sisaCustomer > 0 ? ` + ${sisaCustomer} bj` : '');
+
+                totalBeratCorGlobal += beratAktifItem;
+                totalBeratSisa += beratAktifItem;
+
+                sisaOverproduksi.push(`${prodInfo.nama_barang}: <strong>${sisaBiji} bj</strong> <span style="color:var(--warning); font-weight:bold; font-size:0.85em;">(Overproduksi)</span> (${beratAktifItem.toFixed(1)} kg) <br><small style="color:var(--text-muted);">Karung: ${formatZakCustomer}</small>`);
+            }
+         }
+      });
+
+      if(sisaOverproduksi.length > 0) {
+         customerAlokasiPascaMap['SISA PRODUKSI (STOK GUDANG)'] = {
+             items: sisaOverproduksi,
+             totalBerat: totalBeratSisa
+         };
+      }
 
       txtTotalPascaSummary.innerText = `Total Berat Cor: ${totalBeratCorGlobal.toFixed(1)} kg`;
 
@@ -1669,14 +1731,18 @@
       if(keysPasca.length > 0) {
         gridPasca.innerHTML = keysPasca.map(cName => {
           const alok = customerAlokasiPascaMap[cName];
+          let isStok = (cName === 'SISA PRODUKSI (STOK GUDANG)');
+          let bg = isStok ? '#fefce8' : '#f8fafc';
+          let border = isStok ? '#fef08a' : 'var(--border)';
+          
           return `
-            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="background: ${bg}; border: 1px solid ${border}; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
               <div style="font-weight: bold; font-size: 1.1rem; color: var(--primary); margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; display:flex; justify-content:space-between; align-items:center;">
                 <span>${cName}</span>
                 <span style="font-size: 0.9rem; background: #e2e8f0; padding: 2px 8px; border-radius: 12px;">${alok.totalBerat.toFixed(1)} kg</span>
               </div>
-              <ul style="padding-left: 18px; margin-bottom: 12px; font-size: 0.95rem;">
-                ${alok.items.map(it => `<li>${it}</li>`).join('')}
+              <ul style="padding-left: 18px; margin-bottom: 12px; font-size: 0.95rem; line-height: 1.6;">
+                ${alok.items.map(it => `<li style="margin-bottom:8px;">${it}</li>`).join('')}
               </ul>
             </div>
           `;
