@@ -8,7 +8,6 @@
   <!-- Favicon & Mobile App Icon -->
   <link rel="icon" href="https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg" type="image/jpeg">
   <link rel="apple-touch-icon" href="https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg">
-  <link rel="manifest" href="manifest.json">
   
   <!-- Supabase JS & html2canvas CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -162,7 +161,6 @@
       border-bottom: 1px solid var(--border);
       font-size: 0.95rem;
     }
-    /* Sticky Header / Floating Header */
     th {
       background-color: #f1f5f9;
       color: var(--text-main);
@@ -275,12 +273,12 @@
 
   <div id="loadingOverlay">Memuat Data Sistem...</div>
 
-  <!-- LOGIN PIN MODAL -->
+  <!-- LOGIN PIN MODAL (Watermark dihapus) -->
   <div class="modal-overlay" id="modalLogin" style="z-index: 2000;">
     <div class="modal-content" style="max-width: 400px; text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 12px;">MAJU LANCAR</h2>
-      <p style="margin-bottom: 20px; color: var(--text-muted);">Autentikasi Perangkat Berhasil / Masukkan PIN</p>
-      <input type="password" id="inputPin" placeholder="PIN (default: 1234)" style="text-align: center; font-size: 1.5rem; letter-spacing: 4px;" />
+      <p style="margin-bottom: 20px; color: var(--text-muted);">Masukkan PIN Akses</p>
+      <input type="password" id="inputPin" placeholder="Masukkan PIN" style="text-align: center; font-size: 1.5rem; letter-spacing: 4px;" />
       <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="checkPin()">MASUK</button>
     </div>
   </div>
@@ -291,14 +289,14 @@
       <img src="https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg" alt="Logo" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;">
       <h1>MAJU LANCAR</h1>
     </div>
-    <button class="btn btn-warning" onclick="logoutSystem()">🔒 Keluar</button>
+    <button class="btn btn-warning" onclick="logoutSystem()">Keluar</button>
   </header>
 
   <!-- NAVIGATION TABS -->
   <nav>
-    <button class="nav-btn active" onclick="switchTab('tabRiwayat')">📜 Riwayat & Dashboard</button>
-    <button class="nav-btn" onclick="switchTab('tabPencetakan')">🔥 Sesi Pencetakan Aktif</button>
-    <button class="nav-btn" onclick="switchTab('tabDatabase')">🗄️ Database</button>
+    <button class="nav-btn active" onclick="switchTab('tabRiwayat')">Riwayat & Dashboard</button>
+    <button class="nav-btn" onclick="switchTab('tabPencetakan')">Sesi Pencetakan Aktif</button>
+    <button class="nav-btn" onclick="switchTab('tabDatabase')">Database</button>
   </nav>
 
   <div class="container">
@@ -331,16 +329,23 @@
     <!-- TAB 2: SESI PENCETAKAN (PRA & PASCA PRODUKSI) -->
     <div id="tabPencetakan" class="tab-content" style="display: none;">
       <div class="card">
-        <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-          <div style="flex: 1; min-width: 250px;">
-            <label id="labelInfoSesiActive">Sesi Aktif Tanggal:</label>
-            <div id="txtActiveSessionDates" style="font-size: 1.1rem; font-weight: bold; color: var(--primary);">Pilih dari Riwayat</div>
+        <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 200px;">
+            <label>Tanggal Pencetakan:</label>
+            <input type="date" id="activeEditTglCetak" style="margin-bottom:0;" />
+          </div>
+          <div style="flex: 1; min-width: 200px;">
+            <label>Tanggal Rencana Cor:</label>
+            <input type="date" id="activeEditTglCor" style="margin-bottom:0;" />
           </div>
           <div>
-            <span id="sessionStatusBadge" class="badge badge-safe" style="display:inline-block; margin-top:14px;">Sesi: AKTIF</span>
+            <button class="btn btn-warning" onclick="updateActiveSessionDates()" style="height: 45px;">Update Tanggal</button>
           </div>
-          <div style="margin-top: 14px;">
-            <button class="btn btn-danger" onclick="closeCastingSession()" id="btnCloseSession">🔒 Tutup Sesi</button>
+          <div>
+            <span id="sessionStatusBadge" class="badge badge-safe" style="display:inline-block; height: 45px; line-height: 32px;">Sesi: AKTIF</span>
+          </div>
+          <div>
+            <button class="btn btn-danger" onclick="closeCastingSession()" id="btnCloseSession" style="height: 45px;">Tutup Sesi</button>
           </div>
         </div>
       </div>
@@ -420,7 +425,7 @@
         <div class="card" id="spkContainer">
           <div class="card-title">
             <span>Surat Perintah Kerja (SPK) Summary</span>
-            <button class="btn btn-success" onclick="downloadSPK()">📸 Unduh SPK (Gambar)</button>
+            <button class="btn btn-success" onclick="downloadSPK()">Unduh SPK (Gambar)</button>
           </div>
           <div id="spkPrintArea" style="padding: 16px; background: white; border: 1px dashed var(--border);">
             <h3 style="text-align: center; margin-bottom: 8px;">MAJU LANCAR - SURAT PERINTAH KERJA</h3>
@@ -736,8 +741,9 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://your-supabase-project.supabase.co"; 
-    const SUPABASE_KEY = "your-anon-key";
+    // Konfigurasi Supabase Anda
+    const SUPABASE_URL = "https://qukrrtkmiqnhtgswlqxm.supabase.co"; 
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1a3JydGttaXFuaHRnc3dscXhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5OTkwMTEsImV4cCI6MjEwMTU3NTAxMX0.Jzi14b1heGTt1ObUau64KO2wPq2ri1qLcdR-IsJvi1E";
     
     let supabaseClient = null;
     let currentSession = null;
@@ -763,7 +769,7 @@
         document.getElementById('modalLogin').classList.remove('active');
         initSupabase();
       } else {
-        alert("PIN Salah! Gunakan 1234");
+        alert("PIN Salah!");
       }
     }
 
@@ -775,24 +781,8 @@
 
     function initSupabase() {
       document.getElementById('loadingOverlay').style.display = 'flex';
-      const url = SUPABASE_URL.includes("your-supabase") ? localStorage.getItem('ml_sp_url') : SUPABASE_URL;
-      const key = SUPABASE_KEY.includes("your-anon") ? localStorage.getItem('ml_sp_key') : SUPABASE_KEY;
-      
-      if(url && key && !url.includes("your-supabase")) {
-        supabaseClient = supabase.createClient(url, key);
-        loadMasterData();
-      } else {
-        const u = prompt("Masukkan Supabase URL Anda:");
-        const k = prompt("Masukkan Supabase Anon Key Anda:");
-        if(u && k) {
-          localStorage.setItem('ml_sp_url', u);
-          localStorage.setItem('ml_sp_key', k);
-          supabaseClient = supabase.createClient(u, k);
-          loadMasterData();
-        } else {
-          document.getElementById('loadingOverlay').style.display = 'none';
-        }
-      }
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      loadMasterData();
     }
 
     function openModal(id) { document.getElementById(id).classList.add('active'); }
@@ -864,7 +854,6 @@
       tSel.innerHTML = globalMiscs.filter(m => m.kategori === 'tali').map(t => `<option value="${t.id}">${t.nama_item}</option>`).join('');
     }
 
-    // Modal Buka Sesi Baru
     function openModalNewSession() {
       const todayStr = new Date().toISOString().split('T')[0];
       document.getElementById('mNewTglCetak').value = todayStr;
@@ -895,7 +884,8 @@
       const { data } = await supabaseClient.from('casting_sessions').select('*').eq('id', sessionId).single();
       if(data) {
         currentSession = data;
-        document.getElementById('txtActiveSessionDates').innerText = `Tgl Cetak: ${data.tanggal_pencetakan || '-'} | Rencana Cor: ${data.tanggal_cor || '-'}`;
+        document.getElementById('activeEditTglCetak').value = data.tanggal_pencetakan || '';
+        document.getElementById('activeEditTglCor').value = data.tanggal_cor || '';
         
         const badge = document.getElementById('sessionStatusBadge');
         const btnClose = document.getElementById('btnCloseSession');
@@ -912,6 +902,25 @@
         switchTab('tabPencetakan');
         await loadPraOrders();
         await loadPascaLogs();
+      }
+    }
+
+    async function updateActiveSessionDates() {
+      if(!currentSession) return alert('Tidak ada sesi aktif!');
+      const newTglCetak = document.getElementById('activeEditTglCetak').value;
+      const newTglCor = document.getElementById('activeEditTglCor').value;
+
+      const { error } = await supabaseClient.from('casting_sessions').update({
+        tanggal_pencetakan: newTglCetak,
+        tanggal_cor: newTglCor
+      }).eq('id', currentSession.id);
+
+      if(error) {
+        alert('Gagal memperbarui tanggal: ' + error.message);
+      } else {
+        currentSession.tanggal_pencetakan = newTglCetak;
+        currentSession.tanggal_cor = newTglCor;
+        alert('Tanggal sesi berhasil diperbarui!');
       }
     }
 
@@ -939,7 +948,6 @@
       }
     }
 
-    // Master Barang Actions (Tambah & Edit)
     function openModalBarang(id) {
       document.getElementById('mBarangId').value = '';
       document.getElementById('mBarangNama').value = '';
@@ -997,7 +1005,6 @@
       } catch(e) { alert("Gagal menyimpan barang: " + e.message); }
     }
 
-    // Master Kustomer Actions
     function openModalKustomer(id) {
       document.getElementById('mKustId').value = '';
       document.getElementById('mKustNama').value = '';
@@ -1040,7 +1047,6 @@
       } catch(e) { alert("Gagal menyimpan kustomer: " + e.message); }
     }
 
-    // Master Misc Actions
     function openModalMisc(id) {
       document.getElementById('mMiscId').value = '';
       document.getElementById('mMiscNama').value = '';
@@ -1132,7 +1138,6 @@
       `).join('') || '<tr><td colspan="3" style="text-align:center;">Data Kosong</td></tr>';
     }
 
-    // Order Actions (Tambah dengan fixed customer ID atau Edit)
     function openModalOrder(orderId, fixedCustId) {
       if(!currentSession) return alert('Buka sesi pencetakan terlebih dahulu!');
       document.getElementById('mOrderId').value = '';
@@ -1328,7 +1333,6 @@
       }
     }
 
-    // Pasca Produksi Actions
     function openModalPasca(id) {
       document.getElementById('mPascaId').value = '';
       document.getElementById('mPascaJumlah').value = 0;
@@ -1425,7 +1429,7 @@
             <td>
               ${isSesuai ? 
                 `<input type="number" value="${l.jumlah_biji}" style="width: 100px; padding: 4px; margin:0;" onchange="updateQuickBiji(${l.id}, this.value)">` :
-                `<input type="text" placeholder="Watermark: Ketidaksesuaian/Retak/Kurang" value="${l.catatan_ketidaksesuaian || ''}" style="width: 240px; padding: 4px; margin:0;" onchange="updateCatatan(${l.id}, this.value)">`
+                `<input type="text" placeholder="Catatan ketidaksesuaian..." value="${l.catatan_ketidaksesuaian || ''}" style="width: 240px; padding: 4px; margin:0;" onchange="updateCatatan(${l.id}, this.value)">`
               }
             </td>
             <td><strong>${zakFormat}</strong></td>
