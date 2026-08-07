@@ -145,7 +145,13 @@
     .btn-secondary { background-color: #64748b; color: white; }
     .btn-sm { padding: 6px 10px; font-size: 0.85rem; }
 
-    .table-responsive { overflow-x: auto; margin-top: 12px; }
+    .table-responsive { 
+      overflow-x: auto; 
+      max-height: 450px; 
+      margin-top: 12px; 
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -156,10 +162,14 @@
       border-bottom: 1px solid var(--border);
       font-size: 0.95rem;
     }
+    /* Sticky Header / Floating Header */
     th {
       background-color: #f1f5f9;
       color: var(--text-main);
       font-weight: bold;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
     .indicator-box {
@@ -255,7 +265,6 @@
       border-color: var(--primary);
     }
     
-    /* Loading overlay */
     #loadingOverlay {
       position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 3000;
       display: flex; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: bold; color: var(--primary);
@@ -287,25 +296,50 @@
 
   <!-- NAVIGATION TABS -->
   <nav>
-    <button class="nav-btn active" onclick="switchTab('tabPencetakan')">🔥 Pencetakan</button>
+    <button class="nav-btn active" onclick="switchTab('tabRiwayat')">📜 Riwayat & Dashboard</button>
+    <button class="nav-btn" onclick="switchTab('tabPencetakan')">🔥 Sesi Pencetakan Aktif</button>
     <button class="nav-btn" onclick="switchTab('tabDatabase')">🗄️ Database</button>
-    <button class="nav-btn" onclick="switchTab('tabRiwayat')">📜 Riwayat</button>
   </nav>
 
   <div class="container">
 
-    <!-- TAB 1: PENCETAKAN -->
-    <div id="tabPencetakan" class="tab-content">
+    <!-- TAB 1: RIWAYAT & DASHBOARD UTAMA -->
+    <div id="tabRiwayat" class="tab-content">
+      <div class="card">
+        <div class="card-title">
+          <span>Daftar Sesi Pencetakan & Rencana Cor</span>
+          <button class="btn btn-primary" onclick="openModalNewSession()">+ Buka Sesi Baru</button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Tanggal Pencetakan</th>
+                <th>Tanggal Rencana Cor</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyRiwayat">
+              <tr><td colspan="4" style="text-align:center;">Memuat riwayat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: SESI PENCETAKAN (PRA & PASCA PRODUKSI) -->
+    <div id="tabPencetakan" class="tab-content" style="display: none;">
       <div class="card">
         <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
           <div style="flex: 1; min-width: 250px;">
-            <label for="dateCor">Tanggal Pencetakan:</label>
-            <input type="date" id="dateCor" onchange="loadCastingSession()" />
+            <label id="labelInfoSesiActive">Sesi Aktif Tanggal:</label>
+            <div id="txtActiveSessionDates" style="font-size: 1.1rem; font-weight: bold; color: var(--primary);">Pilih dari Riwayat</div>
           </div>
           <div>
-            <span id="sessionStatusBadge" class="badge badge-safe" style="display:inline-block; margin-top:28px;">Sesi: AKTIF</span>
+            <span id="sessionStatusBadge" class="badge badge-safe" style="display:inline-block; margin-top:14px;">Sesi: AKTIF</span>
           </div>
-          <div style="margin-top: 28px;">
+          <div style="margin-top: 14px;">
             <button class="btn btn-danger" onclick="closeCastingSession()" id="btnCloseSession">🔒 Tutup Sesi</button>
           </div>
         </div>
@@ -321,7 +355,7 @@
         <div class="card">
           <div class="card-title">
             <span>Daftar Order Yang Dicetak</span>
-            <button class="btn btn-primary" onclick="openModalOrder(null)">+ Tambah Order</button>
+            <button class="btn btn-primary" onclick="openModalOrder(null, null)">+ Tambah Order</button>
           </div>
 
           <div class="table-responsive">
@@ -422,13 +456,14 @@
                   <th>Karyawan</th>
                   <th>Nama Barang</th>
                   <th>Warna Tali</th>
-                  <th>Jumlah (Biji)</th>
+                  <th>Status Cek</th>
+                  <th>Jumlah (Biji) / Keterangan</th>
                   <th>Format Karung/Zak</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
               <tbody id="tbodyPascaLog">
-                <tr><td colspan="6" style="text-align:center;">Memuat hasil...</td></tr>
+                <tr><td colspan="7" style="text-align:center;">Memuat hasil...</td></tr>
               </tbody>
             </table>
           </div>
@@ -458,7 +493,7 @@
       </div>
     </div>
 
-    <!-- TAB 2: DATABASE -->
+    <!-- TAB 3: DATABASE -->
     <div id="tabDatabase" class="tab-content" style="display: none;">
       <div class="sub-nav">
         <button class="sub-btn active" onclick="switchDbSubTab('barang')">Barang</button>
@@ -543,27 +578,24 @@
       </div>
     </div>
 
-    <!-- TAB 3: RIWAYAT -->
-    <div id="tabRiwayat" class="tab-content" style="display: none;">
-      <div class="card">
-        <div class="card-title">Daftar Sesi Pencetakan (Riwayat 5 Sesi Terakhir)</div>
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Tanggal Pencetakan</th>
-                <th>Status</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="tbodyRiwayat">
-              <tr><td colspan="3" style="text-align:center;">Memuat...</td></tr>
-            </tbody>
-          </table>
-        </div>
+  </div>
+
+  <!-- MODAL BUKA SESI BARU -->
+  <div class="modal-overlay" id="modalNewSession">
+    <div class="modal-content" style="max-width: 450px;">
+      <div class="modal-header">
+        <h3>Buka Sesi Pencetakan Baru</h3>
+        <button class="btn btn-secondary" onclick="closeModal('modalNewSession')">X</button>
+      </div>
+      <label>Tanggal Pencetakan:</label>
+      <input type="date" id="mNewTglCetak" />
+      <label>Tanggal Rencana Cor:</label>
+      <input type="date" id="mNewTglCor" />
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalNewSession')">Batal</button>
+        <button class="btn btn-primary" onclick="createNewSessionAction()">Simpan & Masuk Sesi</button>
       </div>
     </div>
-
   </div>
 
   <!-- MODALS MASTER BARANG -->
@@ -653,8 +685,15 @@
         <button class="btn btn-secondary" onclick="closeModal('modalEntryOrder')">X</button>
       </div>
       <input type="hidden" id="mOrderId" />
-      <label>Pilih Pelanggan:</label>
-      <select id="mOrderCustomer"></select>
+      
+      <div id="containerSelectCustomer">
+        <label>Pilih Pelanggan:</label>
+        <select id="mOrderCustomer"></select>
+      </div>
+      <div id="infoFixedCustomer" style="display:none; margin-bottom: 16px; font-weight: bold; color: var(--primary);">
+        Pelanggan: <span id="txtFixedCustomerName"></span>
+      </div>
+
       <label>Pilih Barang:</label>
       <select id="mOrderProduct"></select>
       <div style="display: flex; gap: 12px;">
@@ -697,7 +736,6 @@
   </div>
 
   <script>
-    // Konfigurasi Supabase Bawaan
     const SUPABASE_URL = "https://your-supabase-project.supabase.co"; 
     const SUPABASE_KEY = "your-anon-key";
     
@@ -705,8 +743,8 @@
     let currentSession = null;
     let cachedOrders = [];
     let globalProducts = [], globalCustomers = [], globalMiscs = [];
+    let fixedOrderCustomerId = null;
 
-    // Cek Login & Token Komputer agar tidak perlu input PIN terus
     window.addEventListener('DOMContentLoaded', () => {
       const savedPcToken = localStorage.getItem('ml_pc_logged');
       if(savedPcToken === 'true') {
@@ -757,12 +795,9 @@
       }
     }
 
-    document.getElementById('dateCor').valueAsDate = new Date();
-
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-    // Escape button untuk menutup modal
     window.addEventListener('keydown', (e) => {
       if(e.key === 'Escape') {
         document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
@@ -793,20 +828,20 @@
     async function loadMasterData() {
       if(!supabaseClient) return;
       try {
-        const resP = await supabaseClient.from('products').select('*');
+        const resP = await supabaseClient.from('products').select('*').order('nama_barang', { ascending: true });
         globalProducts = resP.data || [];
         renderTableBarang();
 
-        const resC = await supabaseClient.from('customers').select('*');
+        const resC = await supabaseClient.from('customers').select('*').order('nama', { ascending: true });
         globalCustomers = resC.data || [];
         renderTableKustomer();
 
-        const resM = await supabaseClient.from('miscs').select('*');
+        const resM = await supabaseClient.from('miscs').select('*').order('nama_item', { ascending: true });
         globalMiscs = resM.data || [];
         renderTableMiscs();
 
         populateDropdowns();
-        await loadCastingSession();
+        await loadRiwayat();
       } catch(err) {
         console.error("Gagal memuat database:", err);
       } finally {
@@ -827,6 +862,81 @@
 
       const tSel = document.getElementById('mPascaTali');
       tSel.innerHTML = globalMiscs.filter(m => m.kategori === 'tali').map(t => `<option value="${t.id}">${t.nama_item}</option>`).join('');
+    }
+
+    // Modal Buka Sesi Baru
+    function openModalNewSession() {
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('mNewTglCetak').value = todayStr;
+      document.getElementById('mNewTglCor').value = todayStr;
+      openModal('modalNewSession');
+    }
+
+    async function createNewSessionAction() {
+      const tglCetak = document.getElementById('mNewTglCetak').value;
+      const tglCor = document.getElementById('mNewTglCor').value;
+      if(!tglCetak || !tglCor) return alert('Lengkapi tanggal!');
+
+      const { data, error } = await supabaseClient.from('casting_sessions').insert([{
+        tanggal_cor: tglCor,
+        tanggal_pencetakan: tglCetak,
+        status: 'aktif'
+      }]).select().single();
+
+      if(error) {
+        alert('Gagal buat sesi: ' + error.message);
+        return;
+      }
+      closeModal('modalNewSession');
+      viewSession(data.id);
+    }
+
+    async function viewSession(sessionId) {
+      const { data } = await supabaseClient.from('casting_sessions').select('*').eq('id', sessionId).single();
+      if(data) {
+        currentSession = data;
+        document.getElementById('txtActiveSessionDates').innerText = `Tgl Cetak: ${data.tanggal_pencetakan || '-'} | Rencana Cor: ${data.tanggal_cor || '-'}`;
+        
+        const badge = document.getElementById('sessionStatusBadge');
+        const btnClose = document.getElementById('btnCloseSession');
+        if(data.status === 'closed') {
+          badge.innerText = 'Sesi: CLOSED';
+          badge.className = 'badge badge-over';
+          btnClose.style.display = 'none';
+        } else {
+          badge.innerText = 'Sesi: AKTIF';
+          badge.className = 'badge badge-safe';
+          btnClose.style.display = 'inline-block';
+        }
+
+        switchTab('tabPencetakan');
+        await loadPraOrders();
+        await loadPascaLogs();
+      }
+    }
+
+    async function loadRiwayat() {
+      const { data } = await supabaseClient.from('casting_sessions').select('*').order('tanggal_pencetakan', { ascending: false });
+      document.getElementById('tbodyRiwayat').innerHTML = (data || []).map(r => `
+        <tr>
+          <td><strong>${r.tanggal_pencetakan || r.tanggal_cor}</strong></td>
+          <td>${r.tanggal_cor || '-'}</td>
+          <td><span class="badge ${r.status==='closed'?'badge-over':'badge-safe'}">${r.status.toUpperCase()}</span></td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="viewSession(${r.id})">Buka Sesi</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteHistorySession(${r.id})">Hapus</button>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="4" style="text-align:center;">Belum ada riwayat sesi.</td></tr>';
+    }
+
+    async function deleteHistorySession(sessionId) {
+      if(confirm('Hapus sesi riwayat ini beserta data order dan produksinya?')) {
+        await supabaseClient.from('casting_orders').delete().eq('session_id', sessionId);
+        await supabaseClient.from('casting_production_logs').delete().eq('session_id', sessionId);
+        await supabaseClient.from('casting_sessions').delete().eq('id', sessionId);
+        loadRiwayat();
+      }
     }
 
     // Master Barang Actions (Tambah & Edit)
@@ -1022,47 +1132,31 @@
       `).join('') || '<tr><td colspan="3" style="text-align:center;">Data Kosong</td></tr>';
     }
 
-    async function loadCastingSession() {
-      if(!supabaseClient) return;
-      const tgl = document.getElementById('dateCor').value;
-      document.getElementById('spkDateText').innerText = `Tanggal: ${tgl}`;
-
-      let { data } = await supabaseClient.from('casting_sessions').select('*').eq('tanggal_cor', tgl).single();
-      
-      if(!data) {
-        const ins = await supabaseClient.from('casting_sessions').insert([{ tanggal_cor: tgl, status: 'aktif' }]).select().single();
-        currentSession = ins.data;
-      } else {
-        currentSession = data;
-      }
-
-      const badge = document.getElementById('sessionStatusBadge');
-      const btnClose = document.getElementById('btnCloseSession');
-      if(currentSession.status === 'closed') {
-        badge.innerText = 'Sesi: CLOSED';
-        badge.className = 'badge badge-over';
-        btnClose.style.display = 'none';
-      } else {
-        badge.innerText = 'Sesi: AKTIF';
-        badge.className = 'badge badge-safe';
-        btnClose.style.display = 'inline-block';
-      }
-
-      await loadPraOrders();
-      await loadPascaLogs();
-    }
-
-    // Order Actions (Tambah & Edit)
-    function openModalOrder(id) {
+    // Order Actions (Tambah dengan fixed customer ID atau Edit)
+    function openModalOrder(orderId, fixedCustId) {
+      if(!currentSession) return alert('Buka sesi pencetakan terlebih dahulu!');
       document.getElementById('mOrderId').value = '';
       document.getElementById('mOrderAwal').value = 0;
       document.getElementById('mOrderAdj').value = 0;
       document.getElementById('titleModalOrder').innerText = "Tambah Order Pencetakan";
 
-      if(id) {
-        const o = cachedOrders.find(item => item.id === id);
+      fixedOrderCustomerId = fixedCustId || null;
+      if(fixedOrderCustomerId) {
+        document.getElementById('containerSelectCustomer').style.display = 'none';
+        document.getElementById('infoFixedCustomer').style.display = 'block';
+        const custObj = globalCustomers.find(c => c.id === fixedOrderCustomerId);
+        document.getElementById('txtFixedCustomerName').innerText = custObj ? custObj.nama : '-';
+      } else {
+        document.getElementById('containerSelectCustomer').style.display = 'block';
+        document.getElementById('infoFixedCustomer').style.display = 'none';
+      }
+
+      if(orderId) {
+        const o = cachedOrders.find(item => item.id === orderId);
         if(o) {
           document.getElementById('mOrderId').value = o.id;
+          document.getElementById('containerSelectCustomer').style.display = 'block';
+          document.getElementById('infoFixedCustomer').style.display = 'none';
           document.getElementById('mOrderCustomer').value = o.customer_id;
           document.getElementById('mOrderProduct').value = o.product_id;
           document.getElementById('mOrderAwal').value = o.jumlah_awal;
@@ -1075,7 +1169,7 @@
     }
 
     async function saveEntryOrder() {
-      if(currentSession.status === 'closed') return alert('Sesi sudah ditutup!');
+      if(!currentSession || currentSession.status === 'closed') return alert('Sesi sudah ditutup!');
       
       const id = document.getElementById('mOrderId').value;
       const productId = parseInt(document.getElementById('mOrderProduct').value);
@@ -1088,9 +1182,11 @@
       let rawKotak = (satuan === 'kg') ? (akhir / (product.isi_per_kotak * product.berat_biji_kg)) : (akhir / product.isi_per_kotak);
       let kebutuhanKotak = Math.ceil(Math.ceil(rawKotak || 0) / 10) * 10;
 
+      const customerIdVal = fixedOrderCustomerId ? fixedOrderCustomerId : parseInt(document.getElementById('mOrderCustomer').value);
+
       const payload = {
         session_id: currentSession.id,
-        customer_id: parseInt(document.getElementById('mOrderCustomer').value),
+        customer_id: customerIdVal,
         product_id: productId,
         jumlah_awal: awal,
         pengurangan: adj,
@@ -1114,14 +1210,13 @@
 
     async function loadPraOrders() {
       if(!currentSession) return;
-      const { data } = await supabaseClient.from('casting_orders').select('*, customers(nama), products(nama_barang, lubang_cm, berat_biji_kg, isi_per_kotak)').eq('session_id', currentSession.id);
+      const { data } = await supabaseClient.from('casting_orders').select('*, customers(id, nama), products(nama_barang, lubang_cm, berat_biji_kg, isi_per_kotak)').eq('session_id', currentSession.id);
       cachedOrders = data || [];
       
       let totalKotak = 0;
       let spkSummary = {};
       let customerAlokasiMap = {};
 
-      // Sorting agar pelanggan yang sama berurutan (untuk Merge Cell / Rowspan visual)
       cachedOrders.sort((a,b) => (a.customers?.nama || '').localeCompare(b.customers?.nama || ''));
 
       let htmlRows = '';
@@ -1129,8 +1224,8 @@
       while(i < cachedOrders.length) {
         let curr = cachedOrders[i];
         let custName = curr.customers ? curr.customers.nama : '-';
+        let custId = curr.customers ? curr.customers.id : null;
         
-        // Hitung berapa baris dengan kustomer yang sama
         let countSameCust = 0;
         for(let j = i; j < cachedOrders.length; j++) {
           let cNameJ = cachedOrders[j].customers ? cachedOrders[j].customers.nama : '-';
@@ -1146,17 +1241,19 @@
           const pKotakIsi = o.products ? o.products.isi_per_kotak : 0;
           const beratTotalItem = (o.jumlah_akhir * pBerat);
 
-          // Summary SPK
           spkSummary[pName] = (spkSummary[pName] || 0) + o.kebutuhan_kotak;
 
-          // Customer Alokasi Map
           if(!customerAlokasiMap[custName]) customerAlokasiMap[custName] = { items: [], totalBerat: 0 };
           customerAlokasiMap[custName].items.push(`${pName}: ${o.jumlah_akhir} ${o.satuan} (${beratTotalItem.toFixed(1)} kg)`);
           customerAlokasiMap[custName].totalBerat += beratTotalItem;
 
           htmlRows += `<tr>`;
           if(k === 0) {
-            htmlRows += `<td rowspan="${countSameCust}" style="vertical-align: middle; background:#f8fafc; font-weight:bold;">${custName}</td>`;
+            htmlRows += `
+              <td rowspan="${countSameCust}" style="vertical-align: middle; background:#f8fafc; font-weight:bold;">
+                ${custName} 
+                <button class="btn btn-success btn-sm" style="padding: 2px 6px; font-size:0.75rem; margin-left:6px;" onclick="openModalOrder(null, ${custId})" title="Tambah item untuk pelanggan ini">+</button>
+              </td>`;
           }
           htmlRows += `
             <td><strong>${pName}</strong></td>
@@ -1167,7 +1264,7 @@
             <td><strong>${o.jumlah_akhir} ${o.satuan}</strong></td>
             <td><strong>${o.kebutuhan_kotak} Kotak</strong></td>
             <td>
-              <button class="btn btn-warning btn-sm" onclick="openModalOrder(${o.id})">Edit</button>
+              <button class="btn btn-warning btn-sm" onclick="openModalOrder(${o.id}, null)">Edit</button>
               <button class="btn btn-danger btn-sm" onclick="deleteOrder(${o.id})">Hapus</button>
             </td>
           </tr>`;
@@ -1180,7 +1277,6 @@
       document.getElementById('spkTotalKotakBawah').innerText = `Total Kotak Keseluruhan: ${totalKotak} Kotak`;
       updateKotakIndicator();
 
-      // Render Alokasi Kustomer Card
       document.getElementById('tbodyAlokasiCustomer').innerHTML = Object.keys(customerAlokasiMap).map(cName => {
         const alok = customerAlokasiMap[cName];
         return `
@@ -1192,7 +1288,6 @@
         `;
       }).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada alokasi data.</td></tr>';
 
-      // Render SPK Pattern Matching Color & Total
       let spkIndex = 1;
       document.getElementById('tbodySPK').innerHTML = Object.keys(spkSummary).map(kName => {
         let patternColor = "inherit";
@@ -1233,14 +1328,13 @@
       }
     }
 
-    // Pasca Produksi Actions (Tambah & Edit)
+    // Pasca Produksi Actions
     function openModalPasca(id) {
       document.getElementById('mPascaId').value = '';
       document.getElementById('mPascaJumlah').value = 0;
       document.getElementById('titleModalPasca').innerText = "Tambah Hasil Pengerjaan";
 
       if(id) {
-        // Fetch or find log
         supabaseClient.from('casting_production_logs').select('*').eq('id', id).single().then(({data}) => {
           if(data) {
             document.getElementById('mPascaId').value = data.id;
@@ -1258,7 +1352,7 @@
     }
 
     async function saveEntryPasca() {
-      if(currentSession.status === 'closed') return alert('Sesi sudah ditutup!');
+      if(!currentSession || currentSession.status === 'closed') return alert('Sesi sudah ditutup!');
 
       const id = document.getElementById('mPascaId').value;
       const productId = parseInt(document.getElementById('mPascaProduct').value);
@@ -1275,7 +1369,9 @@
         warna_tali_id: parseInt(document.getElementById('mPascaTali').value),
         jumlah_biji: jumlahBiji,
         zak_total: zakTotal,
-        sisa_biji: sisaBiji
+        sisa_biji: sisaBiji,
+        status_cek: 'sesuai',
+        catatan_ketidaksesuaian: ''
       };
 
       let error;
@@ -1300,19 +1396,20 @@
       let summaryMap = {};
 
       document.getElementById('tbodyPascaLog').innerHTML = (data || []).map(l => {
-        // Format Zak / Karung (zak/karung aja cukup, sisa ditulis kecil)
-        const zakFormat = `${l.zak_total} Karung/Zak` + (l.sisa_biji > 0 ? ` + <small style="font-size:0.8rem; color:var(--text-muted);">${l.sisa_biji} kecil</small>` : '');
+        const isSesuai = (!l.status_cek || l.status_cek === 'sesuai');
+        const zakFormat = isSesuai ? (`${l.zak_total} Karung/Zak` + (l.sisa_biji > 0 ? ` + <small style="font-size:0.8rem; color:var(--text-muted);">${l.sisa_biji} kecil</small>` : '')) : '-';
         const pName = l.products ? `${l.products.nama_barang}` : '-';
         const karyName = l.karyawan ? l.karyawan.nama_item : '-';
         
-        // Grouping summary tanpa menggabungkan jika karyawan berbeda meski barang sama (Handle 2 karyawan mengerjakan hal sama bersisa)
         const summaryKey = `${pName}_${l.tali ? l.tali.nama_item : '-'}_${karyName}`;
-        if(!summaryMap[summaryKey]) {
-          summaryMap[summaryKey] = { productName: pName, karyawanName: karyName, totalBiji: 0, beratBiji: l.products ? l.products.berat_biji_kg : 0, zakTotal: 0, sisaTotal: 0, tali: l.tali ? l.tali.nama_item : '-' };
+        if(isSesuai) {
+          if(!summaryMap[summaryKey]) {
+            summaryMap[summaryKey] = { productName: pName, karyawanName: karyName, totalBiji: 0, beratBiji: l.products ? l.products.berat_biji_kg : 0, zakTotal: 0, sisaTotal: 0, tali: l.tali ? l.tali.nama_item : '-' };
+          }
+          summaryMap[summaryKey].totalBiji += l.jumlah_biji;
+          summaryMap[summaryKey].zakTotal += l.zak_total;
+          summaryMap[summaryKey].sisaTotal += l.sisa_biji;
         }
-        summaryMap[summaryKey].totalBiji += l.jumlah_biji;
-        summaryMap[summaryKey].zakTotal += l.zak_total;
-        summaryMap[summaryKey].sisaTotal += l.sisa_biji;
 
         return `
           <tr>
@@ -1320,7 +1417,16 @@
             <td>${pName}</td>
             <td>${l.tali ? l.tali.nama_item : '-'}</td>
             <td>
-              <input type="number" class="inline-edit-biji" value="${l.jumlah_biji}" style="width: 100px; padding: 4px; margin:0;" onchange="updateQuickBiji(${l.id}, this.value)">
+              <select style="width: 130px; padding: 4px; margin:0;" onchange="updateCheckStatus(${l.id}, this.value)">
+                <option value="sesuai" ${isSesuai?'selected':''}>Sesuai</option>
+                <option value="tidak_sesuai" ${!isSesuai?'selected':''}>Tidak Sesuai</option>
+              </select>
+            </td>
+            <td>
+              ${isSesuai ? 
+                `<input type="number" value="${l.jumlah_biji}" style="width: 100px; padding: 4px; margin:0;" onchange="updateQuickBiji(${l.id}, this.value)">` :
+                `<input type="text" placeholder="Watermark: Ketidaksesuaian/Retak/Kurang" value="${l.catatan_ketidaksesuaian || ''}" style="width: 240px; padding: 4px; margin:0;" onchange="updateCatatan(${l.id}, this.value)">`
+              }
             </td>
             <td><strong>${zakFormat}</strong></td>
             <td>
@@ -1329,7 +1435,7 @@
             </td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="6" style="text-align:center;">Belum ada hasil.</td></tr>';
+      }).join('') || '<tr><td colspan="7" style="text-align:center;">Belum ada hasil.</td></tr>';
 
       document.getElementById('tbodySummaryPasca').innerHTML = Object.keys(summaryMap).map(key => {
         const item = summaryMap[key];
@@ -1344,13 +1450,26 @@
             <td><strong>${zakFormat}</strong></td>
           </tr>
         `;
-      }).join('') || 'Dropdown tabel langsung aktif';
+      }).join('') || '<tr><td colspan="5" style="text-align:center;">Belum ada data summary valid.</td></tr>';
     }
 
-    // Dropdown/Inline update langsung di tabel hasil produksi
+    async function updateCheckStatus(logId, statusVal) {
+      await supabaseClient.from('casting_production_logs').update({
+        status_cek: statusVal,
+        catatan_ketidaksesuaian: statusVal === 'tidak_sesuai' ? 'Barang tidak sesuai' : ''
+      }).eq('id', logId);
+      await loadPascaLogs();
+    }
+
+    async function updateCatatan(logId, textVal) {
+      await supabaseClient.from('casting_production_logs').update({
+        catatan_ketidaksesuaian: textVal
+      }).eq('id', logId);
+      await loadPascaLogs();
+    }
+
     async function updateQuickBiji(logId, newBijiVal) {
       const biji = parseInt(newBijiVal) || 0;
-      // Fetch product detail for calculation
       const { data: logData } = await supabaseClient.from('casting_production_logs').select('*, products(isi_per_zak)').eq('id', logId).single();
       if(logData && logData.products) {
         const zakTotal = Math.floor(biji / logData.products.isi_per_zak);
@@ -1375,7 +1494,7 @@
       if(!currentSession) return;
       if(confirm('Yakin tutup sesi ini?')) {
         await supabaseClient.from('casting_sessions').update({ status: 'closed' }).eq('id', currentSession.id);
-        await loadCastingSession();
+        await viewSession(currentSession.id);
       }
     }
 
@@ -1383,51 +1502,10 @@
       const area = document.getElementById('spkPrintArea');
       html2canvas(area).then(canvas => {
         const link = document.createElement('a');
-        link.download = `SPK_${document.getElementById('dateCor').value}.png`;
+        link.download = `SPK_${currentSession.tanggal_cor || 'sekarang'}.png`;
         link.href = canvas.toDataURL();
         link.click();
       });
-    }
-
-    // Riwayat Autodelete menjaga max 5 sesi terlama, sisanya autodelete
-    async function loadRiwayat() {
-      const { data } = await supabaseClient.from('casting_sessions').select('*').order('tanggal_cor', { ascending: false });
-      
-      if(data && data.length > 5) {
-        // Autodelete sesi paling awal jika lebih dari 5
-        for(let i = 5; i < data.length; i++) {
-          await supabaseClient.from('casting_sessions').delete().eq('id', data[i].id);
-        }
-        // Reload ulang setelah autodelete
-        loadRiwayat();
-        return;
-      }
-
-      document.getElementById('tbodyRiwayat').innerHTML = (data || []).map(r => `
-        <tr>
-          <td><strong>${r.tanggal_cor}</strong></td>
-          <td><span class="badge ${r.status==='closed'?'badge-over':'badge-safe'}">${r.status.toUpperCase()}</span></td>
-          <td>
-            <button class="btn btn-primary btn-sm" onclick="viewHistoryDate('${r.tanggal_cor}')">Lihat</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteHistorySession(${r.id})">Hapus</button>
-          </td>
-        </tr>
-      `).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada riwayat.</td></tr>';
-    }
-
-    async function deleteHistorySession(sessionId) {
-      if(confirm('Hapus sesi riwayat ini beserta data order dan produksinya?')) {
-        await supabaseClient.from('casting_orders').delete().eq('session_id', sessionId);
-        await supabaseClient.from('casting_production_logs').delete().eq('session_id', sessionId);
-        await supabaseClient.from('casting_sessions').delete().eq('id', sessionId);
-        loadRiwayat();
-      }
-    }
-
-    function viewHistoryDate(tgl) {
-      document.getElementById('dateCor').value = tgl;
-      switchTab('tabPencetakan');
-      loadCastingSession();
     }
   </script>
 </body>
