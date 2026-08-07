@@ -374,8 +374,8 @@
             <span>Daftar Order Yang Dicetak</span>
             <div style="display: flex; gap: 10px; align-items: center;">
               <select id="sortPraOption" style="padding: 6px 10px; font-size: 0.9rem; margin:0; width: auto;" onchange="loadPraOrders()">
+                <option value="customer" selected>Urutkan: Nama Pelanggan</option>
                 <option value="entry">Urutkan: Berdasarkan Entri</option>
-                <option value="customer">Urutkan: Nama Pelanggan</option>
               </select>
               <button class="btn btn-primary" onclick="openModalOrder(null, null)">+ Tambah Order</button>
             </div>
@@ -409,7 +409,7 @@
               <div style="font-size: 1.6rem; font-weight: bold; color: var(--primary);" id="txtTotalKotak">0 Kotak</div>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <label for="maxLimitKotak" style="margin:0; font-size:0.9rem;">Kelipatan (q):</label>
+              <label for="selectKelipatan" style="margin:0; font-size:0.9rem;">Kelipatan:</label>
               <select id="selectKelipatan" style="width: 90px; padding: 8px; margin:0;" onchange="loadPraOrders()">
                 <option value="5">5</option>
                 <option value="10" selected>10</option>
@@ -427,52 +427,40 @@
           </div>
         </div>
 
-        <!-- GRID CARDS UNTUK ALOKASI & SPK AGAR BISA HORIZONTAL -->
-        <div class="grid-cards">
-          <!-- CARD ALOKASI TIAP KUSTOMER -->
-          <div class="card" style="margin-bottom:0;">
-            <div class="card-title">
-              <span>Alokasi Per Kustomer & Total Berat Final</span>
-            </div>
-            <div class="table-responsive">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Pelanggan</th>
-                    <th>Rincian Barang & Berat Alokasi</th>
-                    <th>Total Berat Final</th>
-                  </tr>
-                </thead>
-                <tbody id="tbodyAlokasiCustomer">
-                  <tr><td colspan="3" style="text-align:center;">Belum ada data alokasi.</td></tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- GRID CARDS UNTUK ALOKASI PRA PRODUKSI (BERBENTUK CARD GRID HORIZONTAL) -->
+        <div class="card">
+          <div class="card-title">
+            <span>Alokasi Per Kustomer (Pra Produksi)</span>
+            <span id="txtTotalBeratPraSummary" style="font-size: 1rem; color: var(--primary); background: #f1f5f9; padding: 6px 12px; border-radius: 8px;">Total Berat Cetak: 0 kg</span>
           </div>
+          <div id="gridAlokasiCustomerPra" class="grid-cards" style="margin-bottom:0;">
+            <!-- Kartu kustomer akan di-generate secara dinamis di sini -->
+            <div style="text-align:center; grid-column: 1/-1; padding: 20px; color: var(--text-muted);">Belum ada data alokasi.</div>
+          </div>
+        </div>
 
-          <!-- SPK -->
-          <div class="card" id="spkContainer" style="margin-bottom:0;">
-            <div class="card-title">
-              <span>Surat Perintah Kerja (SPK) Summary</span>
-              <button class="btn btn-success" onclick="downloadSPK()">Unduh SPK (Gambar)</button>
-            </div>
-            <div id="spkPrintArea" style="padding: 16px; background: white; border: 1px dashed var(--border);">
-              <h3 style="text-align: center; margin-bottom: 8px;">MAJU LANCAR - SURAT PERINTAH KERJA</h3>
-              <p style="text-align: center; margin-bottom: 16px;" id="spkDateText">Tanggal: -</p>
-              <table>
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Nama Barang</th>
-                    <th>Jumlah Kotak</th>
-                  </tr>
-                </thead>
-                <tbody id="tbodySPK">
-                  <tr><td colspan="3" style="text-align: center;">Belum ada data.</td></tr>
-                </tbody>
-              </table>
-              <div id="spkTotalKotakBawah" style="margin-top: 15px; font-weight: bold; text-align: right;">Total Kotak: 0</div>
-            </div>
+        <!-- SPK FULL WIDTH -->
+        <div class="card full-width" id="spkContainer">
+          <div class="card-title">
+            <span>Surat Perintah Kerja (SPK) Summary</span>
+            <button class="btn btn-success" onclick="downloadSPK()">Unduh SPK (Gambar)</button>
+          </div>
+          <div id="spkPrintArea" style="padding: 16px; background: white; border: 1px dashed var(--border);">
+            <h3 style="text-align: center; margin-bottom: 8px;">MAJU LANCAR - SURAT PERINTAH KERJA</h3>
+            <p style="text-align: center; margin-bottom: 16px;" id="spkDateText">Tanggal: -</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Nama Barang</th>
+                  <th>Jumlah Kotak</th>
+                </tr>
+              </thead>
+              <tbody id="tbodySPK">
+                <tr><td colspan="3" style="text-align: center;">Belum ada data.</td></tr>
+              </tbody>
+            </table>
+            <div id="spkTotalKotakBawah" style="margin-top: 15px; font-weight: bold; text-align: right;">Total Kotak: 0</div>
           </div>
         </div>
       </div>
@@ -526,24 +514,14 @@
           </div>
         </div>
 
-        <!-- CARD ALOKASI PER KUSTOMER PASCA PRODUKSI -->
+        <!-- CARD ALOKASI PER KUSTOMER PASCA PRODUKSI (BERBENTUK CARD GRID HORIZONTAL) -->
         <div class="card">
           <div class="card-title">
-            <span>Alokasi Per Kustomer Berdasarkan Hasil Aktual Lapangan (Termasuk Karung/Zak per Customernya)</span>
+            <span>Alokasi Per Kustomer Berdasarkan Hasil Aktual Lapangan</span>
+            <span id="txtTotalBeratPascaSummary" style="font-size: 1rem; color: var(--primary); background: #f1f5f9; padding: 6px 12px; border-radius: 8px;">Total Berat Cor: 0 kg</span>
           </div>
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>Pelanggan</th>
-                  <th>Rincian Barang Aktual (Biji, Berat & Karung)</th>
-                  <th>Total Berat Aktual Final</th>
-                </tr>
-              </thead>
-              <tbody id="tbodyAlokasiPascaCustomer">
-                <tr><td colspan="3" style="text-align:center;">Belum ada data alokasi pasca.</td></tr>
-              </tbody>
-            </table>
+          <div id="gridAlokasiPascaCustomer" class="grid-cards" style="margin-bottom:0;">
+            <div style="text-align:center; grid-column: 1/-1; padding: 20px; color: var(--text-muted);">Belum ada data alokasi pasca (pengecekan lapangan belum dilakukan).</div>
           </div>
         </div>
       </div>
@@ -937,6 +915,15 @@
       viewSession(data.id, true);
     }
 
+    function formatDateDMY(dateStr) {
+      if(!dateStr) return '-';
+      const parts = dateStr.split('-');
+      if(parts.length === 3) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      }
+      return dateStr;
+    }
+
     async function viewSession(sessionId, switchTabActive = true) {
       const { data } = await supabaseClient.from('casting_sessions').select('*').eq('id', sessionId).single();
       if(data) {
@@ -946,8 +933,8 @@
         document.getElementById('activeEditTglCetak').value = data.tanggal_pencetakan || '';
         document.getElementById('activeEditTglCor').value = data.tanggal_cor || '';
         
-        // Update SPK date text sesuai tanggal pencetakan
-        document.getElementById('spkDateText').innerText = `Tanggal Pencetakan: ${data.tanggal_pencetakan || '-'}`;
+        // Update SPK date text sesuai format dd-mm-yyyy tanggal pencetakan
+        document.getElementById('spkDateText').innerText = `Tanggal Pencetakan: ${formatDateDMY(data.tanggal_pencetakan)}`;
         
         const badge = document.getElementById('sessionStatusBadge');
         const btnClose = document.getElementById('btnCloseSession');
@@ -984,7 +971,7 @@
       } else {
         currentSession.tanggal_pencetakan = newTglCetak;
         currentSession.tanggal_cor = newTglCor;
-        document.getElementById('spkDateText').innerText = `Tanggal Pencetakan: ${newTglCetak}`;
+        document.getElementById('spkDateText').innerText = `Tanggal Pencetakan: ${formatDateDMY(newTglCetak)}`;
         alert('Tanggal sesi berhasil diperbarui!');
       }
     }
@@ -993,8 +980,8 @@
       const { data } = await supabaseClient.from('casting_sessions').select('*').order('tanggal_pencetakan', { ascending: false });
       document.getElementById('tbodyRiwayat').innerHTML = (data || []).map(r => `
         <tr>
-          <td><strong>${r.tanggal_pencetakan || r.tanggal_cor}</strong></td>
-          <td>${r.tanggal_cor || '-'}</td>
+          <td><strong>${formatDateDMY(r.tanggal_pencetakan || r.tanggal_cor)}</strong></td>
+          <td>${formatDateDMY(r.tanggal_cor)}</td>
           <td><span class="badge ${r.status==='closed'?'badge-over':'badge-safe'}">${r.status.toUpperCase()}</span></td>
           <td>
             <button class="btn btn-primary btn-sm" onclick="viewSession(${r.id}, true)">Buka Sesi</button>
@@ -1253,7 +1240,7 @@
       const satuan = document.getElementById('mOrderSatuan').value;
       const qVal = parseInt(document.getElementById('selectKelipatan').value) || 10;
 
-      // Formula Sesuai Permintaan: =CEILING.MATH(ROUNDUP(IFERROR(IF(unit="kg";X/(z*y);X/Z);"");0);q)
+      // Formula Sesuai Permintaan (Realtime Ceiling Math): =CEILING.MATH(ROUNDUP(IFERROR(IF(unit="kg";X/(z*y);X/Z);"");0);q)
       let rawVal = 0;
       if (satuan === 'kg') {
         rawVal = akhir / ((product.berat_biji_kg || 1) * (product.isi_per_kotak || 1));
@@ -1297,6 +1284,7 @@
       let totalKotak = 0;
       let spkSummary = {};
       let customerAlokasiMap = {};
+      let totalBeratCetakGlobal = 0;
 
       const sortMode = document.getElementById('sortPraOption').value;
       if(sortMode === 'customer') {
@@ -1326,10 +1314,11 @@
             const pKotakIsi = o.products ? o.products.isi_per_kotak : 0;
             const beratTotalItem = (o.jumlah_akhir * pBerat);
 
+            totalBeratCetakGlobal += beratTotalItem;
             spkSummary[pName] = (spkSummary[pName] || 0) + o.kebutuhan_kotak;
 
             if(!customerAlokasiMap[custName]) customerAlokasiMap[custName] = { items: [], totalBerat: 0 };
-            customerAlokasiMap[custName].items.push(`${pName}: ${o.jumlah_akhir} ${o.satuan} (${beratTotalItem.toFixed(1)} kg)`);
+            customerAlokasiMap[custName].items.push(`${pName}: <strong>${o.jumlah_akhir} ${o.satuan}</strong> (${beratTotalItem.toFixed(1)} kg)`);
             customerAlokasiMap[custName].totalBerat += beratTotalItem;
 
             htmlRows += `<tr>`;
@@ -1367,10 +1356,11 @@
           const pKotakIsi = o.products ? o.products.isi_per_kotak : 0;
           const beratTotalItem = (o.jumlah_akhir * pBerat);
 
+          totalBeratCetakGlobal += beratTotalItem;
           spkSummary[pName] = (spkSummary[pName] || 0) + o.kebutuhan_kotak;
 
           if(!customerAlokasiMap[custName]) customerAlokasiMap[custName] = { items: [], totalBerat: 0 };
-          customerAlokasiMap[custName].items.push(`${pName}: ${o.jumlah_akhir} ${o.satuan} (${beratTotalItem.toFixed(1)} kg)`);
+          customerAlokasiMap[custName].items.push(`${pName}: <strong>${o.jumlah_akhir} ${o.satuan}</strong> (${beratTotalItem.toFixed(1)} kg)`);
           customerAlokasiMap[custName].totalBerat += beratTotalItem;
 
           htmlRows += `
@@ -1398,18 +1388,30 @@
       document.getElementById('tbodyPraOrder').innerHTML = htmlRows || '<tr><td colspan="9" style="text-align:center;">Belum ada order.</td></tr>';
       document.getElementById('txtTotalKotak').innerText = `${totalKotak} Kotak`;
       document.getElementById('spkTotalKotakBawah').innerText = `Total Kotak Keseluruhan: ${totalKotak} Kotak`;
+      document.getElementById('txtTotalBeratPraSummary').innerText = `Total Berat Cetak: ${totalBeratCetakGlobal.toFixed(1)} kg`;
       updateKotakIndicator();
 
-      document.getElementById('tbodyAlokasiCustomer').innerHTML = Object.keys(customerAlokasiMap).map(cName => {
-        const alok = customerAlokasiMap[cName];
-        return `
-          <tr>
-            <td><strong>${cName}</strong></td>
-            <td>${alok.items.join('<br>')}</td>
-            <td><strong>${alok.totalBerat.toFixed(1)} kg</strong></td>
-          </tr>
-        `;
-      }).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada data alokasi.</td></tr>';
+      // Render grid card alokasi pra produksi
+      const gridPra = document.getElementById('gridAlokasiCustomerPra');
+      const keysPra = Object.keys(customerAlokasiMap);
+      if(keysPra.length > 0) {
+        gridPra.innerHTML = keysPra.map(cName => {
+          const alok = customerAlokasiMap[cName];
+          return `
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <div style="font-weight: bold; font-size: 1.1rem; color: var(--primary); margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; display:flex; justify-content:space-between; align-items:center;">
+                <span>${cName}</span>
+                <span style="font-size: 0.9rem; background: #e2e8f0; padding: 2px 8px; border-radius: 12px;">${alok.totalBerat.toFixed(1)} kg</span>
+              </div>
+              <ul style="padding-left: 18px; margin-bottom: 12px; font-size: 0.95rem;">
+                ${alok.items.map(it => `<li>${it}</li>`).join('')}
+              </ul>
+            </div>
+          `;
+        }).join('');
+      } else {
+        gridPra.innerHTML = '<div style="text-align:center; grid-column: 1/-1; padding: 20px; color: var(--text-muted);">Belum ada data alokasi.</div>';
+      }
 
       let spkIndex = 1;
       document.getElementById('tbodySPK').innerHTML = Object.keys(spkSummary).map(kName => {
@@ -1581,15 +1583,19 @@
       const { data: orderData } = await supabaseClient.from('casting_orders').select('*, customers(id, nama), products(id, nama_barang, berat_biji_kg, isi_per_zak)').eq('session_id', currentSession.id);
       const { data: logData } = await supabaseClient.from('casting_production_logs').select('*, products(id, nama_barang, berat_biji_kg, isi_per_zak)').eq('session_id', currentSession.id);
 
-      let actualProductTotals = {};
-      (logData || []).forEach(l => {
-        if(!l.status_cek || l.status_cek === 'sesuai') {
-          if(!actualProductTotals[l.product_id]) actualProductTotals[l.product_id] = 0;
-          actualProductTotals[l.product_id] += l.jumlah_biji;
-        }
-      });
+      const gridPasca = document.getElementById('gridAlokasiPascaCustomer');
+      const txtTotalPascaSummary = document.getElementById('txtTotalBeratPascaSummary');
 
+      // Jika pengecekan lapangan belum dilakukan (logData kosong), kosongkan alokasi pasca sesuai instruksi
+      if(!logData || logData.length === 0) {
+        gridPasca.innerHTML = '<div style="text-align:center; grid-column: 1/-1; padding: 20px; color: var(--text-muted);">Belum ada data alokasi pasca (pengecekan lapangan belum dilakukan).</div>';
+        txtTotalPascaSummary.innerText = `Total Berat Cor: 0 kg`;
+        return;
+      }
+
+      let totalBeratCorGlobal = 0;
       let customerAlokasiPascaMap = {};
+
       (orderData || []).forEach(o => {
         const cName = o.customers?.nama || '-';
         const pName = o.products?.nama_barang || '-';
@@ -1602,21 +1608,34 @@
         let sisaCustomer = alokasiBiji % isiZak;
         let formatZakCustomer = `${zakCustomer} Karung/Zak` + (sisaCustomer > 0 ? ` + ${sisaCustomer} bj` : '');
 
+        totalBeratCorGlobal += beratAktifItem;
+
         if(!customerAlokasiPascaMap[cName]) customerAlokasiPascaMap[cName] = { items: [], totalBerat: 0 };
-        customerAlokasiPascaMap[cName].items.push(`${pName}: ${alokasiBiji} ${o.satuan} (${beratAktifItem.toFixed(1)} kg) [Karung: ${formatZakCustomer}]`);
+        customerAlokasiPascaMap[cName].items.push(`${pName}: <strong>${alokasiBiji} ${o.satuan}</strong> (${beratAktifItem.toFixed(1)} kg) [Karung: ${formatZakCustomer}]`);
         customerAlokasiPascaMap[cName].totalBerat += beratAktifItem;
       });
 
-      document.getElementById('tbodyAlokasiPascaCustomer').innerHTML = Object.keys(customerAlokasiPascaMap).map(cName => {
-        const alok = customerAlokasiPascaMap[cName];
-        return `
-          <tr>
-            <td><strong>${cName}</strong></td>
-            <td>${alok.items.join('<br>')}</td>
-            <td><strong>${alok.totalBerat.toFixed(1)} kg</strong></td>
-          </tr>
-        `;
-      }).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada data alokasi pasca kustomer.</td></tr>';
+      txtTotalPascaSummary.innerText = `Total Berat Cor: ${totalBeratCorGlobal.toFixed(1)} kg`;
+
+      const keysPasca = Object.keys(customerAlokasiPascaMap);
+      if(keysPasca.length > 0) {
+        gridPasca.innerHTML = keysPasca.map(cName => {
+          const alok = customerAlokasiPascaMap[cName];
+          return `
+            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <div style="font-weight: bold; font-size: 1.1rem; color: var(--primary); margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; display:flex; justify-content:space-between; align-items:center;">
+                <span>${cName}</span>
+                <span style="font-size: 0.9rem; background: #e2e8f0; padding: 2px 8px; border-radius: 12px;">${alok.totalBerat.toFixed(1)} kg</span>
+              </div>
+              <ul style="padding-left: 18px; margin-bottom: 12px; font-size: 0.95rem;">
+                ${alok.items.map(it => `<li>${it}</li>`).join('')}
+              </ul>
+            </div>
+          `;
+        }).join('');
+      } else {
+        gridPasca.innerHTML = '<div style="text-align:center; grid-column: 1/-1; padding: 20px; color: var(--text-muted);">Belum ada data alokasi pasca kustomer.</div>';
+      }
     }
 
     async function updateCheckStatus(logId, statusVal) {
