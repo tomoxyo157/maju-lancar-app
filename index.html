@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Maju Lancar - Sistem Pengecoran</title>
+  <title>Maju Lancar - Sistem Pencetakan</title>
+  
+  <!-- Favicon & Mobile App Icon -->
+  <link rel="icon" href="https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg" type="image/jpeg">
+  <link rel="apple-touch-icon" href="https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg">
+  <link rel="manifest" href="manifest.json">
   
   <!-- Supabase JS & html2canvas CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -28,7 +33,7 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: var(--bg-color);
       color: var(--text-main);
-      font-size: 18px;
+      font-size: 16px;
       line-height: 1.5;
       padding-bottom: 50px;
     }
@@ -49,17 +54,19 @@
       background-color: #0f172a;
       padding: 4px 16px;
       gap: 8px;
+      overflow-x: auto;
     }
     .nav-btn {
       background: none;
       border: none;
       color: #94a3b8;
-      padding: 14px 24px;
-      font-size: 1.1rem;
+      padding: 14px 20px;
+      font-size: 1rem;
       font-weight: bold;
       cursor: pointer;
       border-bottom: 4px solid transparent;
       transition: all 0.2s;
+      white-space: nowrap;
     }
     .nav-btn:hover { color: white; }
     .nav-btn.active {
@@ -82,7 +89,7 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     .card-title {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: bold;
       margin-bottom: 16px;
       color: var(--primary);
@@ -91,18 +98,20 @@
       align-items: center;
       border-bottom: 2px solid #f1f5f9;
       padding-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     label {
       display: block;
       font-weight: bold;
       margin-bottom: 6px;
-      font-size: 1rem;
+      font-size: 0.95rem;
     }
     input, select {
       width: 100%;
-      padding: 12px 16px;
-      font-size: 1.1rem;
+      padding: 10px 14px;
+      font-size: 1rem;
       border: 2px solid var(--border);
       border-radius: 8px;
       margin-bottom: 16px;
@@ -118,13 +127,13 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 12px 24px;
-      font-size: 1.1rem;
+      padding: 10px 18px;
+      font-size: 0.95rem;
       font-weight: bold;
       border-radius: 8px;
       border: none;
       cursor: pointer;
-      gap: 8px;
+      gap: 6px;
       transition: background 0.2s, transform 0.1s;
     }
     .btn:active { transform: scale(0.98); }
@@ -134,6 +143,7 @@
     .btn-danger { background-color: var(--danger); color: white; }
     .btn-warning { background-color: var(--warning); color: white; }
     .btn-secondary { background-color: #64748b; color: white; }
+    .btn-sm { padding: 6px 10px; font-size: 0.85rem; }
 
     .table-responsive { overflow-x: auto; margin-top: 12px; }
     table {
@@ -142,9 +152,9 @@
       text-align: left;
     }
     th, td {
-      padding: 14px 16px;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--border);
-      font-size: 1rem;
+      font-size: 0.95rem;
     }
     th {
       background-color: #f1f5f9;
@@ -168,7 +178,7 @@
       padding: 6px 16px;
       border-radius: 20px;
       font-weight: bold;
-      font-size: 1rem;
+      font-size: 0.9rem;
       color: white;
     }
     .badge-safe { background-color: var(--success); }
@@ -186,6 +196,7 @@
       z-index: 1000;
       opacity: 0;
       transition: opacity 0.25s ease-out;
+      padding: 10px;
     }
     .modal-overlay.active {
       display: flex;
@@ -194,11 +205,11 @@
     .modal-content {
       background: white;
       border-radius: 16px;
-      width: 90%;
+      width: 100%;
       max-width: 650px;
       max-height: 90vh;
       overflow-y: auto;
-      padding: 28px;
+      padding: 24px;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
       transform: scale(0.85);
       transition: transform 0.25s ease-out;
@@ -230,27 +241,36 @@
       flex-wrap: wrap;
     }
     .sub-btn {
-      padding: 10px 20px;
+      padding: 10px 18px;
       border-radius: 8px;
       border: 2px solid var(--border);
       background: white;
       font-weight: bold;
       cursor: pointer;
+      font-size: 0.95rem;
     }
     .sub-btn.active {
       background: var(--primary);
       color: white;
       border-color: var(--primary);
     }
+    
+    /* Loading overlay */
+    #loadingOverlay {
+      position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 3000;
+      display: flex; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: bold; color: var(--primary);
+    }
   </style>
 </head>
 <body>
 
+  <div id="loadingOverlay">Memuat Data Sistem...</div>
+
   <!-- LOGIN PIN MODAL -->
-  <div class="modal-overlay active" id="modalLogin" style="z-index: 2000;">
+  <div class="modal-overlay" id="modalLogin" style="z-index: 2000;">
     <div class="modal-content" style="max-width: 400px; text-align: center;">
       <h2 style="color: var(--primary); margin-bottom: 12px;">MAJU LANCAR</h2>
-      <p style="margin-bottom: 20px; color: var(--text-muted);">Masukkan PIN Akses Sistem</p>
+      <p style="margin-bottom: 20px; color: var(--text-muted);">Autentikasi Perangkat Berhasil / Masukkan PIN</p>
       <input type="password" id="inputPin" placeholder="PIN (default: 1234)" style="text-align: center; font-size: 1.5rem; letter-spacing: 4px;" />
       <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="checkPin()">MASUK</button>
     </div>
@@ -258,32 +278,35 @@
 
   <!-- HEADER -->
   <header>
-    <h1>MAJU LANCAR</h1>
-    <button class="btn btn-warning" onclick="logoutSystem()">🔒 Keluar PIN</button>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <img src="https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg" alt="Logo" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;">
+      <h1>MAJU LANCAR</h1>
+    </div>
+    <button class="btn btn-warning" onclick="logoutSystem()">🔒 Keluar</button>
   </header>
 
   <!-- NAVIGATION TABS -->
   <nav>
-    <button class="nav-btn active" onclick="switchTab('tabPengecoran')">🔥 Pengecoran</button>
+    <button class="nav-btn active" onclick="switchTab('tabPencetakan')">🔥 Pencetakan</button>
     <button class="nav-btn" onclick="switchTab('tabDatabase')">🗄️ Database</button>
     <button class="nav-btn" onclick="switchTab('tabRiwayat')">📜 Riwayat</button>
   </nav>
 
   <div class="container">
 
-    <!-- TAB 1: PENGECORAN -->
-    <div id="tabPengecoran" class="tab-content">
+    <!-- TAB 1: PENCETAKAN -->
+    <div id="tabPencetakan" class="tab-content">
       <div class="card">
         <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
           <div style="flex: 1; min-width: 250px;">
-            <label for="dateCor">Tanggal Pengecoran:</label>
+            <label for="dateCor">Tanggal Pencetakan:</label>
             <input type="date" id="dateCor" onchange="loadCastingSession()" />
           </div>
           <div>
             <span id="sessionStatusBadge" class="badge badge-safe" style="display:inline-block; margin-top:28px;">Sesi: AKTIF</span>
           </div>
           <div style="margin-top: 28px;">
-            <button class="btn btn-danger" onclick="closeCastingSession()" id="btnCloseSession">🔒 Tutup Sesi Cor</button>
+            <button class="btn btn-danger" onclick="closeCastingSession()" id="btnCloseSession">🔒 Tutup Sesi</button>
           </div>
         </div>
       </div>
@@ -298,7 +321,7 @@
         <div class="card">
           <div class="card-title">
             <span>Daftar Order Yang Dicetak</span>
-            <button class="btn btn-primary" onclick="openModal('modalEntryOrder')">+ Tambah Order</button>
+            <button class="btn btn-primary" onclick="openModalOrder(null)">+ Tambah Order</button>
           </div>
 
           <div class="table-responsive">
@@ -307,6 +330,8 @@
                 <tr>
                   <th>Pelanggan</th>
                   <th>Nama Barang</th>
+                  <th>Berat/Biji</th>
+                  <th>Isi/Kotak</th>
                   <th>Awal</th>
                   <th>Adj</th>
                   <th>Akhir</th>
@@ -315,12 +340,12 @@
                 </tr>
               </thead>
               <tbody id="tbodyPraOrder">
-                <tr><td colspan="7" style="text-align:center;">Memuat data...</td></tr>
+                <tr><td colspan="9" style="text-align:center;">Memuat data...</td></tr>
               </tbody>
             </table>
           </div>
 
-          <!-- REALTIME INDICATOR KOTAK (Fleksibel Kapasitas) -->
+          <!-- REALTIME INDICATOR KOTAK -->
           <div class="indicator-box">
             <div>
               <strong style="font-size: 1.1rem;">Total Kotak Dipesan:</strong>
@@ -333,6 +358,27 @@
             <div>
               <span id="badgeKapasitas" class="badge badge-safe">AMAN</span>
             </div>
+          </div>
+        </div>
+
+        <!-- CARD ALOKASI TIAP KUSTOMER -->
+        <div class="card">
+          <div class="card-title">
+            <span>Alokasi Per Kustomer & Total Berat</span>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pelanggan</th>
+                  <th>Rincian Barang & Berat Alokasi</th>
+                  <th>Total Berat Keseluruhan</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyAlokasiCustomer">
+                <tr><td colspan="3" style="text-align:center;">Belum ada data alokasi.</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -357,6 +403,7 @@
                 <tr><td colspan="3" style="text-align: center;">Belum ada data.</td></tr>
               </tbody>
             </table>
+            <div id="spkTotalKotakBawah" style="margin-top: 15px; font-weight: bold; text-align: right;">Total Kotak: 0</div>
           </div>
         </div>
       </div>
@@ -366,7 +413,7 @@
         <div class="card">
           <div class="card-title">
             <span>Pengecekan Hasil Produksi (Harian Karyawan)</span>
-            <button class="btn btn-primary" onclick="openModal('modalEntryPasca')">+ Tambah Hasil Pengerjaan</button>
+            <button class="btn btn-primary" onclick="openModalPasca(null)">+ Tambah Hasil Pengerjaan</button>
           </div>
           <div class="table-responsive">
             <table>
@@ -376,7 +423,7 @@
                   <th>Nama Barang</th>
                   <th>Warna Tali</th>
                   <th>Jumlah (Biji)</th>
-                  <th>Format Zak</th>
+                  <th>Format Karung/Zak</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
@@ -399,7 +446,7 @@
                   <th>Total Biji</th>
                   <th>Total Berat (Kg)</th>
                   <th>Warna Tali</th>
-                  <th>Format Zak (50+x)</th>
+                  <th>Format Karung/Zak</th>
                 </tr>
               </thead>
               <tbody id="tbodySummaryPasca">
@@ -423,7 +470,7 @@
         <div class="card">
           <div class="card-title">
             <span>Data Master Barang</span>
-            <button class="btn btn-primary" onclick="openModal('modalBarang')">+ Tambah Barang</button>
+            <button class="btn btn-primary" onclick="openModalBarang(null)">+ Tambah Barang</button>
           </div>
           <div class="table-responsive">
             <table>
@@ -452,7 +499,7 @@
         <div class="card">
           <div class="card-title">
             <span>Data Master Kustomer</span>
-            <button class="btn btn-primary" onclick="openModal('modalKustomer')">+ Tambah Kustomer</button>
+            <button class="btn btn-primary" onclick="openModalKustomer(null)">+ Tambah Kustomer</button>
           </div>
           <div class="table-responsive">
             <table>
@@ -476,7 +523,7 @@
         <div class="card">
           <div class="card-title">
             <span>Data Miscs (Karyawan & Tali)</span>
-            <button class="btn btn-primary" onclick="openModal('modalMisc')">+ Tambah Misc</button>
+            <button class="btn btn-primary" onclick="openModalMisc(null)">+ Tambah Misc</button>
           </div>
           <div class="table-responsive">
             <table>
@@ -499,12 +546,12 @@
     <!-- TAB 3: RIWAYAT -->
     <div id="tabRiwayat" class="tab-content" style="display: none;">
       <div class="card">
-        <div class="card-title">Daftar Pengecoran Closed</div>
+        <div class="card-title">Daftar Sesi Pencetakan (Riwayat 5 Sesi Terakhir)</div>
         <div class="table-responsive">
           <table>
             <thead>
               <tr>
-                <th>Tanggal Cor</th>
+                <th>Tanggal Pencetakan</th>
                 <th>Status</th>
                 <th>Aksi</th>
               </tr>
@@ -519,13 +566,14 @@
 
   </div>
 
-  <!-- MODALS -->
+  <!-- MODALS MASTER BARANG -->
   <div class="modal-overlay" id="modalBarang">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Tambah Barang Baru</h3>
+        <h3 id="titleModalBarang">Tambah Barang Baru</h3>
         <button class="btn btn-secondary" onclick="closeModal('modalBarang')">X</button>
       </div>
+      <input type="hidden" id="mBarangId" />
       <label>Nama Barang:</label>
       <input type="text" id="mBarangNama" placeholder="Contoh: Buis Beton" />
       
@@ -544,7 +592,7 @@
         <div style="flex:1;"><label>Kg per Kotak:</label><input type="number" step="0.001" id="mBarangKgKotak" value="0" /></div>
       </div>
 
-      <label>Pasca Prod: Isi per Karung (Zak):</label>
+      <label>Pasca Prod: Isi per Karung/Zak:</label>
       <input type="number" id="mBarangZak" value="50" />
 
       <div class="modal-footer">
@@ -554,12 +602,14 @@
     </div>
   </div>
 
+  <!-- MODAL MASTER KUSTOMER -->
   <div class="modal-overlay" id="modalKustomer">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Tambah Kustomer</h3>
+        <h3 id="titleModalKustomer">Tambah Kustomer</h3>
         <button class="btn btn-secondary" onclick="closeModal('modalKustomer')">X</button>
       </div>
+      <input type="hidden" id="mKustId" />
       <label>Nama Kustomer:</label>
       <input type="text" id="mKustNama" />
       <label>Perusahaan:</label>
@@ -573,12 +623,14 @@
     </div>
   </div>
 
+  <!-- MODAL MASTER MISC -->
   <div class="modal-overlay" id="modalMisc">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Tambah Misc (Karyawan/Tali)</h3>
+        <h3 id="titleModalMisc">Tambah Misc (Karyawan/Tali)</h3>
         <button class="btn btn-secondary" onclick="closeModal('modalMisc')">X</button>
       </div>
+      <input type="hidden" id="mMiscId" />
       <label>Kategori:</label>
       <select id="mMiscKategori">
         <option value="karyawan">Karyawan</option>
@@ -593,12 +645,14 @@
     </div>
   </div>
 
+  <!-- MODAL ORDER -->
   <div class="modal-overlay" id="modalEntryOrder">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Tambah Order Pengecoran</h3>
+        <h3 id="titleModalOrder">Tambah Order Pencetakan</h3>
         <button class="btn btn-secondary" onclick="closeModal('modalEntryOrder')">X</button>
       </div>
+      <input type="hidden" id="mOrderId" />
       <label>Pilih Pelanggan:</label>
       <select id="mOrderCustomer"></select>
       <label>Pilih Barang:</label>
@@ -619,12 +673,14 @@
     </div>
   </div>
 
+  <!-- MODAL PASCA -->
   <div class="modal-overlay" id="modalEntryPasca">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Tambah Hasil Pengerjaan</h3>
+        <h3 id="titleModalPasca">Tambah Hasil Pengerjaan</h3>
         <button class="btn btn-secondary" onclick="closeModal('modalEntryPasca')">X</button>
       </div>
+      <input type="hidden" id="mPascaId" />
       <label>Nama Karyawan:</label>
       <select id="mPascaKaryawan"></select>
       <label>Nama Barang:</label>
@@ -641,13 +697,31 @@
   </div>
 
   <script>
+    // Konfigurasi Supabase Bawaan
+    const SUPABASE_URL = "https://your-supabase-project.supabase.co"; 
+    const SUPABASE_KEY = "your-anon-key";
+    
     let supabaseClient = null;
     let currentSession = null;
     let cachedOrders = [];
+    let globalProducts = [], globalCustomers = [], globalMiscs = [];
+
+    // Cek Login & Token Komputer agar tidak perlu input PIN terus
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedPcToken = localStorage.getItem('ml_pc_logged');
+      if(savedPcToken === 'true') {
+        document.getElementById('modalLogin').classList.remove('active');
+        initSupabase();
+      } else {
+        document.getElementById('modalLogin').classList.add('active');
+        document.getElementById('loadingOverlay').style.display = 'none';
+      }
+    });
 
     function checkPin() {
       const pin = document.getElementById('inputPin').value;
       if(pin === "1234" || pin === "5678") {
+        localStorage.setItem('ml_pc_logged', 'true');
         document.getElementById('modalLogin').classList.remove('active');
         initSupabase();
       } else {
@@ -656,28 +730,29 @@
     }
 
     function logoutSystem() {
+      localStorage.removeItem('ml_pc_logged');
       document.getElementById('modalLogin').classList.add('active');
       document.getElementById('inputPin').value = "";
     }
 
     function initSupabase() {
-      let url = localStorage.getItem('ml_sp_url');
-      let key = localStorage.getItem('ml_sp_key');
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      const url = SUPABASE_URL.includes("your-supabase") ? localStorage.getItem('ml_sp_url') : SUPABASE_URL;
+      const key = SUPABASE_KEY.includes("your-anon") ? localStorage.getItem('ml_sp_key') : SUPABASE_KEY;
       
-      if(url && key) {
+      if(url && key && !url.includes("your-supabase")) {
         supabaseClient = supabase.createClient(url, key);
         loadMasterData();
       } else {
         const u = prompt("Masukkan Supabase URL Anda:");
         const k = prompt("Masukkan Supabase Anon Key Anda:");
         if(u && k) {
-          localStorage.setItem('ml_sp_url', u.trim());
-          localStorage.setItem('ml_sp_key', k.trim());
-          supabaseClient = supabase.createClient(u.trim(), k.trim());
+          localStorage.setItem('ml_sp_url', u);
+          localStorage.setItem('ml_sp_key', k);
+          supabaseClient = supabase.createClient(u, k);
           loadMasterData();
         } else {
-          alert("URL dan Key wajib diisi agar sistem terhubung!");
-          logoutSystem();
+          document.getElementById('loadingOverlay').style.display = 'none';
         }
       }
     }
@@ -686,6 +761,13 @@
 
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    // Escape button untuk menutup modal
+    window.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+      }
+    });
 
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
@@ -708,8 +790,6 @@
       document.getElementById('dbMiscs').style.display = (type === 'miscs') ? 'block' : 'none';
     }
 
-    let globalProducts = [], globalCustomers = [], globalMiscs = [];
-
     async function loadMasterData() {
       if(!supabaseClient) return;
       try {
@@ -726,9 +806,11 @@
         renderTableMiscs();
 
         populateDropdowns();
-        loadCastingSession();
+        await loadCastingSession();
       } catch(err) {
         console.error("Gagal memuat database:", err);
+      } finally {
+        document.getElementById('loadingOverlay').style.display = 'none';
       }
     }
 
@@ -747,8 +829,40 @@
       tSel.innerHTML = globalMiscs.filter(m => m.kategori === 'tali').map(t => `<option value="${t.id}">${t.nama_item}</option>`).join('');
     }
 
+    // Master Barang Actions (Tambah & Edit)
+    function openModalBarang(id) {
+      document.getElementById('mBarangId').value = '';
+      document.getElementById('mBarangNama').value = '';
+      document.getElementById('mBarangBerat').value = 1;
+      document.getElementById('mBarangLingkar').value = 0;
+      document.getElementById('mBarangTebal').value = 0;
+      document.getElementById('mBarangLubang').value = 0;
+      document.getElementById('mBarangKotak').value = 10;
+      document.getElementById('mBarangKgKotak').value = 0;
+      document.getElementById('mBarangZak').value = 50;
+      document.getElementById('titleModalBarang').innerText = "Tambah Barang Baru";
+
+      if(id) {
+        const p = globalProducts.find(item => item.id === id);
+        if(p) {
+          document.getElementById('mBarangId').value = p.id;
+          document.getElementById('mBarangNama').value = p.nama_barang;
+          document.getElementById('mBarangBerat').value = p.berat_biji_kg;
+          document.getElementById('mBarangLingkar').value = p.lingkar_cm;
+          document.getElementById('mBarangTebal').value = p.tebal_cm;
+          document.getElementById('mBarangLubang').value = p.lubang_cm;
+          document.getElementById('mBarangKotak').value = p.isi_per_kotak;
+          document.getElementById('mBarangKgKotak').value = p.kg_per_kotak;
+          document.getElementById('mBarangZak').value = p.isi_per_zak;
+          document.getElementById('titleModalBarang').innerText = "Edit Barang";
+        }
+      }
+      openModal('modalBarang');
+    }
+
     async function saveBarang() {
       try {
+        const id = document.getElementById('mBarangId').value;
         const payload = {
           nama_barang: document.getElementById('mBarangNama').value,
           berat_biji_kg: parseFloat(document.getElementById('mBarangBerat').value) || 0,
@@ -759,34 +873,96 @@
           kg_per_kotak: parseFloat(document.getElementById('mBarangKgKotak').value) || 0,
           isi_per_zak: parseInt(document.getElementById('mBarangZak').value) || 1
         };
-        const { error } = await supabaseClient.from('products').insert([payload]);
+        let error;
+        if(id) {
+          let res = await supabaseClient.from('products').update(payload).eq('id', id);
+          error = res.error;
+        } else {
+          let res = await supabaseClient.from('products').insert([payload]);
+          error = res.error;
+        }
         if(error) throw error;
         closeModal('modalBarang');
         loadMasterData();
       } catch(e) { alert("Gagal menyimpan barang: " + e.message); }
     }
 
+    // Master Kustomer Actions
+    function openModalKustomer(id) {
+      document.getElementById('mKustId').value = '';
+      document.getElementById('mKustNama').value = '';
+      document.getElementById('mKustPerusahaan').value = '';
+      document.getElementById('mKustLokasi').value = '';
+      document.getElementById('titleModalKustomer').innerText = "Tambah Kustomer";
+
+      if(id) {
+        const c = globalCustomers.find(item => item.id === id);
+        if(c) {
+          document.getElementById('mKustId').value = c.id;
+          document.getElementById('mKustNama').value = c.nama;
+          document.getElementById('mKustPerusahaan').value = c.perusahaan || '';
+          document.getElementById('mKustLokasi').value = c.lokasi || '';
+          document.getElementById('titleModalKustomer').innerText = "Edit Kustomer";
+        }
+      }
+      openModal('modalKustomer');
+    }
+
     async function saveKustomer() {
       try {
+        const id = document.getElementById('mKustId').value;
         const payload = {
           nama: document.getElementById('mKustNama').value,
           perusahaan: document.getElementById('mKustPerusahaan').value,
           lokasi: document.getElementById('mKustLokasi').value
         };
-        const { error } = await supabaseClient.from('customers').insert([payload]);
+        let error;
+        if(id) {
+          let res = await supabaseClient.from('customers').update(payload).eq('id', id);
+          error = res.error;
+        } else {
+          let res = await supabaseClient.from('customers').insert([payload]);
+          error = res.error;
+        }
         if(error) throw error;
         closeModal('modalKustomer');
         loadMasterData();
       } catch(e) { alert("Gagal menyimpan kustomer: " + e.message); }
     }
 
+    // Master Misc Actions
+    function openModalMisc(id) {
+      document.getElementById('mMiscId').value = '';
+      document.getElementById('mMiscNama').value = '';
+      document.getElementById('titleModalMisc').innerText = "Tambah Misc";
+
+      if(id) {
+        const m = globalMiscs.find(item => item.id === id);
+        if(m) {
+          document.getElementById('mMiscId').value = m.id;
+          document.getElementById('mMiscKategori').value = m.kategori;
+          document.getElementById('mMiscNama').value = m.nama_item;
+          document.getElementById('titleModalMisc').innerText = "Edit Misc";
+        }
+      }
+      openModal('modalMisc');
+    }
+
     async function saveMisc() {
       try {
+        const id = document.getElementById('mMiscId').value;
         const payload = {
           kategori: document.getElementById('mMiscKategori').value,
           nama_item: document.getElementById('mMiscNama').value
         };
-        const { error } = await supabaseClient.from('miscs').insert([payload]);
+        let error;
+        if(id) {
+          let res = await supabaseClient.from('miscs').update(payload).eq('id', id);
+          error = res.error;
+        } else {
+          let res = await supabaseClient.from('miscs').insert([payload]);
+          error = res.error;
+        }
         if(error) throw error;
         closeModal('modalMisc');
         loadMasterData();
@@ -811,7 +987,10 @@
           <td>${p.isi_per_kotak}</td>
           <td>${p.kg_per_kotak || 0} kg</td>
           <td>${p.isi_per_zak}</td>
-          <td><button class="btn btn-danger" onclick="deleteItem('products', ${p.id})">Hapus</button></td>
+          <td>
+            <button class="btn btn-warning btn-sm" onclick="openModalBarang(${p.id})">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteItem('products', ${p.id})">Hapus</button>
+          </td>
         </tr>
       `).join('') || '<tr><td colspan="9" style="text-align:center;">Data Kosong</td></tr>';
     }
@@ -822,7 +1001,10 @@
           <td><strong>${c.nama}</strong></td>
           <td>${c.perusahaan || '-'}</td>
           <td>${c.lokasi || '-'}</td>
-          <td><button class="btn btn-danger" onclick="deleteItem('customers', ${c.id})">Hapus</button></td>
+          <td>
+            <button class="btn btn-warning btn-sm" onclick="openModalKustomer(${c.id})">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteItem('customers', ${c.id})">Hapus</button>
+          </td>
         </tr>
       `).join('') || '<tr><td colspan="4" style="text-align:center;">Data Kosong</td></tr>';
     }
@@ -832,7 +1014,10 @@
         <tr>
           <td><strong>${m.kategori.toUpperCase()}</strong></td>
           <td>${m.nama_item}</td>
-          <td><button class="btn btn-danger" onclick="deleteItem('miscs', ${m.id})">Hapus</button></td>
+          <td>
+            <button class="btn btn-warning btn-sm" onclick="openModalMisc(${m.id})">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteItem('miscs', ${m.id})">Hapus</button>
+          </td>
         </tr>
       `).join('') || '<tr><td colspan="3" style="text-align:center;">Data Kosong</td></tr>';
     }
@@ -863,13 +1048,36 @@
         btnClose.style.display = 'inline-block';
       }
 
-      loadPraOrders();
-      loadPascaLogs();
+      await loadPraOrders();
+      await loadPascaLogs();
+    }
+
+    // Order Actions (Tambah & Edit)
+    function openModalOrder(id) {
+      document.getElementById('mOrderId').value = '';
+      document.getElementById('mOrderAwal').value = 0;
+      document.getElementById('mOrderAdj').value = 0;
+      document.getElementById('titleModalOrder').innerText = "Tambah Order Pencetakan";
+
+      if(id) {
+        const o = cachedOrders.find(item => item.id === id);
+        if(o) {
+          document.getElementById('mOrderId').value = o.id;
+          document.getElementById('mOrderCustomer').value = o.customer_id;
+          document.getElementById('mOrderProduct').value = o.product_id;
+          document.getElementById('mOrderAwal').value = o.jumlah_awal;
+          document.getElementById('mOrderAdj').value = o.pengurangan;
+          document.getElementById('mOrderSatuan').value = o.satuan;
+          document.getElementById('titleModalOrder').innerText = "Edit Order Pencetakan";
+        }
+      }
+      openModal('modalEntryOrder');
     }
 
     async function saveEntryOrder() {
-      if(currentSession.status === 'closed') return alert('Sesi cor sudah ditutup!');
+      if(currentSession.status === 'closed') return alert('Sesi sudah ditutup!');
       
+      const id = document.getElementById('mOrderId').value;
       const productId = parseInt(document.getElementById('mOrderProduct').value);
       const product = globalProducts.find(p => p.id === productId);
       const awal = parseInt(document.getElementById('mOrderAwal').value) || 0;
@@ -891,48 +1099,117 @@
         kebutuhan_kotak: kebutuhanKotak
       };
 
-      await supabaseClient.from('casting_orders').insert([payload]);
+      let error;
+      if(id) {
+        let res = await supabaseClient.from('casting_orders').update(payload).eq('id', id);
+        error = res.error;
+      } else {
+        let res = await supabaseClient.from('casting_orders').insert([payload]);
+        error = res.error;
+      }
+      if(error) alert("Gagal simpan order: " + error.message);
       closeModal('modalEntryOrder');
-      loadPraOrders();
+      await loadPraOrders();
     }
 
     async function loadPraOrders() {
       if(!currentSession) return;
-      const { data } = await supabaseClient.from('casting_orders').select('*, customers(nama), products(nama_barang, lubang_cm, berat_biji_kg)').eq('session_id', currentSession.id);
+      const { data } = await supabaseClient.from('casting_orders').select('*, customers(nama), products(nama_barang, lubang_cm, berat_biji_kg, isi_per_kotak)').eq('session_id', currentSession.id);
       cachedOrders = data || [];
       
       let totalKotak = 0;
       let spkSummary = {};
+      let customerAlokasiMap = {};
 
-      document.getElementById('tbodyPraOrder').innerHTML = cachedOrders.map(o => {
-        totalKotak += o.kebutuhan_kotak;
-        const pLabel = o.products ? `${o.products.nama_barang} ${o.products.lubang_cm ? '(Lubang: '+o.products.lubang_cm+'cm)':''}` : '-';
-        spkSummary[pLabel] = (spkSummary[pLabel] || 0) + o.kebutuhan_kotak;
+      // Sorting agar pelanggan yang sama berurutan (untuk Merge Cell / Rowspan visual)
+      cachedOrders.sort((a,b) => (a.customers?.nama || '').localeCompare(b.customers?.nama || ''));
 
-        return `
-          <tr>
-            <td>${o.customers ? o.customers.nama : '-'}</td>
-            <td><strong>${pLabel}</strong></td>
+      let htmlRows = '';
+      let i = 0;
+      while(i < cachedOrders.length) {
+        let curr = cachedOrders[i];
+        let custName = curr.customers ? curr.customers.nama : '-';
+        
+        // Hitung berapa baris dengan kustomer yang sama
+        let countSameCust = 0;
+        for(let j = i; j < cachedOrders.length; j++) {
+          let cNameJ = cachedOrders[j].customers ? cachedOrders[j].customers.nama : '-';
+          if(cNameJ === custName) countSameCust++;
+          else break;
+        }
+
+        for(let k = 0; k < countSameCust; k++) {
+          let o = cachedOrders[i + k];
+          totalKotak += o.kebutuhan_kotak;
+          const pName = o.products ? o.products.nama_barang : '-';
+          const pBerat = o.products ? o.products.berat_biji_kg : 0;
+          const pKotakIsi = o.products ? o.products.isi_per_kotak : 0;
+          const beratTotalItem = (o.jumlah_akhir * pBerat);
+
+          // Summary SPK
+          spkSummary[pName] = (spkSummary[pName] || 0) + o.kebutuhan_kotak;
+
+          // Customer Alokasi Map
+          if(!customerAlokasiMap[custName]) customerAlokasiMap[custName] = { items: [], totalBerat: 0 };
+          customerAlokasiMap[custName].items.push(`${pName}: ${o.jumlah_akhir} ${o.satuan} (${beratTotalItem.toFixed(1)} kg)`);
+          customerAlokasiMap[custName].totalBerat += beratTotalItem;
+
+          htmlRows += `<tr>`;
+          if(k === 0) {
+            htmlRows += `<td rowspan="${countSameCust}" style="vertical-align: middle; background:#f8fafc; font-weight:bold;">${custName}</td>`;
+          }
+          htmlRows += `
+            <td><strong>${pName}</strong></td>
+            <td>${pBerat} kg</td>
+            <td>${pKotakIsi}</td>
             <td>${o.jumlah_awal}</td>
             <td>${o.pengurangan}</td>
             <td><strong>${o.jumlah_akhir} ${o.satuan}</strong></td>
             <td><strong>${o.kebutuhan_kotak} Kotak</strong></td>
-            <td><button class="btn btn-danger" onclick="deleteOrder(${o.id})">Hapus</button></td>
-          </tr>
-        `;
-      }).join('') || '<tr><td colspan="7" style="text-align:center;">Belum ada order.</td></tr>';
+            <td>
+              <button class="btn btn-warning btn-sm" onclick="openModalOrder(${o.id})">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteOrder(${o.id})">Hapus</button>
+            </td>
+          </tr>`;
+        }
+        i += countSameCust;
+      }
 
+      document.getElementById('tbodyPraOrder').innerHTML = htmlRows || '<tr><td colspan="9" style="text-align:center;">Belum ada order.</td></tr>';
       document.getElementById('txtTotalKotak').innerText = `${totalKotak} Kotak`;
+      document.getElementById('spkTotalKotakBawah').innerText = `Total Kotak Keseluruhan: ${totalKotak} Kotak`;
       updateKotakIndicator();
 
+      // Render Alokasi Kustomer Card
+      document.getElementById('tbodyAlokasiCustomer').innerHTML = Object.keys(customerAlokasiMap).map(cName => {
+        const alok = customerAlokasiMap[cName];
+        return `
+          <tr>
+            <td><strong>${cName}</strong></td>
+            <td>${alok.items.join('<br>')}</td>
+            <td><strong>${alok.totalBerat.toFixed(1)} kg</strong></td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada alokasi data.</td></tr>';
+
+      // Render SPK Pattern Matching Color & Total
       let spkIndex = 1;
-      document.getElementById('tbodySPK').innerHTML = Object.keys(spkSummary).map(k => `
-        <tr>
-          <td>${spkIndex++}</td>
-          <td><strong>${k}</strong></td>
-          <td><strong>${spkSummary[k]} Kotak</strong></td>
-        </tr>
-      `).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada data.</td></tr>';
+      document.getElementById('tbodySPK').innerHTML = Object.keys(spkSummary).map(kName => {
+        let patternColor = "inherit";
+        let lowerK = kName.toLowerCase();
+        if(lowerK.startsWith("6") || lowerK.includes("6tps")) patternColor = "#1e3a8a";
+        else if(lowerK.startsWith("7") || lowerK.includes("7tps")) patternColor = "#b91c1c";
+        else if(lowerK.startsWith("8") || lowerK.includes("8tps")) patternColor = "#15803d";
+        else if(lowerK.startsWith("10") || lowerK.includes("10tps")) patternColor = "#b45309";
+
+        return `
+          <tr>
+            <td>${spkIndex++}</td>
+            <td><strong style="color: ${patternColor};">${kName}</strong></td>
+            <td><strong>${spkSummary[kName]} Kotak</strong></td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada data.</td></tr>';
     }
 
     function updateKotakIndicator() {
@@ -952,13 +1229,38 @@
     async function deleteOrder(id) {
       if(confirm('Hapus order?')) {
         await supabaseClient.from('casting_orders').delete().eq('id', id);
-        loadPraOrders();
+        await loadPraOrders();
+      }
+    }
+
+    // Pasca Produksi Actions (Tambah & Edit)
+    function openModalPasca(id) {
+      document.getElementById('mPascaId').value = '';
+      document.getElementById('mPascaJumlah').value = 0;
+      document.getElementById('titleModalPasca').innerText = "Tambah Hasil Pengerjaan";
+
+      if(id) {
+        // Fetch or find log
+        supabaseClient.from('casting_production_logs').select('*').eq('id', id).single().then(({data}) => {
+          if(data) {
+            document.getElementById('mPascaId').value = data.id;
+            document.getElementById('mPascaKaryawan').value = data.karyawan_id;
+            document.getElementById('mPascaProduct').value = data.product_id;
+            document.getElementById('mPascaTali').value = data.warna_tali_id;
+            document.getElementById('mPascaJumlah').value = data.jumlah_biji;
+            document.getElementById('titleModalPasca').innerText = "Edit Hasil Pengerjaan";
+            openModal('modalEntryPasca');
+          }
+        });
+      } else {
+        openModal('modalEntryPasca');
       }
     }
 
     async function saveEntryPasca() {
-      if(currentSession.status === 'closed') return alert('Sesi cor sudah ditutup!');
+      if(currentSession.status === 'closed') return alert('Sesi sudah ditutup!');
 
+      const id = document.getElementById('mPascaId').value;
       const productId = parseInt(document.getElementById('mPascaProduct').value);
       const product = globalProducts.find(p => p.id === productId);
       const jumlahBiji = parseInt(document.getElementById('mPascaJumlah').value) || 0;
@@ -976,70 +1278,104 @@
         sisa_biji: sisaBiji
       };
 
-      await supabaseClient.from('casting_production_logs').insert([payload]);
+      let error;
+      if(id) {
+        let res = await supabaseClient.from('casting_production_logs').update(payload).eq('id', id);
+        error = res.error;
+      } else {
+        let res = await supabaseClient.from('casting_production_logs').insert([payload]);
+        error = res.error;
+      }
+      if(error) alert("Gagal menyimpan hasil: " + error.message);
       closeModal('modalEntryPasca');
-      loadPascaLogs();
+      await loadPascaLogs();
     }
 
     async function loadPascaLogs() {
       if(!currentSession) return;
       const { data } = await supabaseClient.from('casting_production_logs')
-        .select('*, products(nama_barang, lubang_cm, berat_biji_kg), karyawan:miscs!karyawan_id(nama_item), tali:miscs!warna_tali_id(nama_item)')
+        .select('*, products(nama_barang, lubang_cm, berat_biji_kg, isi_per_zak), karyawan:miscs!karyawan_id(nama_item), tali:miscs!warna_tali_id(nama_item)')
         .eq('session_id', currentSession.id);
 
       let summaryMap = {};
 
       document.getElementById('tbodyPascaLog').innerHTML = (data || []).map(l => {
-        const zakFormat = `${l.zak_total} Zak` + (l.sisa_biji > 0 ? ` + <small>${l.sisa_biji}</small>` : '');
-        const pName = l.products ? `${l.products.nama_barang} ${l.products.lubang_cm ? '(Lubang: '+l.products.lubang_cm+'cm)':''}` : '-';
+        // Format Zak / Karung (zak/karung aja cukup, sisa ditulis kecil)
+        const zakFormat = `${l.zak_total} Karung/Zak` + (l.sisa_biji > 0 ? ` + <small style="font-size:0.8rem; color:var(--text-muted);">${l.sisa_biji} kecil</small>` : '');
+        const pName = l.products ? `${l.products.nama_barang}` : '-';
+        const karyName = l.karyawan ? l.karyawan.nama_item : '-';
         
-        if(!summaryMap[pName]) {
-          summaryMap[pName] = { totalBiji: 0, beratBiji: l.products.berat_biji_kg, zakTotal: 0, sisaTotal: 0, tali: l.tali ? l.tali.nama_item : '-' };
+        // Grouping summary tanpa menggabungkan jika karyawan berbeda meski barang sama (Handle 2 karyawan mengerjakan hal sama bersisa)
+        const summaryKey = `${pName}_${l.tali ? l.tali.nama_item : '-'}_${karyName}`;
+        if(!summaryMap[summaryKey]) {
+          summaryMap[summaryKey] = { productName: pName, karyawanName: karyName, totalBiji: 0, beratBiji: l.products ? l.products.berat_biji_kg : 0, zakTotal: 0, sisaTotal: 0, tali: l.tali ? l.tali.nama_item : '-' };
         }
-        summaryMap[pName].totalBiji += l.jumlah_biji;
-        summaryMap[pName].zakTotal += l.zak_total;
-        summaryMap[pName].sisaTotal += l.sisa_biji;
+        summaryMap[summaryKey].totalBiji += l.jumlah_biji;
+        summaryMap[summaryKey].zakTotal += l.zak_total;
+        summaryMap[summaryKey].sisaTotal += l.sisa_biji;
 
         return `
           <tr>
-            <td><strong>${l.karyawan ? l.karyawan.nama_item : '-'}</strong></td>
+            <td><strong>${karyName}</strong></td>
             <td>${pName}</td>
             <td>${l.tali ? l.tali.nama_item : '-'}</td>
-            <td>${l.jumlah_biji} biji</td>
+            <td>
+              <input type="number" class="inline-edit-biji" value="${l.jumlah_biji}" style="width: 100px; padding: 4px; margin:0;" onchange="updateQuickBiji(${l.id}, this.value)">
+            </td>
             <td><strong>${zakFormat}</strong></td>
-            <td><button class="btn btn-danger" onclick="deletePasca(${l.id})">Hapus</button></td>
+            <td>
+              <button class="btn btn-warning btn-sm" onclick="openModalPasca(${l.id})">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deletePasca(${l.id})">Hapus</button>
+            </td>
           </tr>
         `;
       }).join('') || '<tr><td colspan="6" style="text-align:center;">Belum ada hasil.</td></tr>';
 
-      document.getElementById('tbodySummaryPasca').innerHTML = Object.keys(summaryMap).map(p => {
-        const item = summaryMap[p];
+      document.getElementById('tbodySummaryPasca').innerHTML = Object.keys(summaryMap).map(key => {
+        const item = summaryMap[key];
         const totalKg = (item.totalBiji * item.beratBiji).toFixed(1);
-        const zakFormat = `${item.zakTotal} Zak` + (item.sisaTotal > 0 ? ` + <small>${item.sisaTotal}</small>` : '');
+        const zakFormat = `${item.zakTotal} Karung/Zak` + (item.sisaTotal > 0 ? ` + <small style="font-size:0.8rem; color:var(--text-muted);">${item.sisaTotal} kecil</small>` : '');
         return `
           <tr>
-            <td><strong>${p}</strong></td>
+            <td><strong>${item.productName}</strong> <br><small>(${item.karyawanName})</small></td>
             <td>${item.totalBiji} biji</td>
             <td><strong>${totalKg} kg</strong></td>
             <td>${item.tali}</td>
             <td><strong>${zakFormat}</strong></td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="5" style="text-align:center;">Belum ada data.</td></tr>';
+      }).join('') || 'Dropdown tabel langsung aktif';
+    }
+
+    // Dropdown/Inline update langsung di tabel hasil produksi
+    async function updateQuickBiji(logId, newBijiVal) {
+      const biji = parseInt(newBijiVal) || 0;
+      // Fetch product detail for calculation
+      const { data: logData } = await supabaseClient.from('casting_production_logs').select('*, products(isi_per_zak)').eq('id', logId).single();
+      if(logData && logData.products) {
+        const zakTotal = Math.floor(biji / logData.products.isi_per_zak);
+        const sisaBiji = biji % logData.products.isi_per_zak;
+        await supabaseClient.from('casting_production_logs').update({
+          jumlah_biji: biji,
+          zak_total: zakTotal,
+          sisa_biji: sisaBiji
+        }).eq('id', logId);
+        await loadPascaLogs();
+      }
     }
 
     async function deletePasca(id) {
       if(confirm('Hapus log?')) {
         await supabaseClient.from('casting_production_logs').delete().eq('id', id);
-        loadPascaLogs();
+        await loadPascaLogs();
       }
     }
 
     async function closeCastingSession() {
       if(!currentSession) return;
-      if(confirm('Yakin tutup sesi cor ini? (Locked)')) {
+      if(confirm('Yakin tutup sesi ini?')) {
         await supabaseClient.from('casting_sessions').update({ status: 'closed' }).eq('id', currentSession.id);
-        loadCastingSession();
+        await loadCastingSession();
       }
     }
 
@@ -1053,20 +1389,44 @@
       });
     }
 
+    // Riwayat Autodelete menjaga max 5 sesi terlama, sisanya autodelete
     async function loadRiwayat() {
       const { data } = await supabaseClient.from('casting_sessions').select('*').order('tanggal_cor', { ascending: false });
+      
+      if(data && data.length > 5) {
+        // Autodelete sesi paling awal jika lebih dari 5
+        for(let i = 5; i < data.length; i++) {
+          await supabaseClient.from('casting_sessions').delete().eq('id', data[i].id);
+        }
+        // Reload ulang setelah autodelete
+        loadRiwayat();
+        return;
+      }
+
       document.getElementById('tbodyRiwayat').innerHTML = (data || []).map(r => `
         <tr>
           <td><strong>${r.tanggal_cor}</strong></td>
           <td><span class="badge ${r.status==='closed'?'badge-over':'badge-safe'}">${r.status.toUpperCase()}</span></td>
-          <td><button class="btn btn-primary" onclick="viewHistoryDate('${r.tanggal_cor}')">Lihat</button></td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="viewHistoryDate('${r.tanggal_cor}')">Lihat</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteHistorySession(${r.id})">Hapus</button>
+          </td>
         </tr>
-      `).join('');
+      `).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada riwayat.</td></tr>';
+    }
+
+    async function deleteHistorySession(sessionId) {
+      if(confirm('Hapus sesi riwayat ini beserta data order dan produksinya?')) {
+        await supabaseClient.from('casting_orders').delete().eq('session_id', sessionId);
+        await supabaseClient.from('casting_production_logs').delete().eq('session_id', sessionId);
+        await supabaseClient.from('casting_sessions').delete().eq('id', sessionId);
+        loadRiwayat();
+      }
     }
 
     function viewHistoryDate(tgl) {
       document.getElementById('dateCor').value = tgl;
-      switchTab('tabPengecoran');
+      switchTab('tabPencetakan');
       loadCastingSession();
     }
   </script>
