@@ -79,7 +79,7 @@
       padding: 0 16px;
     }
 
-    /* Grid Layout untuk Card agar bisa horizontal */
+    /* Grid Layout untuk Card Alokasi */
     .grid-cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -427,14 +427,13 @@
           </div>
         </div>
 
-        <!-- GRID CARDS UNTUK ALOKASI PRA PRODUKSI (BERBENTUK CARD GRID HORIZONTAL) -->
+        <!-- GRID CARDS UNTUK ALOKASI PRA PRODUKSI -->
         <div class="card">
           <div class="card-title">
             <span>Alokasi Per Kustomer (Pra Produksi)</span>
             <span id="txtTotalBeratPraSummary" style="font-size: 1rem; color: var(--primary); background: #f1f5f9; padding: 6px 12px; border-radius: 8px;">Total Berat Cetak: 0 kg</span>
           </div>
           <div id="gridAlokasiCustomerPra" class="grid-cards" style="margin-bottom:0;">
-            <!-- Kartu kustomer akan di-generate secara dinamis di sini -->
             <div style="text-align:center; grid-column: 1/-1; padding: 20px; color: var(--text-muted);">Belum ada data alokasi.</div>
           </div>
         </div>
@@ -514,7 +513,7 @@
           </div>
         </div>
 
-        <!-- CARD ALOKASI PER KUSTOMER PASCA PRODUKSI (BERBENTUK CARD GRID HORIZONTAL) -->
+        <!-- CARD ALOKASI PER KUSTOMER PASCA PRODUKSI -->
         <div class="card">
           <div class="card-title">
             <span>Alokasi Per Kustomer Berdasarkan Hasil Aktual Lapangan</span>
@@ -756,7 +755,7 @@
       <input type="hidden" id="mPascaId" />
       <label>Nama Karyawan:</label>
       <select id="mPascaKaryawan"></select>
-      <label>Nama Barang:</label>
+      <label>Nama Barang (Dari Rencana Cetak):</label>
       <select id="mPascaProduct"></select>
       <label>Warna Tali:</label>
       <select id="mPascaTali"></select>
@@ -842,6 +841,9 @@
       event.target.classList.add('active');
       document.getElementById('subPra').style.display = (type === 'pra') ? 'block' : 'none';
       document.getElementById('subPasca').style.display = (type === 'pasca') ? 'block' : 'none';
+      if(type === 'pasca') {
+        populatePascaProductDropdown();
+      }
     }
 
     function switchDbSubTab(type) {
@@ -876,8 +878,7 @@
 
     function populateDropdowns() {
       const pSel = document.getElementById('mOrderProduct');
-      const pPasca = document.getElementById('mPascaProduct');
-      pSel.innerHTML = pPasca.innerHTML = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang}</option>`).join('');
+      pSel.innerHTML = globalProducts.map(p => `<option value="${p.id}">${p.nama_barang}</option>`).join('');
 
       const cSel = document.getElementById('mOrderCustomer');
       cSel.innerHTML = globalCustomers.map(c => `<option value="${c.id}">${c.nama} (${c.perusahaan || '-'})</option>`).join('');
@@ -887,6 +888,20 @@
 
       const tSel = document.getElementById('mPascaTali');
       tSel.innerHTML = globalMiscs.filter(m => m.kategori === 'tali').map(t => `<option value="${t.id}">${t.nama_item}</option>`).join('');
+    }
+
+    // Membatasi barang pada pasca produksi hanya dari barang yang terdaftar di rencana cetak (session ini)
+    function populatePascaProductDropdown() {
+      const pPasca = document.getElementById('mPascaProduct');
+      // Ambil product_id unik dari cachedOrders
+      const productIdsInOrder = [...new Set(cachedOrders.map(o => o.product_id))];
+      const filteredProducts = globalProducts.filter(p => productIdsInOrder.includes(p.id));
+
+      if(filteredProducts.length > 0) {
+        pPasca.innerHTML = filteredProducts.map(p => `<option value="${p.id}">${p.nama_barang}</option>`).join('');
+      } else {
+        pPasca.innerHTML = '<option value="">(Belum ada barang di rencana cetak)</option>';
+      }
     }
 
     function openModalNewSession() {
@@ -933,7 +948,6 @@
         document.getElementById('activeEditTglCetak').value = data.tanggal_pencetakan || '';
         document.getElementById('activeEditTglCor').value = data.tanggal_cor || '';
         
-        // Update SPK date text sesuai format dd-mm-yyyy tanggal pencetakan
         document.getElementById('spkDateText').innerText = `Tanggal Pencetakan: ${formatDateDMY(data.tanggal_pencetakan)}`;
         
         const badge = document.getElementById('sessionStatusBadge');
@@ -1240,7 +1254,6 @@
       const satuan = document.getElementById('mOrderSatuan').value;
       const qVal = parseInt(document.getElementById('selectKelipatan').value) || 10;
 
-      // Formula Sesuai Permintaan (Realtime Ceiling Math): =CEILING.MATH(ROUNDUP(IFERROR(IF(unit="kg";X/(z*y);X/Z);"");0);q)
       let rawVal = 0;
       if (satuan === 'kg') {
         rawVal = akhir / ((product.berat_biji_kg || 1) * (product.isi_per_kotak || 1));
@@ -1281,6 +1294,7 @@
       const { data } = await supabaseClient.from('casting_orders').select('*, customers(id, nama), products(nama_barang, lubang_cm, berat_biji_kg, isi_per_kotak)').eq('session_id', currentSession.id);
       cachedOrders = data || [];
       
+      const qVal = parseInt(document.getElementById('selectKelipatan').value) || 10;
       let totalKotak = 0;
       let spkSummary = {};
       let customerAlokasiMap = {};
@@ -1308,10 +1322,15 @@
 
           for(let k = 0; k < countSameCust; k++) {
             let o = cachedOrders[i + k];
+            const pBerat = o.products ? o.products.berat_biji_kg : 0;
+            const pKotakIsi = o.products ? o.products.isi_per_kotak : 1;
+
+            // Kalkulasi real-time kelipatan ceiling math
+            let rawVal = (o.satuan === 'kg') ? (o.jumlah_akhir / ((pBerat || 1) * (pKotakIsi || 1))) : (o.jumlah_akhir / (pKotakIsi || 1));
+            o.kebutuhan_kotak = Math.ceil(Math.ceil(rawVal || 0) / qVal) * qVal;
+
             totalKotak += o.kebutuhan_kotak;
             const pName = o.products ? o.products.nama_barang : '-';
-            const pBerat = o.products ? o.products.berat_biji_kg : 0;
-            const pKotakIsi = o.products ? o.products.isi_per_kotak : 0;
             const beratTotalItem = (o.jumlah_akhir * pBerat);
 
             totalBeratCetakGlobal += beratTotalItem;
@@ -1346,14 +1365,17 @@
           i += countSameCust;
         }
       } else {
-        // Berdasarkan entri
         cachedOrders.forEach(o => {
+          const pBerat = o.products ? o.products.berat_biji_kg : 0;
+          const pKotakIsi = o.products ? o.products.isi_per_kotak : 1;
+
+          let rawVal = (o.satuan === 'kg') ? (o.jumlah_akhir / ((pBerat || 1) * (pKotakIsi || 1))) : (o.jumlah_akhir / (pKotakIsi || 1));
+          o.kebutuhan_kotak = Math.ceil(Math.ceil(rawVal || 0) / qVal) * qVal;
+
           totalKotak += o.kebutuhan_kotak;
           const custName = o.customers ? o.customers.nama : '-';
           const custId = o.customers ? o.customers.id : null;
           const pName = o.products ? o.products.nama_barang : '-';
-          const pBerat = o.products ? o.products.berat_biji_kg : 0;
-          const pKotakIsi = o.products ? o.products.isi_per_kotak : 0;
           const beratTotalItem = (o.jumlah_akhir * pBerat);
 
           totalBeratCetakGlobal += beratTotalItem;
@@ -1430,6 +1452,9 @@
           </tr>
         `;
       }).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada data.</td></tr>';
+
+      // Refresh dropdown pasca product jika aktif
+      populatePascaProductDropdown();
     }
 
     function updateKotakIndicator() {
@@ -1457,6 +1482,7 @@
       document.getElementById('mPascaId').value = '';
       document.getElementById('mPascaJumlah').value = 0;
       document.getElementById('titleModalPasca').innerText = "Tambah Hasil Pengerjaan";
+      populatePascaProductDropdown();
 
       if(id) {
         supabaseClient.from('casting_production_logs').select('*').eq('id', id).single().then(({data}) => {
@@ -1479,7 +1505,10 @@
       if(!currentSession || currentSession.status === 'closed') return alert('Sesi sudah ditutup!');
 
       const id = document.getElementById('mPascaId').value;
-      const productId = parseInt(document.getElementById('mPascaProduct').value);
+      const prodSelectVal = document.getElementById('mPascaProduct').value;
+      if(!prodSelectVal) return alert('Pilih barang yang valid dari rencana cetak!');
+
+      const productId = parseInt(prodSelectVal);
       const product = globalProducts.find(p => p.id === productId);
       const jumlahBiji = parseInt(document.getElementById('mPascaJumlah').value) || 0;
 
@@ -1586,7 +1615,7 @@
       const gridPasca = document.getElementById('gridAlokasiPascaCustomer');
       const txtTotalPascaSummary = document.getElementById('txtTotalBeratPascaSummary');
 
-      // Jika pengecekan lapangan belum dilakukan (logData kosong), kosongkan alokasi pasca sesuai instruksi
+      // Pengecekan lapangan belum dilakukan jika logData kosong -> Kosongkan card alokasi pasca
       if(!logData || logData.length === 0) {
         gridPasca.innerHTML = '<div style="text-align:center; grid-column: 1/-1; padding: 20px; color: var(--text-muted);">Belum ada data alokasi pasca (pengecekan lapangan belum dilakukan).</div>';
         txtTotalPascaSummary.innerText = `Total Berat Cor: 0 kg`;
