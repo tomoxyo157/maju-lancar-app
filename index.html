@@ -462,7 +462,7 @@
         <div class="card">
           <div class="card-title">
             <span>Pengecekan Hasil Produksi (Harian Karyawan)</span>
-            <button class="btn btn-primary" onclick="openModalPasca(null)">+ Tambah Hasil Pengerjaan</button>
+            <button class="btn btn-primary" onclick="openModalPasca(null, null)">+ Tambah Hasil Pengerjaan</button>
           </div>
           <div class="table-responsive">
             <table>
@@ -746,8 +746,15 @@
         <button class="btn btn-secondary" onclick="closeModal('modalEntryPasca')">X</button>
       </div>
       <input type="hidden" id="mPascaId" />
-      <label>Nama Karyawan:</label>
-      <select id="mPascaKaryawan"></select>
+      
+      <div id="containerSelectKaryawan">
+        <label>Nama Karyawan:</label>
+        <select id="mPascaKaryawan"></select>
+      </div>
+      <div id="infoFixedKaryawan" style="display:none; margin-bottom: 16px; font-weight: bold; color: var(--primary);">
+        Karyawan: <span id="txtFixedKaryawanName"></span>
+      </div>
+
       <label>Nama Barang (Dari Rencana Cetak):</label>
       <select id="mPascaProduct"></select>
       <label>Warna Tali:</label>
@@ -770,6 +777,7 @@
     let cachedOrders = [];
     let globalProducts = [], globalCustomers = [], globalMiscs = [];
     let fixedOrderCustomerId = null;
+    let fixedPascaKaryawanId = null;
 
     window.addEventListener('DOMContentLoaded', () => {
       const savedPcToken = localStorage.getItem('ml_pc_logged');
@@ -1423,8 +1431,13 @@
         gridPra.innerHTML = '<div style="text-align:center; grid-column: 1/-1; padding: 20px; color: var(--text-muted);">Belum ada data alokasi.</div>';
       }
 
+      // SORTING SPK ASCENDING NUMERICALLY / ALPHANUMERICALLY
+      let sortedSpkKeys = Object.keys(spkSummary).sort((a, b) => {
+        return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+      });
+
       let spkIndex = 1;
-      document.getElementById('tbodySPK').innerHTML = Object.keys(spkSummary).map(kName => {
+      document.getElementById('tbodySPK').innerHTML = sortedSpkKeys.map(kName => {
         let patternColor = "inherit";
         let lowerK = kName.toLowerCase();
         if(lowerK.startsWith("6") || lowerK.includes("6tps")) patternColor = "#1e3a8a";
@@ -1465,16 +1478,30 @@
       }
     }
 
-    function openModalPasca(id) {
+    function openModalPasca(id, fixedKaryId) {
+      if(!currentSession) return alert('Buka sesi pencetakan terlebih dahulu!');
       document.getElementById('mPascaId').value = '';
       document.getElementById('mPascaJumlah').value = 0;
       document.getElementById('titleModalPasca').innerText = "Tambah Hasil Pengerjaan";
       populatePascaProductDropdown();
 
+      fixedPascaKaryawanId = fixedKaryId || null;
+      if(fixedPascaKaryawanId) {
+        document.getElementById('containerSelectKaryawan').style.display = 'none';
+        document.getElementById('infoFixedKaryawan').style.display = 'block';
+        const karyObj = globalMiscs.find(m => m.id === fixedPascaKaryawanId);
+        document.getElementById('txtFixedKaryawanName').innerText = karyObj ? karyObj.nama_item : '-';
+      } else {
+        document.getElementById('containerSelectKaryawan').style.display = 'block';
+        document.getElementById('infoFixedKaryawan').style.display = 'none';
+      }
+
       if(id) {
         supabaseClient.from('casting_production_logs').select('*').eq('id', id).single().then(({data}) => {
           if(data) {
             document.getElementById('mPascaId').value = data.id;
+            document.getElementById('containerSelectKaryawan').style.display = 'block';
+            document.getElementById('infoFixedKaryawan').style.display = 'none';
             document.getElementById('mPascaKaryawan').value = data.karyawan_id;
             document.getElementById('mPascaProduct').value = data.product_id;
             document.getElementById('mPascaTali').value = data.warna_tali_id;
@@ -1502,9 +1529,11 @@
       const zakOtomatis = Math.floor(jumlahBiji / (product.isi_per_zak || 50));
       const sisaOtomatis = jumlahBiji % (product.isi_per_zak || 50);
 
+      const karyawanIdVal = fixedPascaKaryawanId ? fixedPascaKaryawanId : parseInt(document.getElementById('mPascaKaryawan').value);
+
       const payload = {
         session_id: currentSession.id,
-        karyawan_id: parseInt(document.getElementById('mPascaKaryawan').value),
+        karyawan_id: karyawanIdVal,
         product_id: productId,
         warna_tali_id: parseInt(document.getElementById('mPascaTali').value),
         jumlah_biji: jumlahBiji,
@@ -1532,36 +1561,59 @@
     async function loadPascaLogs() {
       if(!currentSession) return;
       const { data } = await supabaseClient.from('casting_production_logs')
-        .select('*, products(nama_barang, lubang_cm, berat_biji_kg, isi_per_zak), karyawan:miscs!karyawan_id(nama_item), tali:miscs!warna_tali_id(nama_item)')
+        .select('*, products(nama_barang, lubang_cm, berat_biji_kg, isi_per_zak), karyawan:miscs!karyawan_id(id, nama_item), tali:miscs!warna_tali_id(nama_item)')
         .eq('session_id', currentSession.id);
 
-      const logs = data || [];
+      let logs = data || [];
+      // Urutkan berdasarkan nama karyawan agar grouping / merge cell rapi
+      logs.sort((a,b) => (a.karyawan?.nama_item || '').localeCompare(b.karyawan?.nama_item || ''));
+
       let summaryMap = {};
+      let htmlPascaRows = '';
+      let i = 0;
 
-      document.getElementById('tbodyPascaLog').innerHTML = logs.map(l => {
-        const isSesuai = (l.status_cek === 'sesuai');
-        const pName = l.products ? `${l.products.nama_barang}` : '-';
-        const karyName = l.karyawan ? l.karyawan.nama_item : '-';
-        
-        let displayKarungZak = "";
-        let displayKeterangan = "";
+      while(i < logs.length) {
+        let curr = logs[i];
+        let karyName = curr.karyawan ? curr.karyawan.nama_item : '-';
+        let karyId = curr.karyawan ? curr.karyawan.id : null;
 
-        if(isSesuai) {
-          displayKarungZak = `<strong>${l.zak_total} Karung + ${l.sisa_biji} bj</strong>`;
-          displayKeterangan = `<input type="text" placeholder="Keterangan..." value="${l.catatan_ketidaksesuaian || ''}" disabled style="background:#e2e8f0; width:100%; padding:6px; margin:0;" />`;
-        } else {
-          displayKarungZak = `
-            <div style="display: flex; gap: 4px;">
-              <input type="number" placeholder="Karung Full" title="Karung Full (Kiri)" value="${l.zak_manual !== undefined ? l.zak_manual : 0}" style="width: 75px; padding: 6px; margin:0;" onchange="updateManualZak(${l.id}, this.value)">
-              <input type="number" placeholder="Karung Sisa" title="Karung Sisa Sisa Unit (Kanan)" value="${l.sisa_biji_manual !== undefined ? l.sisa_biji_manual : 0}" style="width: 75px; padding: 6px; margin:0;" onchange="updateManualSisa(${l.id}, this.value)">
-            </div>
-          `;
-          displayKeterangan = `<input type="text" placeholder="Masukkan catatan ketidaksesuaian..." value="${l.catatan_ketidaksesuaian || ''}" style="width: 100%; padding: 6px; margin:0;" onchange="updateCatatan(${l.id}, this.value)">`;
+        let countSameKary = 0;
+        for(let j = i; j < logs.length; j++) {
+          let kNameJ = logs[j].karyawan ? logs[j].karyawan.nama_item : '-';
+          if(kNameJ === karyName) countSameKary++;
+          else break;
         }
 
-        return `
-          <tr>
-            <td><strong>${karyName}</strong></td>
+        for(let k = 0; k < countSameKary; k++) {
+          let l = logs[i + k];
+          const isSesuai = (l.status_cek === 'sesuai');
+          const pName = l.products ? `${l.products.nama_barang}` : '-';
+
+          let displayKarungZak = "";
+          let displayKeterangan = "";
+
+          if(isSesuai) {
+            displayKarungZak = `<strong>${l.zak_total} Karung + ${l.sisa_biji} bj</strong>`;
+            displayKeterangan = `<input type="text" placeholder="Keterangan..." value="${l.catatan_ketidaksesuaian || ''}" disabled style="background:#e2e8f0; width:100%; padding:6px; margin:0;" />`;
+          } else {
+            displayKarungZak = `
+              <div style="display: flex; gap: 4px;">
+                <input type="number" placeholder="Karung Full" title="Karung Full (Kiri)" value="${l.zak_manual !== undefined ? l.zak_manual : 0}" style="width: 75px; padding: 6px; margin:0;" onchange="updateManualZak(${l.id}, this.value)">
+                <input type="number" placeholder="Karung Sisa" title="Karung Sisa Unit (Kanan)" value="${l.sisa_biji_manual !== undefined ? l.sisa_biji_manual : 0}" style="width: 75px; padding: 6px; margin:0;" onchange="updateManualSisa(${l.id}, this.value)">
+              </div>
+            `;
+            displayKeterangan = `<input type="text" placeholder="Masukkan catatan ketidaksesuaian..." value="${l.catatan_ketidaksesuaian || ''}" style="width: 100%; padding: 6px; margin:0;" onchange="updateCatatan(${l.id}, this.value)">`;
+          }
+
+          htmlPascaRows += `<tr>`;
+          if(k === 0) {
+            htmlPascaRows += `
+              <td rowspan="${countSameKary}" style="vertical-align: middle; background:#f8fafc; font-weight:bold;">
+                ${karyName}
+                <button class="btn btn-success btn-sm" style="padding: 2px 6px; font-size:0.75rem; margin-left:6px;" onclick="openModalPasca(null, ${karyId})" title="Tambah hasil untuk karyawan ini">+</button>
+              </td>`;
+          }
+          htmlPascaRows += `
             <td>${pName}</td>
             <td>${l.tali ? l.tali.nama_item : '-'}</td>
             <td><strong>${l.jumlah_biji} Biji</strong></td>
@@ -1574,12 +1626,15 @@
             <td>${displayKarungZak}</td>
             <td>${displayKeterangan}</td>
             <td>
-              <button class="btn btn-warning btn-sm" onclick="openModalPasca(${l.id})">Edit</button>
+              <button class="btn btn-warning btn-sm" onclick="openModalPasca(${l.id}, null)">Edit</button>
               <button class="btn btn-danger btn-sm" onclick="deletePasca(${l.id})">Hapus</button>
             </td>
-          </tr>
-        `;
-      }).join('') || '<tr><td colspan="8" style="text-align:center;">Belum ada hasil.</td></tr>';
+          </tr>`;
+        }
+        i += countSameKary;
+      }
+
+      document.getElementById('tbodyPascaLog').innerHTML = htmlPascaRows || '<tr><td colspan="8" style="text-align:center;">Belum ada hasil.</td></tr>';
 
       // FILTER HANYA DATA LOG YANG VALID / DIISI
       const filteredLogs = logs.filter(l => l.status_cek !== null);
@@ -1639,7 +1694,7 @@
         return;
       }
 
-      // 1. Kalkulasi total stok valid (pasca produksi) yang ada per product_id berdasarkan logs lapangan
+      // 1. Kalkulasi total stok valid (pasca produksi) per product_id berdasarkan logs lapangan
       let aktualPerProduk = {};
       filteredLogs.forEach(l => {
         const pid = l.product_id;
@@ -1672,10 +1727,8 @@
         let demand = o.jumlah_akhir; // Jumlah yang dipesan
         let available = aktualPerProduk[pid] || 0; // Jumlah lapangan yang tersedia
         
-        // Distribusi: alokasikan maksimal sebesar yang dipesan, atau seadanya stok
         let alokasiBiji = Math.min(demand, available);
         
-        // Kurangi stok yang tersedia setelah diberikan ke kustomer ini
         if(aktualPerProduk[pid] !== undefined) {
            aktualPerProduk[pid] -= alokasiBiji;
         }
@@ -1689,14 +1742,13 @@
 
         if(!customerAlokasiPascaMap[cName]) customerAlokasiPascaMap[cName] = { items: [], totalBerat: 0 };
         
-        // Buat flag/status pemenuhan (Apakah order terpenuhi 100% atau kurang dari rencana karena cetakan reject/kurang)
         let statusTeks = alokasiBiji < demand ? `<span style="color:var(--danger); font-weight:bold; font-size:0.85em;">(Kurang ${demand - alokasiBiji} bj)</span>` : `<span style="color:var(--success); font-weight:bold; font-size:0.85em;">(Terpenuhi)</span>`;
 
         customerAlokasiPascaMap[cName].items.push(`${pName}: <strong>${alokasiBiji} ${o.satuan}</strong> ${statusTeks} (${beratAktifItem.toFixed(1)} kg) <br><small style="color:var(--text-muted);">Karung: ${formatZakCustomer}</small>`);
         customerAlokasiPascaMap[cName].totalBerat += beratAktifItem;
       });
 
-      // 4. Masukkan sisa produksi (Overproduksi) yang tidak teralokasi ke pelanggan manapun menjadi "Stok Gudang"
+      // 4. Masukkan sisa produksi (Overproduksi) ke "Stok Gudang"
       let sisaOverproduksi = [];
       let totalBeratSisa = 0;
       Object.keys(aktualPerProduk).forEach(pid => {
