@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maju Lancar - Sistem Terpadu</title>
+
+  <!-- Favicon & Mobile App Icon -->
+  <link rel="icon" href="https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg" type="image/jpeg">
+  <link rel="apple-touch-icon" href="https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg">
+
+  <!-- Supabase JS & html2canvas CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    /* =========================================================
+       GABUNGAN STYLE.CSS & INDEX.HTML
+       ========================================================= */
+    :root {
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --primary: #1e3a8a;
+      --primary-hover: #1e40af;
+      --success: #15803d;
+      --success-hover: #166534;
+      --danger: #b91c1c;
+      --warning: #b45309;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-size: 17px;
+      line-height: 1.5;
+    }
+
+    /* PENGATURAN TAMPILAN (SPA) */
+    .app-view { display: none; padding-bottom: 60px; }
+    .app-view.active { display: block; }
+
+    /* HEADER BERSAMA */
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    header .logo-container { display: flex; align-items: center; gap: 12px; }
+    header img { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; }
+    header h1 { font-size: 1.6rem; letter-spacing: 0.5px; }
+
+    /* NAVIGASI TAB */
+    nav {
+      display: flex; background-color: #0f172a; padding: 6px 12px; gap: 8px;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+    }
+    .nav-btn {
+      background: none; border: none; color: #94a3b8; padding: 12px 18px;
+      font-size: 1rem; font-weight: bold; cursor: pointer;
+      border-bottom: 4px solid transparent; transition: all 0.2s; white-space: nowrap;
+    }
+    .nav-btn:hover { color: white; }
+    .nav-btn.active { color: #38bdf8; border-bottom-color: #38bdf8; }
+
+    /* KOMPONEN UMUM */
+    .container { max-width: 1280px; margin: 20px auto; padding: 0 12px; }
+    .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .card.full-width { grid-column: 1 / -1; }
+    .card-header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+    .card-title-text { font-size: 1.25rem; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+
+    /* FORM INPUTS */
+    label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 1rem; }
+    input, select { width: 100%; padding: 12px 14px; font-size: 1rem; border: 2px solid var(--border); border-radius: 8px; margin-bottom: 14px; background-color: #f8fafc; min-height: 48px; }
+    input:focus, select:focus { border-color: var(--primary); outline: none; background-color: #fff; }
+
+    /* TOMBOL (BUTTONS) */
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 18px; font-size: 1rem; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; gap: 6px; min-height: 44px; transition: background 0.2s, transform 0.1s; white-space: nowrap; }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background-color: var(--primary); color: white; }
+    .btn-primary:hover { background-color: var(--primary-hover); }
+    .btn-success { background-color: var(--success); color: white; }
+    .btn-danger { background-color: var(--danger); color: white; }
+    .btn-warning { background-color: var(--warning); color: white; }
+    .btn-secondary { background-color: #64748b; color: white; }
+    .btn-sm { padding: 6px 12px; font-size: 0.9rem; min-height: 36px; }
+
+    /* TABEL */
+    .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 8px; border: 1px solid var(--border); border-radius: 8px; position: relative; }
+    table { width: 100%; border-collapse: collapse; text-align: left; min-width: 650px; }
+    th, td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+    th { background-color: #f1f5f9; color: var(--text-main); font-weight: bold; position: sticky; top: 0; z-index: 10; }
+    .table-responsive th:first-child, .table-responsive td:first-child { position: sticky; left: 0; background-color: var(--card-bg, #ffffff); z-index: 12; box-shadow: 2px 0 5px rgba(0,0,0,0.08); }
+    .table-responsive th:first-child { z-index: 15; background-color: #f1f5f9; }
+
+    /* BADGES & LAINNYA */
+    .badge { padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; color: white; display: inline-block; }
+    .badge-safe { background-color: var(--success); }
+    .badge-over { background-color: var(--danger); }
+    .badge-warn { background-color: var(--warning); }
+    
+    .sub-nav { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .sub-btn { padding: 10px 16px; border-radius: 8px; border: 2px solid var(--border); background: white; font-weight: bold; cursor: pointer; font-size: 1rem; min-height: 44px; }
+    .sub-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    
+    .indicator-box-floating { position: sticky; top: 10px; z-index: 100; background: #ffffff; border: 2px solid var(--primary); border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(3px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 12px; opacity: 0; transition: opacity 0.2s ease-out; }
+    .modal-overlay.active { display: flex; opacity: 1; }
+    .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 20px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 16px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 2px solid #f1f5f9; padding-top: 14px; }
+
+    #loadingOverlay { position: fixed; inset: 0; background: rgba(255,255,255,0.85); z-index: 3000; display: flex; justify-content: center; align-items: center; font-size: 1.3rem; font-weight: bold; color: var(--primary); }
+
+    /* DASHBOARD UTAMA STYLES */
+    .dashboard-layout { display: flex; flex-direction: column; min-height: 100vh; }
+    .dashboard-main { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
+    .menu-grid { display: grid; grid-template-columns: 1fr; gap: 32px; width: 100%; max-width: 500px; }
+    .menu-btn { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; padding: 60px 40px; border-radius: 24px; border: none; cursor: pointer; color: white; font-weight: bold; text-decoration: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.15), 0 4px 6px -2px rgba(0,0,0,0.08); transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s; }
+    .menu-btn:active { transform: scale(0.97); }
+    .menu-btn:hover { box-shadow: 0 15px 20px -3px rgba(0,0,0,0.2), 0 6px 8px -2px rgba(0,0,0,0.1); }
+    .menu-btn .icon { font-size: 4.5rem; line-height: 1; }
+    .menu-btn .label { font-size: 2rem; letter-spacing: 0.5px; text-align: center; line-height: 1.2; }
+    .menu-btn .sub-label { font-size: 1.1rem; font-weight: normal; opacity: 0.9; text-align: center; padding: 0 10px; }
+    .btn-order-dashboard { background-color: var(--success); }
+    .btn-order-dashboard:hover { background-color: var(--success-hover); }
+    .btn-cor-dashboard { background-color: var(--primary); }
+    .btn-cor-dashboard:hover { background-color: var(--primary-hover); }
+
+    @media (max-width: 768px) {
+      .menu-btn { padding: 50px 30px; }
+      .menu-btn .icon { font-size: 4rem; }
+      .menu-btn .label { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOADING & LOGIN BERSAMA -->
+  <div id="loadingOverlay">Memuat Data Sistem...</div>
+
+  <div class="modal-overlay" id="modalLogin" style="z-index: 2500;">
+    <div class="modal-content" style="max-width: 380px; text-align: center;">
+      <h2 style="color: var(--primary); margin-bottom: 8px;">MAJU LANCAR</h2>
+      <p style="margin-bottom: 16px; color: var(--text-muted);">Masukkan PIN Akses</p>
+      <input type="password" id="inputPin" placeholder="Masukkan PIN" style="text-align: center; font-size: 1.6rem; letter-spacing: 6px;" />
+      <button class="btn btn-primary" style="width: 100%;" onclick="checkPin()">MASUK</button>
+    </div>
+  </div>
+
+
+  <!-- =========================================================================
+       VIEW 1: DASHBOARD UTAMA
+       ========================================================================= -->
+  <div id="view-dashboard" class="app-view active dashboard-layout">
+    <header style="justify-content: center;">
+      <div class="logo-container">
+        <img src="https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg" alt="Logo">
+        <h1>MAJU LANCAR</h1>
+      </div>
+    </header>
+    <main class="dashboard-main">
+      <div class="menu-grid">
+        <button class="menu-btn btn-order-dashboard" onclick="navigateTo('view-order')">
+          <span class="icon">🚚</span>
+          <span class="label">ORDER &amp; MUAT</span>
+          <span class="sub-label">Data pesanan &amp; muatan</span>
+        </button>
+        <button class="menu-btn btn-cor-dashboard" onclick="navigateTo('view-cor')">
+          <span class="icon">🏗️</span>
+          <span class="label">COR</span>
+          <span class="sub-label">Data cor &amp; stoker</span>
+        </button>
+      </div>
+    </main>
+  </div>
+
+
+  <!-- =========================================================================
+       VIEW 2: APLIKASI ORDER & MUAT
+       ========================================================================= -->
+  <div id="view-order" class="app-view">
+    <header>
+      <div class="logo-container">
+        <img src="https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg" alt="Logo">
+        <h1>SISTEM PENCETAKAN</h1>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-success btn-sm" onclick="navigateTo('view-dashboard')">🏠 Menu Utama</button>
+        <button class="btn btn-warning btn-sm" onclick="logoutSystem()">Keluar</button>
+      </div>
+    </header>
+
+    <nav>
+      <button class="nav-btn active" id="navBtnRiwayat" onclick="switchTabOrder('tabRiwayat')">Riwayat & Dashboard</button>
+      <button class="nav-btn" id="navBtnPencetakan" onclick="switchTabOrder('tabPencetakan')">Sesi Pencetakan Aktif</button>
+      <button class="nav-btn" id="navBtnOrderDatabase" onclick="switchTabOrder('tabDatabaseOrder')">Database Master</button>
+    </nav>
+
+    <div class="container">
+      <!-- TAB 1: RIWAYAT (ORDER) -->
+      <div id="tabRiwayat" class="tab-content-order">
+        <div class="card full-width">
+          <div class="card-header-flex">
+            <div class="card-title-text">Daftar Sesi Pencetakan & Rencana Cor</div>
+            <button class="btn btn-primary" onclick="openModalNewSession()">+ Buka Sesi Baru</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tanggal Pencetakan</th>
+                  <th>Tanggal Rencana Cor</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyRiwayat">
+                <tr><td colspan="4" style="text-align:center;">Memuat riwayat...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: SESI PENCETAKAN -->
+      <div id="tabPencetakan" class="tab-content-order" style="display: none;">
+        <!-- TOOLBAR KONTROL SESI -->
+        <div class="card full-width" style="padding: 12px 18px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button class="btn btn-secondary" onclick="switchTabOrder('tabRiwayat')">← Dashboard Order</button>
+              <span id="sessionStatusBadge" class="badge badge-safe">Sesi: AKTIF</span>
+            </div>
+          </div>
+        </div>
+        <div class="sub-nav">
+          <button class="sub-btn active" id="subBtnPra" onclick="switchSubTabOrder('pra')">1. PRA PRODUKSI</button>
+          <button class="sub-btn" id="subBtnPasca" onclick="switchSubTabOrder('pasca')">2. PASCA PRODUKSI</button>
+        </div>
+
+        <div id="subPra">
+          <!-- INDIKATOR FLOATING PRA PRODUKSI -->
+          <div class="indicator-box-floating">
+            <div><strong style="font-size: 0.9rem; color: var(--text-muted);">Total Kotak Dipesan:</strong><div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);" id="txtTotalKotak">0 Kotak</div></div>
+            <div><strong style="font-size: 0.9rem; color: var(--text-muted);">Total Kotak Tersisa (Delta):</strong><div style="font-size: 1.5rem; font-weight: bold; color: var(--success);" id="txtDeltaKotak">0 Kotak</div></div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <label for="selectKelipatan" style="margin:0; font-size:0.9rem;">Kelipatan:</label>
+              <select id="selectKelipatan" style="width: 80px; padding: 6px; margin:0; min-height: 40px;" onchange="loadPraOrders()">
+                <option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option>
+              </select>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <label for="maxLimitKotak" style="margin:0; font-size:0.9rem;">Maksimal Kotak:</label>
+              <input type="number" id="maxLimitKotak" value="3200" style="width: 110px; padding: 6px; margin:0; min-height: 40px;" oninput="updateKotakIndicator()" />
+            </div>
+            <div><span id="badgeKapasitas" class="badge badge-safe">AMAN</span></div>
+            <div><button class="btn btn-primary" onclick="openModalOrder(null, null)">+ Tambah Order Baru</button></div>
+          </div>
+
+          <!-- GRID CARDS PER CUSTOMER -->
+          <div class="card full-width">
+            <div class="card-header-flex">
+              <div class="card-title-text">Alokasi Rencana Cetak Per Kustomer</div>
+              <span id="txtTotalBeratPraSummary" style="font-size: 1rem; color: var(--primary); background: #f1f5f9; padding: 6px 12px; border-radius: 8px; font-weight: bold;">Total Berat Cetak: 0 kg</span>
+            </div>
+            <div id="gridAlokasiCustomerPra" class="grid-cards" style="margin-bottom:0;">
+              <div style="text-align:center; grid-column: 1/-1; padding: 20px; color: var(--text-muted);">Belum ada order kustomer.</div>
+            </div>
+          </div>
+
+          <!-- SPK SUMMARY -->
+          <div class="card full-width" id="spkContainer">
+            <div class="card-header-flex">
+              <div class="card-title-text">Surat Perintah Kerja (SPK) Summary</div>
+              <button class="btn btn-success" onclick="downloadSPK()">Unduh SPK (Gambar)</button>
+            </div>
+            <div id="spkPrintArea" style="padding: 16px; background: white; border: 1px dashed var(--border); border-radius: 8px;">
+              <h3 style="text-align: center; margin-bottom: 6px;">MAJU LANCAR - SURAT PERINTAH KERJA</h3>
+              <p style="text-align: center; margin-bottom: 16px;" id="spkDateText">Tanggal Pencetakan: -</p>
+              <div class="table-responsive">
+                <table>
+                  <thead><tr><th>No</th><th>Nama Barang</th><th>Jumlah Kotak</th></tr></thead>
+                  <tbody id="tbodySPK"><tr><td colspan="3" style="text-align: center;">Belum ada data.</td></tr></tbody>
+                </table>
+              </div>
+              <div id="spkTotalKotakBawah" style="margin-top: 15px; font-weight: bold; text-align: right; font-size: 1.1rem;">Total Kotak: 0</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="subPasca" style="display: none;">
+           <!-- Area HTML subPasca yang sudah ada sebelumnya -->
+           <div class="card full-width">
+            <div class="card-header-flex">
+              <div class="card-title-text">Pengecekan Hasil Produksi (Harian Karyawan)</div>
+              <button class="btn btn-primary" onclick="openModalPasca(null, null)">+ Tambah Hasil Pengerjaan</button>
+            </div>
+            <div id="gridPascaKaryawan" class="grid-cards" style="margin-bottom:0;">
+              <div style="text-align:center; grid-column: 1/-1; padding: 20px; color: var(--text-muted);">Belum ada hasil pengecekan harian.</div>
+            </div>
+          </div>
+          <!-- Summary Pasca -->
+          <div class="card full-width" id="summaryPascaContainer">
+            <div class="card-header-flex">
+              <div class="card-title-text">Summary Hasil Produksi (Sesuai Urutan SPK)</div>
+              <button class="btn btn-success" onclick="downloadSummaryPasca()">Unduh Summary Gambar</button>
+            </div>
+            <div id="summaryPascaPrintArea" style="padding: 12px; background: white; border-radius: 8px;">
+              <div class="table-responsive">
+                <table>
+                  <thead><tr><th>Nama Barang</th><th>Total Biji</th><th>Total Berat (Kg)</th><th>Warna Tali</th><th>Format Unit Fisik</th></tr></thead>
+                  <tbody id="tbodySummaryPasca"><tr><td colspan="5" style="text-align:center;">Belum ada data.</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <!-- Tabel Muat -->
+          <div class="card full-width">
+            <div class="card-header-flex">
+              <div class="card-title-text">Tabel Muat (Alokasi Berdasarkan Hasil Aktual Lapangan)</div>
+              <span id="txtTotalBeratPascaSummary" style="font-size: 1rem; color: var(--primary); background: #f1f5f9; padding: 6px 12px; border-radius: 8px; font-weight: bold;">Total Berat Cor: 0 kg</span>
+            </div>
+            <div style="margin-bottom: 24px;">
+              <h3 style="color: var(--danger); font-size: 1.15rem; margin-bottom: 12px; border-bottom: 2px dashed var(--danger); padding-bottom: 4px;">a. Item Konflik (Dipesan >1 Customer)</h3>
+              <div id="containerKonflik" class="grid-cards"><div style="text-align:center; grid-column: 1/-1; padding: 12px; color: var(--text-muted);">Tidak ada konflik item.</div></div>
+            </div>
+            <div style="margin-bottom: 24px;">
+              <h3 style="color: var(--success); font-size: 1.15rem; margin-bottom: 12px; border-bottom: 2px dashed var(--success); padding-bottom: 4px;">b. Alokasi Siap Muat Per Kustomer (All-In)</h3>
+              <div id="containerTanpaKonflik" class="grid-cards"><div style="text-align:center; grid-column: 1/-1; padding: 12px; color: var(--text-muted);">Belum ada alokasi kustomer.</div></div>
+            </div>
+            <div id="wrapperOverProduksi"><div id="containerOverproduksi"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: DATABASE MASTER (ORDER) -->
+      <div id="tabDatabaseOrder" class="tab-content-order" style="display: none;">
+        <div class="sub-nav">
+          <button class="sub-btn active" onclick="switchDbSubTabOrder('barang')">Barang</button>
+          <button class="sub-btn" onclick="switchDbSubTabOrder('kustomer')">Kustomer</button>
+          <button class="sub-btn" onclick="switchDbSubTabOrder('miscs')">Miscs (Karyawan & Tali)</button>
+        </div>
+        
+        <div id="dbBarang">
+          <div class="card full-width">
+            <div class="card-header-flex"><div class="card-title-text">Data Master Barang</div><button class="btn btn-primary" onclick="openModalBarang(null)">+ Tambah Barang</button></div>
+            <div class="table-responsive">
+              <table>
+                <thead><tr><th>Nama Barang</th><th>Berat/Biji</th><th>Lingkar</th><th>Tebal</th><th>Lubang</th><th>Isi/Kotak</th><th>Kg/Kotak</th><th>Isi/Karung Besar</th><th>Aksi</th></tr></thead>
+                <tbody id="tbodyBarang"><tr><td colspan="9" style="text-align:center;">Memuat...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div id="dbKustomer" style="display: none;">
+          <div class="card full-width">
+            <div class="card-header-flex"><div class="card-title-text">Data Master Kustomer</div><button class="btn btn-primary" onclick="openModalKustomer(null)">+ Tambah Kustomer</button></div>
+            <div class="table-responsive">
+              <table>
+                <thead><tr><th>Nama</th><th>Perusahaan</th><th>Lokasi</th><th>Aksi</th></tr></thead>
+                <tbody id="tbodyKustomer"><tr><td colspan="4" style="text-align:center;">Memuat...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div id="dbMiscs" style="display: none;">
+          <div class="card full-width">
+            <div class="card-header-flex"><div class="card-title-text">Data Miscs (Karyawan & Tali)</div><button class="btn btn-primary" onclick="openModalMisc(null)">+ Tambah Misc</button></div>
+            <div class="table-responsive">
+              <table>
+                <thead><tr><th>Kategori</th><th>Nama Item</th><th>Aksi</th></tr></thead>
+                <tbody id="tbodyMiscs"><tr><td colspan="3" style="text-align:center;">Memuat...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =========================================================================
+       VIEW 3: APLIKASI COR & STOKER
+       ========================================================================= -->
+  <div id="view-cor" class="app-view">
+    <header>
+      <div class="logo-container">
+        <img src="https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg" alt="Logo">
+        <h1>MAJU LANCAR - COR</h1>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-success btn-sm" onclick="navigateTo('view-dashboard')">🏠 Menu Utama</button>
+        <button class="btn btn-warning btn-sm" onclick="logoutSystem()">Keluar</button>
+      </div>
+    </header>
+
+    <nav>
+      <button class="nav-btn active" id="navBtnCor" onclick="switchTabCor('tabCor')">Cor</button>
+      <button class="nav-btn" id="navBtnStoker" onclick="switchTabCor('tabStoker')">Stoker</button>
+      <button class="nav-btn" id="navBtnCorDatabase" onclick="switchTabCor('tabDatabaseCor')">Database</button>
+    </nav>
+
+    <div class="container">
+      <!-- TAB 1: COR -->
+      <div id="tabCor" class="tab-content-cor">
+        <div class="card full-width">
+          <div class="card-header-flex">
+            <div class="card-title-text">Data Cor</div>
+            <button class="btn btn-primary" onclick="openModalCor(null)">+ Entry Cor</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr><th>No.</th><th>Tanggal</th><th>Bahan Cor</th><th>Batu Bara</th><th>Ongkos Stoker</th><th>Keterangan</th><th>Aksi</th></tr>
+              </thead>
+              <tbody id="tbodyCor">
+                <tr><td colspan="7" style="text-align:center;">Memuat data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: STOKER -->
+      <div id="tabStoker" class="tab-content-cor" style="display:none;">
+        <div class="card full-width">
+          <div class="card-header-flex">
+            <div class="card-title-text">Balance Bon Karyawan (Stoker)</div>
+            <button class="btn btn-primary" onclick="openModalStoker(null)">+ Entry Bon</button>
+          </div>
+          <div class="toolbar-flex" style="margin-bottom: 12px;">
+            <div style="min-width: 220px; flex: 1;">
+              <label for="filterStokerBulan" style="margin-bottom:4px;">Filter Periode:</label>
+              <select id="filterStokerBulan" onchange="renderStokerTable()"><option value="all">Semua</option></select>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th rowspan="2">No.</th><th rowspan="2">Tanggal</th><th rowspan="2">Karyawan</th><th rowspan="2">Total Bon</th>
+                  <th colspan="5" style="text-align: center;">Pelunasan</th><th rowspan="2">Status</th><th rowspan="2">Keterangan</th><th rowspan="2">Aksi</th>
+                </tr>
+                <tr><th>I</th><th>II</th><th>III</th><th>IV</th><th>V</th></tr>
+              </thead>
+              <tbody id="tbodyStoker"><tr><td colspan="11" style="text-align:center;">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: DATABASE KARYAWAN (COR) -->
+      <div id="tabDatabaseCor" class="tab-content-cor" style="display:none;">
+        <div class="sub-nav">
+          <button class="sub-btn active" onclick="switchDbSubTabCor('karyawan')">Karyawan</button>
+        </div>
+        <div id="dbKaryawan">
+          <div class="card full-width">
+            <div class="card-header-flex"><div class="card-title-text">Data Master Stoker / Karyawan</div><button class="btn btn-primary" onclick="openModalKaryawan(null)">+ Tambah Karyawan</button></div>
+            <div class="table-responsive">
+              <table>
+                <thead><tr><th>No.</th><th>Nama Stoker</th><th>Aksi</th></tr></thead>
+                <tbody id="tbodyKaryawan"><tr><td colspan="3" style="text-align:center;">Memuat data...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =========================================================================
+       SEMUA MODAL (DIGABUNG)
+       ========================================================================= -->
+  <!-- MODAL BUKA SESI BARU (ORDER) -->
+  <div class="modal-overlay" id="modalNewSession"><div class="modal-content" style="max-width: 440px;"><div class="modal-header"><h3>Buka Sesi Pencetakan Baru</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modalNewSession')">X</button></div><label>Tanggal Pencetakan:</label><input type="date" id="mNewTglCetak" /><label>Tanggal Rencana Cor:</label><input type="date" id="mNewTglCor" /><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalNewSession')">Batal</button><button class="btn btn-primary" onclick="createNewSessionAction()">Simpan & Masuk Sesi</button></div></div></div>
+  <!-- MODAL EDIT TANGGAL SESI (ORDER) -->
+  <div class="modal-overlay" id="modalEditSessionDates"><div class="modal-content" style="max-width: 440px;"><div class="modal-header"><h3>Edit Tanggal Sesi</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modalEditSessionDates')">X</button></div><input type="hidden" id="mEditSessionId" /><label>Tanggal Pencetakan:</label><input type="date" id="mEditTglCetak" /><label>Tanggal Rencana Cor:</label><input type="date" id="mEditTglCor" /><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalEditSessionDates')">Batal</button><button class="btn btn-primary" onclick="saveActiveSessionDates()">Simpan Perubahan</button></div></div></div>
+  <!-- MODAL MASTER BARANG (ORDER) -->
+  <div class="modal-overlay" id="modalBarang"><div class="modal-content"><div class="modal-header"><h3 id="titleModalBarang">Tambah Barang Baru</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modalBarang')">X</button></div><input type="hidden" id="mBarangId" /><label>Nama Barang:</label><input type="text" id="mBarangNama" /><div style="display: flex; gap: 12px; flex-wrap: wrap;"><div style="flex:1; min-width: 140px;"><label>Berat / Biji (kg):</label><input type="number" step="0.001" id="mBarangBerat" value="1" /></div><div style="flex:1; min-width: 140px;"><label>Lingkar (cm):</label><input type="number" step="0.01" id="mBarangLingkar" value="0" /></div></div><div style="display: flex; gap: 12px; flex-wrap: wrap;"><div style="flex:1; min-width: 140px;"><label>Tebal (cm):</label><input type="number" step="0.01" id="mBarangTebal" value="0" /></div><div style="flex:1; min-width: 140px;"><label>Diameter Lubang (cm):</label><input type="number" step="0.01" id="mBarangLubang" value="0" /></div></div><div style="display: flex; gap: 12px; flex-wrap: wrap;"><div style="flex:1; min-width: 140px;"><label>Pra Prod: Isi / Kotak:</label><input type="number" id="mBarangKotak" value="10" /></div><div style="flex:1; min-width: 140px;"><label>Kg per Kotak:</label><input type="number" step="0.001" id="mBarangKgKotak" value="0" /></div></div><label>Pasca Prod: Isi per Karung Besar:</label><input type="number" id="mBarangZak" value="50" /><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalBarang')">Batal</button><button class="btn btn-primary" onclick="saveBarang()">Simpan</button></div></div></div>
+  <!-- MODAL KUSTOMER (ORDER) -->
+  <div class="modal-overlay" id="modalKustomer"><div class="modal-content"><div class="modal-header"><h3 id="titleModalKustomer">Tambah Kustomer</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modalKustomer')">X</button></div><input type="hidden" id="mKustId" /><label>Nama Kustomer:</label><input type="text" id="mKustNama" /><label>Perusahaan:</label><input type="text" id="mKustPerusahaan" /><label>Lokasi:</label><input type="text" id="mKustLokasi" /><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalKustomer')">Batal</button><button class="btn btn-primary" onclick="saveKustomer()">Simpan</button></div></div></div>
+  <!-- MODAL MISC (ORDER) -->
+  <div class="modal-overlay" id="modalMisc"><div class="modal-content"><div class="modal-header"><h3 id="titleModalMisc">Tambah Misc</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modalMisc')">X</button></div><input type="hidden" id="mMiscId" /><label>Kategori:</label><select id="mMiscKategori"><option value="karyawan">Karyawan</option><option value="tali">Warna Tali</option></select><label>Nama Item / Nama Karyawan:</label><input type="text" id="mMiscNama" /><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalMisc')">Batal</button><button class="btn btn-primary" onclick="saveMisc()">Simpan</button></div></div></div>
+  <!-- MODAL ENTRY ORDER (ORDER) -->
+  <div class="modal-overlay" id="modalEntryOrder"><div class="modal-content"><div class="modal-header"><h3 id="titleModalOrder">Tambah Order Pencetakan</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modalEntryOrder')">X</button></div><input type="hidden" id="mOrderId" /><div id="containerSelectCustomer"><label>Pilih Pelanggan:</label><select id="mOrderCustomer"></select></div><div id="infoFixedCustomer" style="display:none; margin-bottom: 14px; font-weight: bold; color: var(--primary);">Pelanggan: <span id="txtFixedCustomerName"></span></div><label>Pilih Barang:</label><select id="mOrderProduct"></select><div style="display: flex; gap: 12px; flex-wrap: wrap;"><div style="flex: 1; min-width: 130px;"><label>Jumlah Awal:</label><input type="number" id="mOrderAwal" value="0" /></div><div style="flex: 1; min-width: 130px;"><label>Pengurangan (Adj):</label><input type="number" id="mOrderAdj" value="0" /></div></div><label>Satuan Input:</label><select id="mOrderSatuan"><option value="bj">Biji (bj)</option><option value="kg">Kilogram (kg)</option></select><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalEntryOrder')">Batal</button><button class="btn btn-primary" onclick="saveEntryOrder()">Simpan Order</button></div></div></div>
+  <!-- MODAL PASCA (ORDER) -->
+  <div class="modal-overlay" id="modalEntryPasca"><div class="modal-content"><div class="modal-header"><h3 id="titleModalPasca">Tambah Hasil Pengerjaan</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modalEntryPasca')">X</button></div><input type="hidden" id="mPascaId" /><div id="containerSelectKaryawan"><label>Nama Karyawan:</label><select id="mPascaKaryawan"></select></div><div id="infoFixedKaryawan" style="display:none; margin-bottom: 14px; font-weight: bold; color: var(--primary);">Karyawan: <span id="txtFixedKaryawanName"></span></div><label>Nama Barang (Dari Rencana Cetak):</label><select id="mPascaProduct"></select><label>Jumlah Hasil (Biji):</label><input type="number" id="mPascaJumlah" value="0" /><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalEntryPasca')">Batal</button><button class="btn btn-primary" onclick="saveEntryPasca()">Simpan Hasil</button></div></div></div>
+
+  <!-- MODAL ENTRY COR (COR) -->
+  <div class="modal-overlay" id="modalCor"><div class="modal-content"><div class="modal-header"><h3 id="titleModalCor">Entry Cor Baru</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modalCor')">X</button></div><input type="hidden" id="mCorId" /><label>Tanggal:</label><input type="date" id="mCorTanggal" /><label>Bahan Cor (kg):</label><input type="number" step="0.01" id="mCorBahan" /><label>Batu Bara (kg):</label><input type="number" step="0.01" id="mCorBatuBara" /><label>Ongkos Stoker (Rp):</label><input type="number" step="1" id="mCorOngkos" /><label>Keterangan:</label><input type="text" id="mCorKeterangan" /><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalCor')">Batal</button><button class="btn btn-primary" onclick="saveCorEntry()">Simpan</button></div></div></div>
+  <!-- MODAL ENTRY STOKER (COR) -->
+  <div class="modal-overlay" id="modalStoker"><div class="modal-content"><div class="modal-header"><h3 id="titleModalStoker">Entry Bon Baru</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modalStoker')">X</button></div><input type="hidden" id="mStokerId" /><label>Tanggal:</label><input type="date" id="mStokerTanggal" /><label>Nama Karyawan:</label><select id="mStokerKaryawan"></select><label>Bon (Rp):</label><input type="number" step="1" id="mStokerBon" /><label>Keterangan:</label><input type="text" id="mStokerKeterangan" /><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalStoker')">Batal</button><button class="btn btn-primary" onclick="saveStokerEntry()">Simpan</button></div></div></div>
+  <!-- MODAL KARYAWAN (COR) -->
+  <div class="modal-overlay" id="modalKaryawan"><div class="modal-content" style="max-width: 420px;"><div class="modal-header"><h3 id="titleModalKaryawan">Tambah Karyawan</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modalKaryawan')">X</button></div><input type="hidden" id="mKaryawanId" /><label>Nama Stoker:</label><input type="text" id="mKaryawanNama" /><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modalKaryawan')">Batal</button><button class="btn btn-primary" onclick="saveKaryawanCor()">Simpan</button></div></div></div>
+
+  <!-- =========================================================================
+       GABUNGAN JAVASCRIPT LOGIC
+       ========================================================================= -->
+  <script>
+    // ---------------------------------------------------------
+    // 1. KONFIGURASI GLOBAL (Hanya 1 deklarasi)
+    // ---------------------------------------------------------
+    const SUPABASE_URL = "https://qukrrtkmiqnhtgswlqxm.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1a3JydGttaXFuaHRnc3dscXhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5OTkwMTEsImV4cCI6MjEwMTU3NTAxMX0.Jzi14b1heGTt1ObUau64KO2wPq2ri1qLcdR-IsJvi1E";
+    let supabaseClient = null;
+
+    // State Aplikasi Order
+    let currentSession = null;
+    let cachedOrders = [], cachedPascaLogs = [];
+    let globalProducts = [], globalCustomers = [], globalMiscs = [];
+    let fixedOrderCustomerId = null, fixedPascaKaryawanId = null;
+    let conflictModes = {}, manualConflictZak = {}, manualConflictSisa = {};
+
+    // State Aplikasi Cor
+    let corEntries = [], stokerEntries = [], karyawanDb = [];
+
+    // ---------------------------------------------------------
+    // 2. SISTEM ROUTING SPA (Pindah Halaman Tanpa Reload)
+    // ---------------------------------------------------------
+    function navigateTo(viewId) {
+      document.querySelectorAll('.app-view').forEach(el => el.style.display = 'none');
+      document.getElementById(viewId).style.display = 'block';
+      window.scrollTo(0, 0);
+    }
+
+    // ---------------------------------------------------------
+    // 3. FUNGSI UTILITAS BERSAMA (Modals, Escape, Formatting)
+    // ---------------------------------------------------------
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+    });
+
+    function formatRp(num) { return "Rp " + (Number(num) || 0).toLocaleString('id-ID'); }
+    function formatKgSigned(num) {
+      const n = Number(num) || 0; const sign = n > 0 ? '+' : (n < 0 ? '-' : '');
+      const cls = n > 0 ? 'kg-plus' : (n < 0 ? 'kg-minus' : '');
+      return `<span style="color:${n > 0 ? 'green' : (n < 0 ? 'red' : 'inherit')}">${sign}${Math.abs(n).toLocaleString('id-ID')} kg</span>`;
+    }
+    function formatTanggal(iso) {
+      if (!iso) return '-'; const d = new Date(iso + 'T00:00:00');
+      if (isNaN(d.getTime())) return iso; return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    // ---------------------------------------------------------
+    // 4. AUTENTIKASI (LOGIN & LOGOUT)
+    // ---------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('ml_pc_logged') === 'true') {
+        document.getElementById('modalLogin').classList.remove('active');
+        initSupabase();
+      } else {
+        document.getElementById('modalLogin').classList.add('active');
+        document.getElementById('loadingOverlay').style.display = 'none';
+      }
+    });
+
+    function checkPin() {
+      const pin = document.getElementById('inputPin').value;
+      if (pin === "1234" || pin === "5678") {
+        localStorage.setItem('ml_pc_logged', 'true');
+        document.getElementById('modalLogin').classList.remove('active');
+        initSupabase();
+      } else { alert("PIN Salah!"); }
+    }
+
+    function logoutSystem() {
+      localStorage.removeItem('ml_pc_logged');
+      localStorage.removeItem('ml_active_session_id');
+      document.getElementById('modalLogin').classList.add('active');
+      document.getElementById('inputPin').value = "";
+      navigateTo('view-dashboard');
+    }
+
+    // MENGINISIALISASI SEMUA DATA (ORDER + COR)
+    async function initSupabase() {
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      
+      // Load Data Order
+      await loadMasterData();
+      const savedSessionId = localStorage.getItem('ml_active_session_id');
+      if (savedSessionId) await viewSession(parseInt(savedSessionId), false);
+      
+      // Load Data Cor
+      await loadAllCor();
+      renderCorTable(); renderKaryawanTable(); renderStokerTable();
+      
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    // =========================================================================
+    // BAGIAN LOGIC: COR.JS
+    // =========================================================================
+    function switchTabCor(tabId) {
+      document.querySelectorAll('.tab-content-cor').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('#view-cor .nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).style.display = 'block';
+
+      if(tabId === 'tabCor') { document.getElementById('navBtnCor').classList.add('active'); renderCorTable(); }
+      else if(tabId === 'tabStoker') { document.getElementById('navBtnStoker').classList.add('active'); renderStokerTable(); }
+      else if(tabId === 'tabDatabaseCor') { document.getElementById('navBtnCorDatabase').classList.add('active'); renderKaryawanTable(); }
+    }
+
+    function switchDbSubTabCor(type) { document.getElementById('dbKaryawan').style.display = (type === 'karyawan') ? 'block' : 'none'; }
+
+    async function loadAllCor() {
+      if (!supabaseClient) return;
+      try {
+        const [resCor, resStoker, resKaryawan] = await Promise.all([
+          supabaseClient.from('cor_entries').select('*').order('tanggal', { ascending: false }),
+          supabaseClient.from('stoker_entries').select('*').order('tanggal', { ascending: false }),
+          supabaseClient.from('karyawan').select('*').order('nama', { ascending: true })
+        ]);
+        corEntries = resCor.data || []; stokerEntries = resStoker.data || []; karyawanDb = resKaryawan.data || [];
+        stokerEntries.forEach(e => { if (!Array.isArray(e.pelunasan) || e.pelunasan.length !== 5) e.pelunasan = [0, 0, 0, 0, 0]; });
+      } catch (err) { console.error(err); alert("Gagal memuat data Cor: " + err.message); }
+    }
+
+    // Fungsi Render & CRUD Cor (Dipersingkat namun tetap utuh)
+    function renderCorTable() {
+      const tbody = document.getElementById('tbodyCor');
+      if (corEntries.length === 0) return tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Belum ada data.</td></tr>';
+      tbody.innerHTML = corEntries.map((e, idx) => `<tr><td>${idx + 1}</td><td>${formatTanggal(e.tanggal)}</td><td>${formatKgSigned(e.bahan_cor)}</td><td>${formatKgSigned(e.batu_bara)}</td><td>${formatRp(e.ongkos_stoker)}</td><td>${e.keterangan||'-'}</td><td><button class="btn btn-warning btn-sm" onclick="openModalCor(${e.id})">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteCorEntry(${e.id})">Hapus</button></td></tr>`).join('');
+    }
+    function openModalCor(id) {
+      ['mCorId','mCorTanggal','mCorBahan','mCorBatuBara','mCorOngkos','mCorKeterangan'].forEach(id => document.getElementById(id).value = '');
+      if (id) {
+        const e = corEntries.find(x => x.id === id);
+        if (e) {
+          document.getElementById('mCorId').value = e.id; document.getElementById('mCorTanggal').value = e.tanggal || '';
+          document.getElementById('mCorBahan').value = e.bahan_cor; document.getElementById('mCorBatuBara').value = e.batu_bara;
+          document.getElementById('mCorOngkos').value = e.ongkos_stoker; document.getElementById('mCorKeterangan').value = e.keterangan || '';
+          document.getElementById('titleModalCor').innerText = 'Edit Data Cor';
+        }
+      } else { document.getElementById('titleModalCor').innerText = 'Entry Cor Baru'; }
+      openModal('modalCor');
+    }
+    async function saveCorEntry() {
+      const id = document.getElementById('mCorId').value;
+      const payload = { tanggal: document.getElementById('mCorTanggal').value, bahan_cor: parseFloat(document.getElementById('mCorBahan').value)||0, batu_bara: parseFloat(document.getElementById('mCorBatuBara').value)||0, ongkos_stoker: parseFloat(document.getElementById('mCorOngkos').value)||0, keterangan: document.getElementById('mCorKeterangan').value||'' };
+      if (!payload.tanggal) return alert('Tanggal wajib diisi.');
+      try {
+        let error = id ? (await supabaseClient.from('cor_entries').update(payload).eq('id', id)).error : (await supabaseClient.from('cor_entries').insert([payload])).error;
+        if (error) throw error;
+        await loadAllCor(); closeModal('modalCor'); renderCorTable();
+      } catch (e) { alert('Gagal simpan cor: ' + e.message); }
+    }
+    async function deleteCorEntry(id) {
+      if (!confirm('Hapus cor?')) return;
+      await supabaseClient.from('cor_entries').delete().eq('id', id); await loadAllCor(); renderCorTable();
+    }
+
+    // Fungsi Render & CRUD Stoker
+    function monthYearKey(iso) { if (!iso) return null; const d = new Date(iso + 'T00:00:00'); return isNaN(d.getTime()) ? null : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; }
+    function karyawanNama(id) { const k = karyawanDb.find(x => x.id === id); return k ? k.nama : '(Dihapus)'; }
+    function renderStokerTable() {
+      const tbody = document.getElementById('tbodyStoker');
+      if (stokerEntries.length === 0) return tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;">Belum ada data.</td></tr>';
+      tbody.innerHTML = stokerEntries.map((e, idx) => {
+        const totalBayar = (e.pelunasan||[]).reduce((a, b) => a + (Number(b) || 0), 0), totalBon = Number(e.total_bon)||0, lunas = totalBayar >= totalBon && totalBon > 0, sisa = totalBon - totalBayar;
+        const pelunasanCells = (e.pelunasan||[0,0,0,0,0]).map((val, i) => `<td><input type="number" value="${val||''}" onchange="updatePelunasan(${e.id}, ${i}, this.value)" style="width:70px; margin:0;" /></td>`).join('');
+        const badge = lunas ? `<span class="badge badge-safe">LUNAS</span>` : `<span class="badge badge-over">Sisa: ${formatRp(sisa>0?sisa:0)}</span>`;
+        return `<tr><td>${idx+1}</td><td>${formatTanggal(e.tanggal)}</td><td>${karyawanNama(e.karyawan_id)}</td><td>${formatRp(totalBon)}</td>${pelunasanCells}<td>${badge}</td><td>${e.keterangan||'-'}</td><td><button class="btn btn-warning btn-sm" onclick="openModalStoker(${e.id})">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteStokerEntry(${e.id})">Hapus</button></td></tr>`;
+      }).join('');
+    }
+    async function updatePelunasan(id, index, value) {
+      const idx = stokerEntries.findIndex(x => x.id === id); if (idx === -1) return;
+      stokerEntries[idx].pelunasan[index] = parseFloat(value) || 0;
+      await supabaseClient.from('stoker_entries').update({ pelunasan: stokerEntries[idx].pelunasan }).eq('id', id); renderStokerTable();
+    }
+    function openModalStoker(id) {
+      ['mStokerId','mStokerTanggal','mStokerBon','mStokerKeterangan'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('mStokerKaryawan').innerHTML = karyawanDb.map(k => `<option value="${k.id}">${k.nama}</option>`).join('');
+      if (id) {
+        const e = stokerEntries.find(x => x.id === id);
+        if (e) {
+          document.getElementById('mStokerId').value = e.id; document.getElementById('mStokerTanggal').value = e.tanggal || '';
+          document.getElementById('mStokerBon').value = e.total_bon; document.getElementById('mStokerKeterangan').value = e.keterangan || '';
+          document.getElementById('mStokerKaryawan').value = e.karyawan_id;
+        }
+      } openModal('modalStoker');
+    }
+    async function saveStokerEntry() {
+      const id = document.getElementById('mStokerId').value, payload = { tanggal: document.getElementById('mStokerTanggal').value, karyawan_id: parseInt(document.getElementById('mStokerKaryawan').value), total_bon: parseFloat(document.getElementById('mStokerBon').value)||0, keterangan: document.getElementById('mStokerKeterangan').value||'' };
+      if (!payload.tanggal || !payload.karyawan_id) return alert('Lengkapi data.');
+      if (!id) payload.pelunasan = [0,0,0,0,0];
+      let err = id ? (await supabaseClient.from('stoker_entries').update(payload).eq('id', id)).error : (await supabaseClient.from('stoker_entries').insert([payload])).error;
+      if (err) return alert('Gagal: '+err.message); await loadAllCor(); closeModal('modalStoker'); renderStokerTable();
+    }
+    async function deleteStokerEntry(id) { if(confirm('Hapus?')) { await supabaseClient.from('stoker_entries').delete().eq('id',id); await loadAllCor(); renderStokerTable(); } }
+
+    // Fungsi Karyawan (Database Cor)
+    function renderKaryawanTable() {
+      document.getElementById('tbodyKaryawan').innerHTML = karyawanDb.length === 0 ? '<tr><td colspan="3" style="text-align:center;">Kosong</td></tr>' : karyawanDb.map((k,i) => `<tr><td>${i+1}</td><td>${k.nama}</td><td><button class="btn btn-warning btn-sm" onclick="openModalKaryawan(${k.id})">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteKaryawanCor(${k.id})">Hapus</button></td></tr>`).join('');
+    }
+    function openModalKaryawan(idMenggabungkan seluruh file menjadi satu sistem *All-in-One* (Single Page Application) adalah langkah yang tepat untuk menghilangkan redundansi dan mempercepat proses memuat halaman. 
+
+Karena Anda tidak memiliki latar belakang *coding*, saya telah menyusun ulang seluruh struktur HTML, CSS, dan JavaScript dari file-file sebelumnya[cite: 1, 2, 3, 4, 5, 6] menjadi **satu file tunggal (`index.html`)** yang langsung siap pakai. 
+
+Berikut adalah penyesuaian utama yang telah saya lakukan agar sistem berjalan efisien tanpa *error*:
+1. **Pemusatan Autentikasi & Koneksi:** Konfigurasi kredensial `SUPABASE_URL` dan `SUPABASE_KEY` kini hanya ditulis satu kali dan dipakai bersama oleh modul Cor maupun Order[cite: 2, 6].
+2. **Navigasi Dinamis:** Anda tidak perlu berpindah file secara fisik. Saat Anda mengklik "Order" atau "Cor" di Menu Utama, sistem akan menyembunyikan Menu Utama dan memunculkan panel aplikasi yang relevan secara instan[cite: 1, 3, 4]. Tombol "Kembali ke Beranda" telah ditambahkan.
+3. **Penyelesaian Kode yang Terpotong:** Script `supabase.js` pada referensi terpotong di bagian akhir (logika *sorting* SPK)[cite: 6]. Saya telah melengkapi kode yang terpotong tersebut dan menambahkan *placeholder* fungsi agar antarmuka tidak *crash/error* saat tombol diklik.
+4. **Pencegahan Konflik ID:** Karena sebelumnya `cor.html` dan `order.html` memiliki nama tombol dan tab yang sama (seperti `tabDatabase`), saya telah membedakannya (misal: `tabDatabaseCor` dan `tabDatabaseOrder`) agar JavaScript tidak kebingungan[cite: 1, 4].
+
+Silakan salin seluruh kode di bawah ini, lalu tempel (*paste*) dan simpan sebagai **`index.html`**. 
+
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maju Lancar - Sistem Terpadu</title>
+
+  <!-- Favicon & Mobile App Icon -->
+  <link rel="icon" href="[https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg](https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg)" type="image/jpeg">
+  <link rel="apple-touch-icon" href="[https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg](https://github.com/tomoxyo157/maju-lancar-app/raw/dff1ece20fc2886a3f6f99987ce677b7ed5d849a/home.jpg)">
+
+  <!-- Supabase JS & html2canvas CDN -->
+  <script src="[https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)"></script>
+  <script src="[https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js](https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js)"></script>
+
+  <style>
+    /* =========================================================
+       1. CSS CORE & VARIABEL (Gabungan style.css & index.html)
+       ========================================================= */
+    :root {
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --primary: #1e3a8a;
+      --primary-hover: #1e40af;
+      --success: #15803d;
+      --success-hover: #166534;
+      --danger: #b91c1c;
+      --warning: #b45309;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-size: 17px;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-right { display: flex; gap: 10px; align-items: center; }
+    header img { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; }
+    header h1 { font-size: 1.6rem; letter-spacing: 0.5px; }
+
+    /* MENU UTAMA (DASHBOARD) STYLES */
+    .menu-main-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .menu-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+      width: 100%;
+      max-width: 500px;
+    }
+    .menu-btn {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      padding: 60px 40px;
+      border-radius: 24px;
+      border: none;
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.15), 0 4px 6px -2px rgba(0,0,0,0.08);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s;
+    }
+    .menu-btn:active { transform: scale(0.97); }
+    .menu-btn:hover { box-shadow: 0 15px 20px -3px rgba(0,0,0,0.2), 0 6px 8px -2px rgba(0,0,0,0.1); }
+    .menu-btn .icon { font-size: 4.5rem; line-height: 1; }
+    .menu-btn .label { font-size: 2rem; letter-spacing: 0.5px; text-align: center; line-height: 1.2; }
+    .menu-btn .sub-label { font-size: 1.1rem; font-weight: normal; opacity: 0.9; text-align: center; padding: 0 10px; }
+    .btn-order { background-color: var(--success); }
+    .btn-order:hover { background-color: var(--success-hover); }
+    .btn-cor { background-color: var(--primary); }
+    .btn-cor:hover { background-color: var(--primary-hover); }
+
+    /* KOMPONEN APLIKASI (TAB, FORM, MODAL, TABLE) */
+    nav { display: flex; background-color: #0f172a; padding: 6px 12px; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .nav-btn { background: none; border: none; color: #94a3b8; padding: 12px 18px; font-size: 1rem; font-weight: bold; cursor: pointer; border-bottom: 4px solid transparent; transition: all 0.2s; white-space: nowrap; }
+    .nav-btn:hover { color: white; }
+    .nav-btn.active { color: #38bdf8; border-bottom-color: #38bdf8; }
+    .sub-nav { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .sub-btn { padding: 10px 16px; border-radius: 8px; border: 2px solid var(--border); background: white; font-weight: bold; cursor: pointer; font-size: 1rem; min-height: 44px; }
+    .sub-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    .app-container { max-width: 1280px; margin: 20px auto; padding: 0 12px; flex: 1; width: 100%; display: none; }
+    
+    .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .card.full-width { grid-column: 1 / -1; }
+    .card-header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+    .card-title-text { font-size: 1.25rem; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+
+    label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 1rem; }
+    input, select { width: 100%; padding: 12px 14px; font-size: 1rem; border: 2px solid var(--border); border-radius: 8px; margin-bottom: 14px; background-color: #f8fafc; min-height: 48px; }
+    input:focus, select:focus { border-color: var(--primary); outline: none; background-color: #fff; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 18px; font-size: 1rem; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; gap: 6px; min-height: 44px; transition: background 0.2s, transform 0.1s; white-space: nowrap; }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background-color: var(--primary); color: white; }
+    .btn-success { background-color: var(--success); color: white; }
+    .btn-danger { background-color: var(--danger); color: white; }
+    .btn-warning { background-color: var(--warning); color: white; }
+    .btn-secondary { background-color: #64748b; color: white; }
+    .btn-sm { padding: 6px 12px; font-size: 0.9rem; min-height: 36px;
