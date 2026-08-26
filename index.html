@@ -2453,14 +2453,12 @@
         return;
       }
     
-      // AMBIL NILAI DARI DROPDOWN SORTING
       const sortOpt = document.getElementById('sortCorOption') ? document.getElementById('sortCorOption').value : 'tanggal';
       let sorted = [...corEntries];
     
-      // LOGIKA PENGURUTAN
       if (sortOpt === 'entry') {
-        // Urutkan berdasarkan ID entri (dari yang pertama dibuat hingga terbaru, atau sebaliknya)
-        sorted.sort((a, b) => b.id - a.id); 
+        // Diubah jadi a.id - b.id (dari entri pertama/lama ke terbaru) agar perubahannya kontras
+        sorted.sort((a, b) => a.id - b.id); 
       } else {
         // Default: Berdasarkan Tanggal (terbaru ke terlama)
         sorted.sort((a, b) => (a.tanggal < b.tanggal ? 1 : -1));
