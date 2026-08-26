@@ -699,6 +699,15 @@
           <div class="card full-width">
             <div class="card-header-flex">
               <div class="card-title-text">Data Cor</div>
+              <!-- TAMBAHKAN KODE DROPDOWN INI -->
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <select id="sortCorOption" style="padding: 6px 10px; font-size: 0.95rem; margin:0; width: auto;" onchange="renderCorTable()">
+                  <option value="tanggal" selected>Urutkan: Tanggal</option>
+                  <option value="entry">Urutkan: Berdasarkan Entri</option>
+                </select>
+                <button class="btn btn-primary" onclick="openModalCor(null)">+ Entry Cor</button>
+              </div>
+              <!-- BATAS TAMBAHAN -->
               <button class="btn btn-primary" onclick="openModalCor(null)">+ Entry Cor</button>
             </div>
             <div class="table-responsive">
@@ -2446,7 +2455,20 @@
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Belum ada data.</td></tr>';
         return;
       }
-      const sorted = [...corEntries].sort((a, b) => (a.tanggal < b.tanggal ? 1 : -1));
+    
+      // AMBIL NILAI DARI DROPDOWN SORTING
+      const sortOpt = document.getElementById('sortCorOption') ? document.getElementById('sortCorOption').value : 'tanggal';
+      let sorted = [...corEntries];
+    
+      // LOGIKA PENGURUTAN
+      if (sortOpt === 'entry') {
+        // Urutkan berdasarkan ID entri (dari yang pertama dibuat hingga terbaru, atau sebaliknya)
+        sorted.sort((a, b) => b.id - a.id); 
+      } else {
+        // Default: Berdasarkan Tanggal (terbaru ke terlama)
+        sorted.sort((a, b) => (a.tanggal < b.tanggal ? 1 : -1));
+      }
+    
       tbody.innerHTML = sorted.map((e, idx) => `
         <tr>
           <td>${idx + 1}</td>
